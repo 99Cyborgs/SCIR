@@ -1,0 +1,20 @@
+{
+  "module_id": "example.python.clocked_math",
+  "layer": "scir_h",
+  "source_language": "python",
+  "source_path": "examples/python/clocked_math.py",
+  "declared_profiles": [
+    "R",
+    "D"
+  ],
+  "declared_tier": "C",
+  "dependencies": [
+    "python:builtins",
+    "python:math"
+  ],
+  "exports": [
+    "fib",
+    "timestamped_result"
+  ],
+  "opaque_boundary_count": 1
+}

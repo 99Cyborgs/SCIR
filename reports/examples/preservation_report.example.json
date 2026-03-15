@@ -1,0 +1,23 @@
+{
+  "report_id": "example-preservation-report-001",
+  "subject": "example.python.fib_only reconstruction",
+  "source_artifact": "frontend/python:example.python.fib_only",
+  "target_artifact": "reconstructed/python/fib_only.py",
+  "profile": "R",
+  "preservation_level": "P1",
+  "status": "pass",
+  "observables": {
+    "preserved": [
+      "function boundaries",
+      "structured control"
+    ],
+    "normalized": [],
+    "contract_bounded": [],
+    "opaque": [],
+    "unsupported": []
+  },
+  "evidence": [
+    "illustrative fixture only",
+    "preservation labels remain profile-qualified"
+  ]
+}

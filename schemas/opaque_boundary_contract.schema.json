@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SCIR Opaque Boundary Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "boundary_id",
+    "kind",
+    "signature",
+    "effects",
+    "ownership_transfer",
+    "capabilities",
+    "determinism",
+    "audit_note"
+  ],
+  "properties": {
+    "boundary_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "opaque_type",
+        "opaque_call",
+        "unsafe",
+        "foreign",
+        "host_stub",
+        "trusted_runtime"
+      ]
+    },
+    "signature": {
+      "type": "string",
+      "minLength": 1
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "ownership_transfer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inbound",
+        "outbound"
+      ],
+      "properties": {
+        "inbound": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outbound": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "determinism": {
+      "type": "string",
+      "enum": [
+        "deterministic",
+        "nondeterministic",
+        "unknown"
+      ]
+    },
+    "audit_note": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

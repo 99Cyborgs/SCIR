@@ -1,0 +1,34 @@
+{
+  "report_id": "example-feature-tier-report-001",
+  "subject": "example.python.clocked_math",
+  "source_language": "python",
+  "summary": {
+    "A": 2,
+    "B": 1,
+    "C": 1,
+    "D": 0
+  },
+  "items": [
+    {
+      "feature": "functions and async def",
+      "tier": "A",
+      "rationale": "Structured function definitions lower directly into the SCIR-H core."
+    },
+    {
+      "feature": "local mutation",
+      "tier": "A",
+      "rationale": "Explicit local mutation maps to canonical write sites."
+    },
+    {
+      "feature": "class sugar normalized into records plus methods",
+      "tier": "B",
+      "rationale": "Normalization remains validator-understood but may reduce source idiomaticity."
+    },
+    {
+      "feature": "host clock access",
+      "tier": "C",
+      "rationale": "Host runtime service remains an explicit boundary contract.",
+      "fallback": "host_stub"
+    }
+  ]
+}

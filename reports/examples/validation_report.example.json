@@ -1,0 +1,9 @@
+{
+  "report_id": "example-validation-report-001",
+  "artifact": "scir_h:example.python.clocked_math",
+  "layer": "scir_h",
+  "validator": "bootstrap-example-validator",
+  "spec_version": "v0.1-draft",
+  "status": "pass",
+  "diagnostics": []
+}

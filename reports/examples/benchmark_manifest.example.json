@@ -1,0 +1,29 @@
+{
+  "benchmark_id": "example-benchmark-track-b-001",
+  "track": "B",
+  "task_family": "python-subset-roundtrip",
+  "corpus": {
+    "name": "python-subset-functions",
+    "scope": "Tier A and B illustrative subset",
+    "hash": "sha256:example-python-subset"
+  },
+  "baselines": [
+    "direct source",
+    "typed-AST"
+  ],
+  "profiles": [
+    "R",
+    "D"
+  ],
+  "success_gates": [
+    "S1"
+  ],
+  "kill_gates": [
+    "K3",
+    "K4"
+  ],
+  "contamination_controls": [
+    "held-out evaluation split recorded",
+    "baseline adapters recorded"
+  ]
+}

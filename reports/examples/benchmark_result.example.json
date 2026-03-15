@@ -1,0 +1,22 @@
+{
+  "benchmark_id": "example-benchmark-track-b-001",
+  "run_id": "example-run-2026-03-15",
+  "system_under_test": "scir-bootstrap-example-fixtures",
+  "track": "B",
+  "profile": "R",
+  "metrics": {
+    "import_success": 0.97,
+    "compile_pass": 0.96,
+    "test_pass": 0.95,
+    "idiomaticity": 4.1
+  },
+  "baseline_comparison": {
+    "direct source": "reference only",
+    "typed-AST": 0.02
+  },
+  "status": "pass",
+  "evidence": [
+    "reports/examples/benchmark_manifest.example.json",
+    "reports/examples/reconstruction_report.example.json"
+  ]
+}

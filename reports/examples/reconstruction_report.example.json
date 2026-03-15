@@ -1,0 +1,16 @@
+{
+  "report_id": "example-reconstruction-report-001",
+  "subject": "example.python.fib_only",
+  "source_language": "python",
+  "target_language": "python",
+  "profile": "R",
+  "preservation_level": "P1",
+  "compile_pass": true,
+  "test_pass": true,
+  "idiomaticity_score": 4.0,
+  "provenance_complete": true,
+  "notes": [
+    "Illustrative fixture only.",
+    "Comments are not preserved in canonical storage."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "boundary_id": "example-boundary-001",
+  "kind": "host_stub",
+  "signature": "host.stub python clock_now() : gc<float> ! { io }",
+  "effects": [
+    "io"
+  ],
+  "ownership_transfer": {
+    "inbound": [],
+    "outbound": [
+      "gc<float>"
+    ]
+  },
+  "capabilities": [
+    "clock"
+  ],
+  "determinism": "nondeterministic",
+  "audit_note": "Illustrative host runtime boundary for a Tier C time source."
+}

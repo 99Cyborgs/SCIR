@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SCIR Preservation Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_id",
+    "subject",
+    "source_artifact",
+    "target_artifact",
+    "profile",
+    "preservation_level",
+    "status",
+    "observables",
+    "evidence"
+  ],
+  "properties": {
+    "report_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_artifact": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_artifact": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile": {
+      "type": "string",
+      "enum": [
+        "R",
+        "N",
+        "P",
+        "D"
+      ]
+    },
+    "preservation_level": {
+      "type": "string",
+      "enum": [
+        "P0",
+        "P1",
+        "P2",
+        "P3",
+        "PX"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "mixed",
+        "fail"
+      ]
+    },
+    "observables": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preserved",
+        "normalized",
+        "contract_bounded",
+        "opaque",
+        "unsupported"
+      ],
+      "properties": {
+        "preserved": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "normalized": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "contract_bounded": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "opaque": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unsupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

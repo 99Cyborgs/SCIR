@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SCIR Module Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "module_id",
+    "layer",
+    "source_language",
+    "source_path",
+    "declared_profiles",
+    "declared_tier",
+    "dependencies"
+  ],
+  "properties": {
+    "module_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "layer": {
+      "type": "string",
+      "enum": [
+        "scir_h",
+        "scir_l"
+      ]
+    },
+    "source_language": {
+      "type": "string",
+      "enum": [
+        "python",
+        "rust",
+        "typescript",
+        "go",
+        "c++",
+        "haskell",
+        "scir_h",
+        "scir_l",
+        "unknown"
+      ]
+    },
+    "source_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "declared_profiles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "R",
+          "N",
+          "P",
+          "D"
+        ]
+      }
+    },
+    "declared_tier": {
+      "type": "string",
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ]
+    },
+    "dependencies": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "exports": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "opaque_boundary_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

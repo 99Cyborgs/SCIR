@@ -1,0 +1,100 @@
+{
+  "decisions": [
+    {
+      "id": "DR-001",
+      "status": "accepted",
+      "decision": "SCIR is a dual representation: canonical `SCIR-H` and derivative `SCIR-L`.",
+      "constraint_imposed": "`SCIR-L` must not become an independent semantic source of truth.",
+      "reversible": "partly",
+      "first_validation": "Track B + validator drift checks"
+    },
+    {
+      "id": "DR-002",
+      "status": "accepted",
+      "decision": "First credible product is importer + validator + lowering + reconstruction + benchmark harness.",
+      "constraint_imposed": "No mass-market language work in phase 1.",
+      "reversible": "yes",
+      "first_validation": "milestone gates 01–05"
+    },
+    {
+      "id": "DR-003",
+      "status": "accepted",
+      "decision": "Every claim is profile-qualified (`R`, `N`, `P`, `D`).",
+      "constraint_imposed": "Unqualified preservation or performance claims are invalid.",
+      "reversible": "yes",
+      "first_validation": "benchmark result review"
+    },
+    {
+      "id": "DR-004",
+      "status": "accepted",
+      "decision": "Preservation levels are `P0`, `P1`, `P2`, `P3`, `PX`.",
+      "constraint_imposed": "No binary “preserved/not preserved” claims.",
+      "reversible": "yes",
+      "first_validation": "preservation report review"
+    },
+    {
+      "id": "DR-005",
+      "status": "accepted",
+      "decision": "Feature coverage is tiered (`A`, `B`, `C`, `D`).",
+      "constraint_imposed": "No vague support language.",
+      "reversible": "no",
+      "first_validation": "frontend conformance review"
+    },
+    {
+      "id": "DR-006",
+      "status": "accepted",
+      "decision": "Unsupported and opaque cases must be explicit.",
+      "constraint_imposed": "No silent fallback to pseudo-support.",
+      "reversible": "yes",
+      "first_validation": "importer and validator reports"
+    },
+    {
+      "id": "DR-007",
+      "status": "accepted",
+      "decision": "Benchmark-first evaluation is mandatory.",
+      "constraint_imposed": "No AI or performance claim without strong baselines.",
+      "reversible": "no",
+      "first_validation": "Track A–D governance"
+    },
+    {
+      "id": "DR-008",
+      "status": "accepted",
+      "decision": "Python subset importer lands before Rust subset importer.",
+      "constraint_imposed": "Dynamic-host stress comes before ownership-heavy stress.",
+      "reversible": "yes",
+      "first_validation": "milestone 02 review"
+    },
+    {
+      "id": "DR-009",
+      "status": "accepted",
+      "decision": "Reconstruction is driven primarily from `SCIR-H`.",
+      "constraint_imposed": "`SCIR-L` reconstruction is secondary and non-idiomatic.",
+      "reversible": "partly",
+      "first_validation": "Track B review"
+    },
+    {
+      "id": "DR-010",
+      "status": "accepted",
+      "decision": "Wasm or equivalent portable execution is the first execution backend path.",
+      "constraint_imposed": "Native backend sprawl is deferred.",
+      "reversible": "yes",
+      "first_validation": "milestone 03–05 review"
+    },
+    {
+      "id": "DR-011",
+      "status": "accepted",
+      "decision": "Validators and report schemas are part of the trusted core surface.",
+      "constraint_imposed": "Specs, schemas, and validators must evolve together.",
+      "reversible": "partly",
+      "first_validation": "`make validate`"
+    },
+    {
+      "id": "DR-012",
+      "status": "accepted",
+      "decision": "Architecture changes require synchronized updates to specs, docs, validator contracts, benchmarks, and this register.",
+      "constraint_imposed": "No architecture drift by omission.",
+      "reversible": "no",
+      "first_validation": "PR review + CI"
+    }
+  ]
+}

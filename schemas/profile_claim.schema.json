@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SCIR Profile Claim",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subject",
+    "profile",
+    "preservation_level",
+    "equivalence_mode",
+    "evidence"
+  ],
+  "properties": {
+    "subject": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile": {
+      "type": "string",
+      "enum": [
+        "R",
+        "N",
+        "P",
+        "D"
+      ]
+    },
+    "preservation_level": {
+      "type": "string",
+      "enum": [
+        "P0",
+        "P1",
+        "P2",
+        "P3",
+        "PX"
+      ]
+    },
+    "equivalence_mode": {
+      "type": "string",
+      "enum": [
+        "deterministic",
+        "trace",
+        "contract_bounded",
+        "boundary_only",
+        "none"
+      ]
+    },
+    "contract_id": {
+      "type": "string"
+    },
+    "normalized_observables": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dropped_observables": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

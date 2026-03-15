@@ -1,0 +1,22 @@
+name: benchmark-contracts
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "BENCHMARK_STRATEGY.md"
+      - "benchmarks/**"
+      - "schemas/benchmark_*.json"
+      - "ci/benchmark_pipeline.md"
+      - "scripts/benchmark_contract_dry_run.py"
+
+jobs:
+  benchmark-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run benchmark doctrine dry run
+        run: make benchmark

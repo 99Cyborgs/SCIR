@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SCIR Reconstruction Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_id",
+    "subject",
+    "source_language",
+    "target_language",
+    "profile",
+    "preservation_level",
+    "compile_pass",
+    "test_pass",
+    "provenance_complete"
+  ],
+  "properties": {
+    "report_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_language": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_language": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile": {
+      "type": "string",
+      "enum": [
+        "R",
+        "N",
+        "P",
+        "D"
+      ]
+    },
+    "preservation_level": {
+      "type": "string",
+      "enum": [
+        "P0",
+        "P1",
+        "P2",
+        "P3",
+        "PX"
+      ]
+    },
+    "compile_pass": {
+      "type": "boolean"
+    },
+    "test_pass": {
+      "type": "boolean"
+    },
+    "idiomaticity_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 5
+    },
+    "provenance_complete": {
+      "type": "boolean"
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

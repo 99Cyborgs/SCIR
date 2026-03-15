@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SCIR Open Questions Export",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "open_questions"
+  ],
+  "properties": {
+    "open_questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "question",
+          "impact",
+          "default_until_resolved",
+          "blocker"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "question": {
+            "type": "string",
+            "minLength": 1
+          },
+          "impact": {
+            "type": "string",
+            "minLength": 1
+          },
+          "default_until_resolved": {
+            "type": "string",
+            "minLength": 1
+          },
+          "blocker": {
+            "type": "string",
+            "enum": [
+              "yes",
+              "no"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

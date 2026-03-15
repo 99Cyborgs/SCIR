@@ -1,0 +1,123 @@
+{
+  "open_questions": [
+    {
+      "id": "OQ-001",
+      "question": "Should profile `R` preserve stronger comment and provenance detail in v1?",
+      "impact": "reconstruction and audit tooling",
+      "default_until_resolved": "comments remain out of canonical text; provenance sidecars remain allowed",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-002",
+      "question": "Should profile `D` split into Python-host and JS-host variants?",
+      "impact": "host-runtime fidelity and benchmarks",
+      "default_until_resolved": "keep a single `D` profile; qualify host runtime in reports",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-003",
+      "question": "How much of `SCIR-H` should be user-visible versus tool-mediated?",
+      "impact": "UX and tooling design",
+      "default_until_resolved": "`SCIR-H` remains inspectable text; no separate authoring language",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-004",
+      "question": "Does Path B require different success thresholds than Path C or D?",
+      "impact": "benchmark interpretation",
+      "default_until_resolved": "use current global thresholds until a path split is justified",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-005",
+      "question": "Can `SCIR-H` live inside MLIR infrastructure without losing normative status?",
+      "impact": "implementation architecture",
+      "default_until_resolved": "treat MLIR as optional infrastructure, not the spec surface",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-006",
+      "question": "How much laziness, reflection, and template behavior can be captured without collapsing regularity?",
+      "impact": "source coverage and tiers",
+      "default_until_resolved": "keep them outside Tier A unless explicitly proven otherwise",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-007",
+      "question": "Should generators remain first-class in `SCIR-H` or normalize to iterator/state-machine forms?",
+      "impact": "grammar and reconstruction",
+      "default_until_resolved": "keep generators out of `SCIR-H` v0.1 core",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-008",
+      "question": "The source material defines `throw` and `try` typing rules, but the published `SCIR-H` grammar includes `throw` and no `try/catch`. What is the canonical v0.1 form?",
+      "impact": "exception modeling",
+      "default_until_resolved": "v0.1 core includes `throw`; structured catch syntax is deferred and unsupported unless a frontend-specific plan states otherwise",
+      "blocker": "yes"
+    },
+    {
+      "id": "OQ-009",
+      "question": "The build-order notes mention `select`, but the published `SCIR-H` grammar has `spawn`, `send`, and `recv` only. Is `select` in v0.1?",
+      "impact": "concurrency grammar",
+      "default_until_resolved": "`select` is deferred from v0.1",
+      "blocker": "yes"
+    },
+    {
+      "id": "OQ-010",
+      "question": "Should strict floating-point behavior be modeled as a separate profile facet?",
+      "impact": "preservation claims for native and portable backends",
+      "default_until_resolved": "keep strict-fp as a contract-bounded note under `P2`",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-011",
+      "question": "How much analysis metadata should flow back from `SCIR-L` to `SCIR-H`?",
+      "impact": "tooling and debugging",
+      "default_until_resolved": "provenance only; do not reflect optimizer-only facts back into `SCIR-H` yet",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-012",
+      "question": "Which trusted runtime services deserve first-class semantics rather than opaque boundaries?",
+      "impact": "interop and runtime scope",
+      "default_until_resolved": "keep runtime services opaque unless they are required by the first targeted subset",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-013",
+      "question": "Which translation-validation obligations should land first?",
+      "impact": "trust reduction sequencing",
+      "default_until_resolved": "start with `H -> L` preservation downgrades and provenance continuity checks",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-014",
+      "question": "Which intrinsic AI metrics actually predict repository repair success?",
+      "impact": "benchmark strategy",
+      "default_until_resolved": "keep intrinsic metrics informative, not sufficient",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-015",
+      "question": "How much repository import should be eager versus slice-based on demand?",
+      "impact": "agent workflow scalability",
+      "default_until_resolved": "default to slice-based import driven by impacted dependency cones",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-016",
+      "question": "How strict should versioning be before 1.0 while semantics are still moving?",
+      "impact": "release process",
+      "default_until_resolved": "allow breaking changes only with migration notes and updated golden tests",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-017",
+      "question": "Which proof assistant split is appropriate: Lean, Coq, or both?",
+      "impact": "proof roadmap",
+      "default_until_resolved": "proof work is non-blocking for phase 1",
+      "blocker": "no"
+    }
+  ]
+}
