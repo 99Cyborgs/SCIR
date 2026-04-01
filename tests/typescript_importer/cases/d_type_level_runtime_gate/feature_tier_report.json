@@ -1,0 +1,19 @@
+{
+  "report_id": "fixture-feature-tier-d-type-level-runtime-gate",
+  "subject": "fixture.typescript_importer.d_type_level_runtime_gate",
+  "source_language": "typescript",
+  "summary": {
+    "A": 0,
+    "B": 0,
+    "C": 0,
+    "D": 1
+  },
+  "items": [
+    {
+      "feature": "executable type-level runtime gate",
+      "tier": "D",
+      "rationale": "Executable type-level runtime gates are outside the bounded Phase 7 TypeScript interface-only slice; this file is reserved placeholder evidence only and does not record a live importer rejection.",
+      "fallback": "reject"
+    }
+  ]
+}

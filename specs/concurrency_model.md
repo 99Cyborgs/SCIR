@@ -13,29 +13,38 @@ SCIR must model practical concurrency without pretending universal schedule pres
 - `await`
 - `send`
 - `recv`
+- `select`
 
 ## Required semantics
 
 - async suspension points are explicit,
 - task creation is explicit,
 - channel operations are explicit,
+- `select` is explicit structured control in `SCIR-H`,
+- every `select` arm is an explicit channel `send` or `recv` operation,
+- if one or more arms are ready, exactly one ready arm is chosen nondeterministically,
+- a chosen `recv` arm may bind its received value for that arm body only,
+- unchosen arms do not perform their channel operation,
 - shared mutable state must be explicit in the alias model,
 - concurrency-sensitive preservation claims are almost always profile-bounded.
 
 ## Deliberate v0.1 non-commitments
 
-The source material references `select` in build-order guidance but does not include it in the published grammar.
-
-Repository rule:
-
-- `select` is not canonical v0.1 until `OPEN_QUESTIONS.md` resolves it and the grammar is updated.
+- no default arm,
+- no timeout arm,
+- no fairness guarantee,
+- no priority semantics,
+- no non-channel selection surface in canonical v0.1,
+- no broad `SCIR-L` concurrency lowering design is defined here beyond the bootstrap subset,
+- Phase 3 freezes only simple `await` lowering to `async.resume`; `select`, `spawn`, `send`, and `recv` lowering remain deferred.
 
 ## Profile interaction
 
 - `R`: preserve source-visible async or concurrency shape when representable, otherwise downgrade
 - `N`: map to native threads, tasks, atomics, or runtime scheduling without exact schedule preservation
 - `P`: allow host-assisted async and portable subset concurrency only
-- `D`: preserve host event-loop or task semantics where supported
+- `D-PY`: preserve Python event-loop or task semantics where supported
+- `D-JS`: preserve JS/TS event-loop or task semantics where supported
 
 ## Validation rules
 

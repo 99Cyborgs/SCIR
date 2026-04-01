@@ -1,0 +1,17 @@
+{
+  "boundary_id": "fixture.python_importer.c_opaque_call.boundary.foreign_api_ping",
+  "kind": "opaque_call",
+  "signature": "opaque.call foreign_api_ping() -> opaque<ForeignResult> !opaque",
+  "effects": [
+    "opaque"
+  ],
+  "ownership_transfer": {
+    "inbound": [],
+    "outbound": [
+      "opaque<ForeignResult>"
+    ]
+  },
+  "capabilities": [],
+  "determinism": "unknown",
+  "audit_note": "The Python bootstrap slice treats foreign_api.ping as a Tier C opaque boundary rather than modeled semantics."
+}

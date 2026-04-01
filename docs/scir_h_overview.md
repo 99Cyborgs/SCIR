@@ -28,12 +28,25 @@ Status: Informative
 - regular enough for AI-facing editing,
 - small enough to avoid semantic sprawl.
 
+## Minimal v0.1 control surface
+
+- structured exception handling exists only as `try { ... } catch(x: T) { ... }`
+- structured concurrency choice exists only as `select { ... }` over explicit channel `send` or `recv` arms
+- `finally`, multi-catch, default arms, timeout arms, and priority semantics are outside canonical v0.1
+
 ## Canonicality rules
 
+- indentation-sensitive suites with two-space indentation,
+- newline-delimited storage with no canonical braces or semicolons,
 - one declaration form per construct kind,
 - sorted imports,
 - topologically ordered declarations,
 - stable identifiers on public structure,
+- compact effect rows (`!` or `!a,b`),
+- direct calls rendered as `f(args)`,
+- explicit mutable binders via `var` and explicit writes via `set`,
+- readable field places rendered explicitly such as `counter.value`,
+- intrinsic scalar comparisons rendered explicitly (`lt`, `le`, `eq`, `ne`, `gt`, `ge`),
 - no hidden conversions,
 - no hidden ambient capabilities,
 - no comments in canonical storage.

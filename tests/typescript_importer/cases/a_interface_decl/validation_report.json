@@ -1,0 +1,16 @@
+{
+  "report_id": "fixture-validation-a-interface-decl",
+  "artifact": "fixture.typescript_importer.a_interface_decl",
+  "layer": "scir_h",
+  "validator": "typescript-phase7-placeholder-bundle",
+  "spec_version": "v0.1-draft",
+  "status": "warn",
+  "diagnostics": [
+    {
+      "code": "TS-PH001",
+      "severity": "warn",
+      "message": "No live TypeScript importer, SCIR-H validation, SCIR-L, reconstruction, benchmark, or executable D-JS path has run for this reserved Phase 7 placeholder bundle.",
+      "location": "source.ts:1"
+    }
+  ]
+}

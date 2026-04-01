@@ -1,0 +1,9 @@
+{
+  "report_id": "fixture-validation-a-struct-field-borrow-mut",
+  "artifact": "fixture.rust_importer.a_struct_field_borrow_mut",
+  "layer": "scir_h",
+  "validator": "rust-bootstrap-importer",
+  "spec_version": "v0.1-draft",
+  "status": "pass",
+  "diagnostics": []
+}

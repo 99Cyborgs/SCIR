@@ -1,0 +1,19 @@
+{
+  "report_id": "fixture-feature-tier-d-async-function",
+  "subject": "fixture.typescript_importer.d_async_function",
+  "source_language": "typescript",
+  "summary": {
+    "A": 0,
+    "B": 0,
+    "C": 0,
+    "D": 1
+  },
+  "items": [
+    {
+      "feature": "async function declaration",
+      "tier": "D",
+      "rationale": "Async function declarations are outside the bounded Phase 7 TypeScript interface-only slice; this file is reserved placeholder evidence only and does not record a live importer rejection.",
+      "fallback": "reject"
+    }
+  ]
+}

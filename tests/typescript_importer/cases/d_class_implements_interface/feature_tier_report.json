@@ -1,0 +1,19 @@
+{
+  "report_id": "fixture-feature-tier-d-class-implements-interface",
+  "subject": "fixture.typescript_importer.d_class_implements_interface",
+  "source_language": "typescript",
+  "summary": {
+    "A": 0,
+    "B": 0,
+    "C": 0,
+    "D": 1
+  },
+  "items": [
+    {
+      "feature": "class implementing interface",
+      "tier": "D",
+      "rationale": "Class-plus-interface implementation shapes are outside the bounded Phase 7 TypeScript interface-only slice; this file is reserved placeholder evidence only and does not record a live importer rejection.",
+      "fallback": "reject"
+    }
+  ]
+}

@@ -12,4 +12,6 @@ Local rules:
 - translation validation may downgrade or fail claims; it must not silently strengthen them,
 - preserve or report opaque and unsafe accounting,
 - require explicit contracts for `P2` and `P3`,
+- keep the bootstrap lowering claims fixed at `R/P1` for the Tier A cases and `D-PY/P3` for the opaque case,
+- reject any lowering that converts a validated direct call into an opaque boundary without source justification,
 - do not treat benchmark parity as proof of semantic parity.

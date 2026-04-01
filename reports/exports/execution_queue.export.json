@@ -1,20 +1,371 @@
 {
-  "generation_timestamp": "2026-03-30T00:00:00-05:00",
-  "active_milestone": "Milestone 02B - Python Expansion",
+  "generation_timestamp": "2026-03-31T00:00:00-05:00",
+  "active_milestone": "Phase 7 - TypeScript Witness Slice",
   "autonomy_mode": "high",
   "source_documents": [
     "IMPLEMENTATION_PLAN.md",
-    "plans/milestone_02b_python_expansion.md",
+    "plans/milestone_07_typescript_witness_slice.md",
     "OPEN_QUESTIONS.md",
     "STATUS.md"
   ],
   "queue_items": [
     {
+      "queue_id": "Q-07-012",
+      "title": "Define the promotion contract from dormant TypeScript placeholders to live generated-vs-golden fixtures",
+      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "status": "ready",
+      "why_now": "TypeScript validate-fixtures now enforces the dormant placeholder corpus under the top-level validation baseline, so the next bounded task is to define exactly what must change before test mode can stop being reserved and live generated-vs-golden conformance can begin.",
+      "prerequisites": [
+        "Q-07-011"
+      ],
+      "work_instructions": "Document the promotion contract that turns the first-slice TypeScript placeholder corpus into future live generated-vs-golden fixtures, including admitted source.ts promotion to live inputs, admitted expected.scirh promotion from non-canonical sentinel text to canonical goldens, rejected-case expected.scirh absence, and do not activate live importer behavior or executable D-JS, lowering, reconstruction, or benchmark scope.",
+      "touched_surfaces": [
+        "plans/milestone_07_typescript_witness_slice.md",
+        "VALIDATION_STRATEGY.md",
+        "tests/README.md",
+        "tests/typescript_importer/README.md"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "defining the promotion contract would require live importer execution, schema changes, executable D-JS claims, or broader TypeScript semantic admission than the bounded interface-witness slice allows",
+      "done_evidence": [
+        "the placeholder-to-live promotion rules for first-slice TypeScript fixtures are explicit",
+        "test-mode preconditions are explicit",
+        "the importer-only boundary remains explicit"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-07-011",
+      "title": "Activate TypeScript validate-fixtures mode for the dormant placeholder corpus",
+      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "status": "done",
+      "why_now": "Repository validation now enforces the dormant TypeScript placeholder corpus contract, so the next bounded task is to move fixed-corpus integrity checks into the reserved TypeScript conformance entrypoint without activating live importer execution or widening executable scope.",
+      "prerequisites": [
+        "Q-07-010"
+      ],
+      "work_instructions": "Implement real validate-fixtures corpus-integrity checks in scripts/typescript_importer_conformance.py for the dormant TypeScript placeholder corpus, keep test mode reserved, and do not activate live importer behavior or executable D-JS, lowering, reconstruction, or benchmark scope.",
+      "touched_surfaces": [
+        "scripts/typescript_importer_conformance.py",
+        "scripts/run_repo_validation.py",
+        "Makefile",
+        "README.md",
+        "ci/validation_pipeline.md",
+        "VALIDATION_STRATEGY.md",
+        "tests/README.md",
+        "tests/typescript_importer/README.md",
+        "plans/milestone_07_typescript_witness_slice.md"
+      ],
+      "validation": [
+        "python scripts/typescript_importer_conformance.py --mode validate-fixtures",
+        "python scripts/typescript_importer_conformance.py --mode test",
+        "python scripts/build_execution_queue.py --mode write",
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/run_repo_validation.py",
+        "make validate"
+      ],
+      "escalate_only_if": "validate-fixtures integrity checks would require live importer output, schema changes, executable D-JS claims, or broader TypeScript semantic admission than the bounded interface-witness slice allows",
+      "done_evidence": [
+        "the TypeScript conformance entrypoint validates the dormant placeholder corpus shape in validate-fixtures mode",
+        "test mode remains reserved with an explicit non-live message",
+        "top-level validation commands now include the TypeScript validate-fixtures gate",
+        "the importer-only boundary remains explicit"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-07-010",
+      "title": "Enforce the dormant TypeScript placeholder corpus contract in repository validation",
+      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "status": "done",
+      "why_now": "The full dormant TypeScript placeholder corpus is now materialized on disk, so the next bounded task is to make repository-contract validation reject drift in the admitted-vs-rejected placeholder bundle shape without activating live TypeScript conformance or widening executable scope.",
+      "prerequisites": [
+        "Q-07-009"
+      ],
+      "work_instructions": "Add explicit repository-contract checks for the fully materialized dormant TypeScript placeholder corpus, including admitted/rejected file-presence rules and rejected-case expected.scirh absence; do not activate the TypeScript conformance checker or widen executable D-JS, lowering, reconstruction, or benchmark scope.",
+      "touched_surfaces": [
+        "scripts/validate_repo_contracts.py",
+        "VALIDATION_STRATEGY.md",
+        "tests/README.md",
+        "plans/milestone_07_typescript_witness_slice.md"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode write",
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/validate_repo_contracts.py --mode test",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "repository-contract enforcement would require live importer behavior, schema changes, or broader semantic admission than the bounded interface-witness slice allows",
+      "done_evidence": [
+        "repository validation rejects drift in the dormant TypeScript placeholder corpus shape, including exact case IDs, admitted-vs-rejected file sets, placeholder report posture, and rejected-case expected.scirh absence",
+        "the importer-only boundary remains explicit"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-07-009",
+      "title": "Add placeholder bundle files for the rejected TypeScript boundary cases",
+      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "status": "done",
+      "why_now": "The admitted placeholder bundle shape is now visible on disk, so the next bounded task is to add rejected-case placeholder files that preserve the published rejection bundle contract without introducing live importer outputs or canonical SCIR-H on rejected cases.",
+      "prerequisites": [
+        "Q-07-008"
+      ],
+      "work_instructions": "Add placeholder-only rejected-case bundle files for the fixed TypeScript D-case directories and keep them clearly non-live; do not add executable D-JS, importer logic, lowering, reconstruction, or benchmark work.",
+      "touched_surfaces": [
+        "tests/typescript_importer/cases/",
+        "tests/README.md",
+        "plans/milestone_07_typescript_witness_slice.md"
+      ],
+      "validation": [
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "placeholder rejected-case files would force live fixture contents, schema changes, canonical SCIR-H on rejected cases, or broader semantic admission than the bounded interface-witness slice allows",
+      "done_evidence": [
+        "the rejected TypeScript case directories contain placeholder bundle files only",
+        "rejected cases still omit expected.scirh",
+        "the importer-only boundary remains explicit"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-07-008",
+      "title": "Add placeholder bundle files for the admitted TypeScript cases",
+      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "status": "done",
+      "why_now": "The placeholder case directories now exist, so the next bounded task is to add admitted-case placeholder files that preserve the published bundle shape without introducing live importer outputs.",
+      "prerequisites": [
+        "Q-07-007"
+      ],
+      "work_instructions": "Add placeholder-only admitted-case bundle files for the fixed TypeScript A-case directories and keep them clearly non-live; do not add executable D-JS, importer logic, lowering, reconstruction, or benchmark work.",
+      "touched_surfaces": [
+        "tests/typescript_importer/cases/",
+        "tests/README.md",
+        "plans/milestone_07_typescript_witness_slice.md"
+      ],
+      "validation": [
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "placeholder admitted-case files would force live fixture contents, schema changes, or broader semantic admission than the bounded interface-witness slice allows",
+      "done_evidence": [
+        "the admitted TypeScript case directories contain placeholder bundle files only",
+        "the published bundle shape is visible on disk",
+        "the importer-only boundary remains explicit"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-07-007",
+      "title": "Create the dormant TypeScript fixture directories for the fixed case matrix",
+      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "status": "done",
+      "why_now": "The reserved corpus root and dormant conformance scaffold now existed, so the next bounded task was to create the empty first-slice fixture directories for the fixed TypeScript case matrix without adding real fixture content or importer execution.",
+      "prerequisites": [
+        "Q-07-006"
+      ],
+      "work_instructions": "Create the dormant case directories for the fixed first-slice TypeScript matrix and keep them placeholder-only; do not add live fixture contents, importer logic, executable D-JS, lowering, reconstruction, or benchmark work.",
+      "touched_surfaces": [
+        "tests/typescript_importer/cases/",
+        "tests/README.md",
+        "plans/milestone_07_typescript_witness_slice.md"
+      ],
+      "validation": [
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "creating the dormant case directories would force live fixtures, schema changes, or broader semantic admission than the bounded interface-witness slice allows",
+      "done_evidence": [
+        "the fixed TypeScript case directories exist on disk",
+        "they remain placeholder-only",
+        "the importer-only boundary remains explicit"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-07-006",
+      "title": "Reserve the dormant TypeScript conformance scaffold and corpus root",
+      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "status": "done",
+      "why_now": "The future conformance contract was explicit, so the next bounded task was to reserve the non-executable filesystem and script scaffold that future TypeScript importer work will fill in.",
+      "prerequisites": [
+        "Q-07-005"
+      ],
+      "work_instructions": "Add the dormant TypeScript corpus root and non-executable conformance-checker scaffold surfaces needed by the published contract; do not add importer logic, executable D-JS, lowering, reconstruction, or benchmark work.",
+      "touched_surfaces": [
+        "tests/README.md",
+        "frontend/README.md",
+        "scripts/"
+      ],
+      "validation": [
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "reserving the dormant TypeScript scaffold would require live importer behavior, schema changes, or broader semantic admission than the bounded interface-witness slice allows",
+      "done_evidence": [
+        "the dormant TypeScript corpus root is reserved",
+        "the non-executable conformance scaffold is explicit",
+        "the importer-only boundary remains explicit"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-07-005",
+      "title": "Define the TypeScript conformance checker contract and validation entrypoint",
+      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "status": "done",
+      "why_now": "The initial TypeScript corpus layout and case matrix were explicit, so the next bounded task was to define how future conformance checking would consume that corpus and integrate with repository validation without implying importer implementation was already present.",
+      "prerequisites": [
+        "Q-07-004"
+      ],
+      "work_instructions": "Define the future TypeScript conformance checker contract, expected command entrypoint, and repository-validation integration for the importer-only interface witness corpus; do not add executable D-JS, lowering, reconstruction, or benchmark work.",
+      "touched_surfaces": [
+        "VALIDATION_STRATEGY.md",
+        "tests/README.md",
+        "frontend/README.md"
+      ],
+      "validation": [
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "the conformance contract cannot be stated without implementing importer code, adding schemas, or broadening the first Phase 7 slice beyond importer-only witness evidence",
+      "done_evidence": [
+        "the future TypeScript conformance checker contract is explicit",
+        "repository validation expectations are explicit",
+        "executable D-JS scope remains deferred"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-07-004",
+      "title": "Define the initial TypeScript fixture corpus layout and case matrix",
+      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "status": "done",
+      "why_now": "The fixture/report contract was explicit, so the next bounded task was to define the first concrete TypeScript fixture corpus layout and case matrix that an importer implementation will be required to satisfy.",
+      "prerequisites": [
+        "Q-07-003"
+      ],
+      "work_instructions": "Define the initial TypeScript importer corpus layout, enumerate the first admitted and rejected interface-witness cases, and keep the corpus importer-only; do not add executable D-JS, lowering, reconstruction, or benchmark work.",
+      "touched_surfaces": [
+        "plans/milestone_07_typescript_witness_slice.md",
+        "frontend/typescript/IMPORT_SCOPE.md",
+        "tests/README.md"
+      ],
+      "validation": [
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "the case matrix cannot be defined without adding new schemas, executable artifacts, or broadening the first Phase 7 slice beyond interface-shaped witness doctrine",
+      "done_evidence": [
+        "the initial TypeScript corpus layout is explicit",
+        "admitted and rejected first-slice cases are enumerated",
+        "the importer-only boundary remains explicit"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-07-003",
+      "title": "Define the fixture and report contract for the first interface witness slice",
+      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "status": "done",
+      "why_now": "The planning handoff and implementation-facing doctrine were explicit, so the next bounded Phase 7 task was to define the minimal fixture and report expectations for the importer-only interface witness slice before any importer implementation began.",
+      "prerequisites": [
+        "Q-07-002"
+      ],
+      "work_instructions": "Define the minimal checked-in fixture shape, report obligations, and rejection boundaries for the first importer-only TypeScript interface witness slice; do not add executable D-JS, lowering, reconstruction, or benchmark work.",
+      "touched_surfaces": [
+        "plans/milestone_07_typescript_witness_slice.md",
+        "VALIDATION_STRATEGY.md",
+        "frontend/typescript/IMPORT_SCOPE.md"
+      ],
+      "validation": [
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "the fixture and report contract cannot be stated without adding schemas, executable artifacts, or broader TypeScript semantic admission than the bounded interface slice allows",
+      "done_evidence": [
+        "fixture expectations are explicit for the first interface slice",
+        "report-visible witness semantics and rejection boundaries are explicit",
+        "executable D-JS scope remains deferred"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-07-002",
+      "title": "Record the bounded interface-witness doctrine in the implementation surfaces",
+      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "status": "done",
+      "why_now": "The planning handoff contract was explicit, so the next bounded task was to mirror that contract into the implementation-facing surfaces that would govern future TypeScript importer work without admitting execution scope.",
+      "prerequisites": [
+        "Q-07-001"
+      ],
+      "work_instructions": "Update the TypeScript-facing implementation surfaces so the first Phase 7 slice is expressed as importer-only interface witness doctrine, keep host assumptions and report obligations explicit, and do not admit executable D-JS, lowering, reconstruction, or benchmark work.",
+      "touched_surfaces": [
+        "frontend/typescript/IMPORT_SCOPE.md",
+        "VALIDATION_STRATEGY.md",
+        "validators/validator_contracts.md"
+      ],
+      "validation": [
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "implementation-facing doctrine cannot express the bounded interface slice without changing schemas, adding executable artifacts, or silently broadening classes, async behavior, or prototype semantics",
+      "done_evidence": [
+        "implementation-facing doctrine agrees on the bounded interface slice",
+        "report-visible witness and host assumptions remain explicit",
+        "executable D-JS scope remains deferred"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-07-001",
+      "title": "Prepare the TypeScript witness-slice planning handoff",
+      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "status": "done",
+      "why_now": "Milestone 02B was explicitly complete, so the next bounded step was to make the TypeScript witness slice the active planning surface while keeping it doctrine-only and non-executable.",
+      "prerequisites": [
+        "Milestone 02B complete"
+      ],
+      "work_instructions": "Keep the first witness-bearing second-language item limited to a planning handoff for TypeScript interface-shaped witnesses; do not admit executable D-JS lowering, reconstruction, or benchmark work under the current roadmap.",
+      "touched_surfaces": [
+        "plans/milestone_07_typescript_witness_slice.md",
+        "frontend/typescript/IMPORT_SCOPE.md",
+        "VALIDATION_STRATEGY.md"
+      ],
+      "validation": [
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "OQ-018 or OQ-019 force a broader witness contract than the interface-shaped doctrine-only slice, or a proposed task widens executable D-JS scope before the published downstream gates exist",
+      "done_evidence": [
+        "Phase 7 is the explicit active queue source",
+        "the witness slice remains doctrine-only until a later plan widens downstream contracts explicitly"
+      ],
+      "blocking_open_questions": [
+        "OQ-018",
+        "OQ-019"
+      ]
+    },
+    {
       "queue_id": "Q-02B-005",
       "title": "Record Milestone 02B closeout and phase-handoff readiness",
       "source_milestone_or_phase": "Milestone 02B - Python Expansion",
-      "status": "ready",
-      "why_now": "The Rust-inclusive validation gate is now green, so the remaining 02B work is explicit milestone closeout and a bounded handoff toward the next architecture phase without silently changing the queue regime.",
+      "status": "done",
+      "why_now": "The Rust-inclusive validation gate was green, so the remaining 02B work was explicit milestone closeout and a bounded handoff toward the next architecture phase without silently changing the queue regime.",
       "prerequisites": [
         "Q-02B-004"
       ],
@@ -147,35 +498,6 @@
         "any required plan update is recorded before implementation"
       ],
       "blocking_open_questions": []
-    },
-    {
-      "queue_id": "Q-07-001",
-      "title": "Prepare the TypeScript witness-slice planning handoff",
-      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
-      "status": "blocked",
-      "why_now": "Phase 7 is the next architecture phase after Milestone 02B, but it is not ready while the active queue source remains 02B and the witness slice is still bounded by unresolved contract questions.",
-      "prerequisites": [
-        "Milestone 02B complete"
-      ],
-      "work_instructions": "Keep the first witness-bearing second-language item limited to a planning handoff for TypeScript interface-shaped witnesses; do not admit executable D-JS lowering, reconstruction, or benchmark work under the current roadmap.",
-      "touched_surfaces": [
-        "plans/milestone_07_typescript_witness_slice.md",
-        "frontend/typescript/IMPORT_SCOPE.md",
-        "VALIDATION_STRATEGY.md"
-      ],
-      "validation": [
-        "python scripts/validate_repo_contracts.py --mode validate",
-        "python scripts/run_repo_validation.py"
-      ],
-      "escalate_only_if": "Milestone 02B is complete and OQ-018 or OQ-019 still block the witness-slice contract, or a proposed task widens executable D-JS scope before the published downstream gates exist",
-      "done_evidence": [
-        "02B is complete",
-        "the witness slice remains doctrine-only until a later plan widens downstream contracts explicitly"
-      ],
-      "blocking_open_questions": [
-        "OQ-018",
-        "OQ-019"
-      ]
     }
   ],
   "blocking_open_questions": [
@@ -183,8 +505,8 @@
     "OQ-019"
   ],
   "next_action": {
-    "queue_id": "Q-02B-005",
-    "title": "Record Milestone 02B closeout and phase-handoff readiness"
+    "queue_id": "Q-07-012",
+    "title": "Define the promotion contract from dormant TypeScript placeholders to live generated-vs-golden fixtures"
   },
   "escalation_threshold": "doctrine conflict; missing source authority; sequencing violation"
 }

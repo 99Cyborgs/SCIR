@@ -1,0 +1,23 @@
+{
+  "report_id": "fixture-feature-tier-a-async-await",
+  "subject": "fixture.python_importer.a_async_await",
+  "source_language": "python",
+  "summary": {
+    "A": 2,
+    "B": 0,
+    "C": 0,
+    "D": 0
+  },
+  "items": [
+    {
+      "feature": "async function definition",
+      "tier": "A",
+      "rationale": "Structured async definitions remain explicit in the compact canonical SCIR-H surface."
+    },
+    {
+      "feature": "simple await",
+      "tier": "A",
+      "rationale": "A single await point maps directly into the canonical await expression."
+    }
+  ]
+}

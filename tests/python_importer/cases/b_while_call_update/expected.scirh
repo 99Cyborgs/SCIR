@@ -1,0 +1,8 @@
+module fixture.python_importer.b_while_call_update
+fn step_until_nonneg step Callable x int -> int !write
+  loop loop0
+    if lt x 0
+      set x step(x)
+    else
+      break loop0
+  return x

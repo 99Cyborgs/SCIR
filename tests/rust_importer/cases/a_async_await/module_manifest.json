@@ -1,0 +1,17 @@
+{
+  "module_id": "fixture.rust_importer.a_async_await",
+  "layer": "scir_h",
+  "source_language": "rust",
+  "source_path": "tests/rust_importer/cases/a_async_await/input/src/lib.rs",
+  "declared_profiles": [
+    "R"
+  ],
+  "declared_tier": "A",
+  "dependencies": [
+    "rust:std"
+  ],
+  "exports": [
+    "load_once"
+  ],
+  "opaque_boundary_count": 0
+}

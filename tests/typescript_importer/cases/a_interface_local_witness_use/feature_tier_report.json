@@ -1,0 +1,18 @@
+{
+  "report_id": "fixture-feature-tier-a-interface-local-witness-use",
+  "subject": "fixture.typescript_importer.a_interface_local_witness_use",
+  "source_language": "typescript",
+  "summary": {
+    "A": 1,
+    "B": 0,
+    "C": 0,
+    "D": 0
+  },
+  "items": [
+    {
+      "feature": "reserved module-local witness-use placeholder bundle",
+      "tier": "A",
+      "rationale": "This admitted first-slice TypeScript case is checked in only as reserved placeholder evidence for the published bundle shape; it is not a live importer result and does not widen executable claims."
+    }
+  ]
+}

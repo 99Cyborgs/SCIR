@@ -1,0 +1,5 @@
+module fixture.python_importer.c_opaque_call
+import sym foreign_api_ping python:foreign_api.ping
+
+fn ping -> opaque<ForeignResult> !opaque
+  return foreign_api_ping()

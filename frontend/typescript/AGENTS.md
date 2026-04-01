@@ -13,5 +13,5 @@ Local rules:
 
 - keep structural typing and runtime semantics separate,
 - do not treat decorators, proxies, or emit-dependent reflection as Tier `A` or `B`,
-- represent host runtime obligations explicitly under profile `D`,
+- represent host runtime obligations explicitly under profile `D-JS`,
 - do not claim native-performance semantics for host-object-heavy code.

@@ -1,0 +1,16 @@
+{
+  "report_id": "fixture-validation-b-if-else-return",
+  "artifact": "fixture.python_importer.b_if_else_return",
+  "layer": "scir_h",
+  "validator": "python-bootstrap-importer",
+  "spec_version": "v0.1-draft",
+  "status": "warn",
+  "diagnostics": [
+    {
+      "code": "PY-B002",
+      "severity": "warn",
+      "message": "Explicit if/else return imports as Tier B canonical SCIR-H only; no executable lowering, translation, or reconstruction path is claimed for this follow-on case.",
+      "location": "source.py:1"
+    }
+  ]
+}

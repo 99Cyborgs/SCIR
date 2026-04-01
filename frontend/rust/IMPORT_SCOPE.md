@@ -1,45 +1,49 @@
 # Rust Import Scope
 Status: Normative
 
-## Initial targeted subset
+## Phase 6A executable slice
 
-### Tier A candidate constructs
+### Tier A executable constructs
 
-- modules and visibility
-- structs, enums, pattern matching
-- functions, closures, methods
-- traits and impls in safe structured cases
+- free functions
+- named record types
+- borrowed and borrowed-mutable parameters
+- mutable locals
+- record field places in read and write positions
+- direct calls
+- scalar comparison branches
+- simple async functions with explicit `await`
+
+### Tier B deferred constructs
+
+- methods and receiver sugar
+- trait and impl dispatch
+- closures
 - `Result` and `Option`
-- explicit ownership and borrowing in safe code
-- simple async functions where runtime assumptions are explicit
+- enums and pattern matching
+- iterator normalization and async normalization with idiomaticity loss
+- macro-expanded code imported post-expansion with provenance caveats
 
-### Tier B candidate constructs
+### Tier C executable constructs
 
-- trait object and specialization-sensitive cases
-- iterator and async normalization with idiomaticity loss
-- macro-expanded code when imported post-expansion with provenance caveats
-
-### Tier C constructs
-
-- `unsafe` blocks
-- foreign or ABI-sensitive boundaries
-- host intrinsics
-- unsupported alias or pin patterns
+- explicit `unsafe` call boundaries lowered as opaque
 
 ### Tier D constructs
 
 - proc macro semantics as first-class source behavior
 - build-script semantics
-- unsupported self-referential patterns
+- self-referential pin patterns
+- unsafe alias tricks and raw-pointer choreography beyond an explicit opaque boundary
 
 ## Preservation expectations
 
-- `N`: often the strongest profile for the safe subset
-- `R`: `P0/P1` where source-shape preservation remains credible
-- `P` and `D`: usually weaker except for selected structured cases
+- Tier `A` Rust reconstruction claims in Phase 6A are fixed at profile `R`, preservation `P1`
+- explicit unsafe boundary handling is fixed at profile `N`, preservation `P3`
+- optimization claims are deferred to Phase 6B
 
 ## Importer obligations
 
-- keep ownership modes explicit,
-- keep trait lowering visible as witnesses,
-- do not widen support via hidden unsafe helpers.
+- keep borrow modes explicit in parameter and type surfaces
+- keep field-place semantics explicit rather than hidden in projection sugar
+- keep Tier `C` unsafe handling explicit through opaque boundary contracts
+- do not widen support via hidden unsafe helpers

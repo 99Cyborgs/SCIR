@@ -1,5 +1,5 @@
 # Milestone 02B - Python Expansion
-Status: in-progress
+Status: complete
 
 ## Objective
 
@@ -75,4 +75,13 @@ Keep rejected or deferred constructs outside the accepted fixture corpus rather 
 - `python scripts/run_repo_validation.py --require-rust` passed on `2026-03-30` after the local Windows environment exposed the MSVC compiler and linker in the active shell
 - `python scripts/benchmark_contract_dry_run.py` passed on `2026-03-30` under that same Rust-inclusive environment
 - the bounded class field-update slice is therefore fully validated and remains importer-only with no widened lowering, reconstruction, or benchmark claim for the admitted 02B follow-on cases
-- Milestone 02B remains `in-progress` only because explicit closeout and next-phase handoff recording is still pending
+- the bounded class field-update slice is therefore fully validated and remains importer-only with no widened lowering, reconstruction, or benchmark claim for the admitted 02B follow-on cases
+
+## Completion evidence
+
+- the admitted 02B Python follow-on corpus remains explicitly scoped and importer-only
+- `python scripts/python_importer_conformance.py --mode validate-fixtures` passed on `2026-03-27`
+- `python scripts/python_importer_conformance.py --mode test` passed on `2026-03-27`
+- `python scripts/run_repo_validation.py --require-rust` passed on `2026-03-30`
+- `python scripts/benchmark_contract_dry_run.py` passed on `2026-03-30`
+- the milestone closeout queue item and handoff record now make Milestone 02B completion explicit without widening lowering, reconstruction, or benchmark scope for the admitted 02B follow-on cases

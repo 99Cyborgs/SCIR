@@ -1,0 +1,6 @@
+module fixture.python_importer.b_if_else_return
+fn choose_zero_or_x x int -> int !
+  if lt x 0
+    return 0
+  else
+    return x

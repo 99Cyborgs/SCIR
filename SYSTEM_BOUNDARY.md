@@ -30,6 +30,13 @@ It is not, in the first credible product cycle, a source-language replacement pr
 - reconstruction-first path before broad backend work
 - benchmark tracks A–D, starting with Track A and B pilots
 
+### Near-term roadmap priority
+
+- complete Python Milestone 02B as the active semantic expansion track
+- then land witness-bearing second-language evidence through a TypeScript interface-shaped slice
+- keep `D-JS` doctrine-only during that witness milestone unless a later plan widens downstream contracts
+- do not add new backend tracks as part of that roadmap step
+
 ## Explicitly out of scope for the first credible product
 
 - a mass-market user-facing language
@@ -61,7 +68,7 @@ Initial target priority:
 1. reconstruction back to the source language subset,
 2. portable execution profile `P`,
 3. native profile `N` only after `H`, `L`, and reconstruction are credible,
-4. dynamic-host profile `D` where host fidelity is a requirement.
+4. dynamic-host profiles `D-PY` and `D-JS` where host fidelity is a requirement.
 
 ## Unsupported-case policy
 

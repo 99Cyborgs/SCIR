@@ -1,0 +1,17 @@
+{
+  "module_id": "fixture.python_importer.c_opaque_call",
+  "layer": "scir_h",
+  "source_language": "python",
+  "source_path": "tests/python_importer/cases/c_opaque_call/source.py",
+  "declared_profiles": [
+    "D-PY"
+  ],
+  "declared_tier": "C",
+  "dependencies": [
+    "python:foreign_api"
+  ],
+  "exports": [
+    "ping"
+  ],
+  "opaque_boundary_count": 1
+}

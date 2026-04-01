@@ -10,5 +10,8 @@ Read first:
 Local rules:
 
 - enforce CFG, SSA, token, and provenance correctness,
+- accept only the frozen bootstrap op set unless the spec is widened first,
+- treat block parameters as the only valid merge mechanism in the bootstrap subset,
+- keep memory-token and effect-token classes distinct across instructions and edges,
 - reject `SCIR-L` artifacts that require semantics not present in `SCIR-H`,
 - do not add optimizer-specific assumptions to the validator contract.

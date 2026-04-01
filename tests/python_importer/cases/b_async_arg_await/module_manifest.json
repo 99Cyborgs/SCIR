@@ -1,0 +1,19 @@
+{
+  "module_id": "fixture.python_importer.b_async_arg_await",
+  "layer": "scir_h",
+  "source_language": "python",
+  "source_path": "tests/python_importer/cases/b_async_arg_await/source.py",
+  "declared_profiles": [
+    "R",
+    "D-PY"
+  ],
+  "declared_tier": "B",
+  "dependencies": [
+    "python:builtins"
+  ],
+  "exports": [
+    "fetch_value",
+    "load_value"
+  ],
+  "opaque_boundary_count": 0
+}

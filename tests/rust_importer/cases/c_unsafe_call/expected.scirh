@@ -1,0 +1,5 @@
+module fixture.rust_importer.c_unsafe_call
+import sym unsafe_ping rust:unsafe_ping
+
+fn call_unsafe_ping -> int !opaque,unsafe
+  return unsafe_ping()

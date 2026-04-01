@@ -1,0 +1,23 @@
+{
+  "report_id": "fixture-feature-tier-b-class-init-method",
+  "subject": "fixture.python_importer.b_class_init_method",
+  "source_language": "python",
+  "summary": {
+    "A": 0,
+    "B": 2,
+    "C": 0,
+    "D": 0
+  },
+  "items": [
+    {
+      "feature": "bounded record-like class import",
+      "tier": "B",
+      "rationale": "A single plain class with one explicit instance field can normalize into a canonical record declaration plus plain functions, but this slice remains importer-only and does not widen executable claims."
+    },
+    {
+      "feature": "explicit instance-field assignment and read normalization",
+      "tier": "B",
+      "rationale": "The fixed self.value assignment in __init__ and fixed field read in one method reuse canonical field-place syntax, while broader Python object semantics remain deferred."
+    }
+  ]
+}

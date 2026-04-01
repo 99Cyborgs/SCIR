@@ -1,0 +1,24 @@
+{
+  "report_id": "fixture-feature-tier-c-unsafe-call",
+  "subject": "fixture.rust_importer.c_unsafe_call",
+  "source_language": "rust",
+  "summary": {
+    "A": 1,
+    "B": 0,
+    "C": 1,
+    "D": 0
+  },
+  "items": [
+    {
+      "feature": "plain free function wrapper",
+      "tier": "A",
+      "rationale": "The outer function structure itself remains regular."
+    },
+    {
+      "feature": "explicit unsafe call boundary",
+      "tier": "C",
+      "rationale": "The call into unsafe_ping remains bounded only by an explicit unsafe opaque boundary contract.",
+      "fallback": "opaque_call"
+    }
+  ]
+}

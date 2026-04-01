@@ -1,0 +1,6 @@
+module fixture.python_importer.a_basic_function
+fn clamp_nonneg x int -> int !write
+  var y int x
+  if lt y 0
+    set y 0
+  return y

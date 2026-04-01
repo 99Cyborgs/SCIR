@@ -1,0 +1,16 @@
+{
+  "report_id": "fixture-validation-d-try-except",
+  "artifact": "fixture.python_importer.d_try_except",
+  "layer": "scir_h",
+  "validator": "python-bootstrap-importer",
+  "spec_version": "v0.1-draft",
+  "status": "warn",
+  "diagnostics": [
+    {
+      "code": "PY-B001",
+      "severity": "warn",
+      "message": "Minimal try/except imports as Tier B only; the catch binder is synthesized and no executable lowering or reconstruction path is claimed.",
+      "location": "source.py:2"
+    }
+  ]
+}

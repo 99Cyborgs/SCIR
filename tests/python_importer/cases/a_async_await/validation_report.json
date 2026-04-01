@@ -1,0 +1,9 @@
+{
+  "report_id": "fixture-validation-a-async-await",
+  "artifact": "fixture.python_importer.a_async_await",
+  "layer": "scir_h",
+  "validator": "python-bootstrap-importer",
+  "spec_version": "v0.1-draft",
+  "status": "pass",
+  "diagnostics": []
+}

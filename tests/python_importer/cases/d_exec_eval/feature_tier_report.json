@@ -1,0 +1,19 @@
+{
+  "report_id": "fixture-feature-tier-d-exec-eval",
+  "subject": "fixture.python_importer.d_exec_eval",
+  "source_language": "python",
+  "summary": {
+    "A": 0,
+    "B": 0,
+    "C": 0,
+    "D": 1
+  },
+  "items": [
+    {
+      "feature": "exec/eval",
+      "tier": "D",
+      "rationale": "Ambient namespace execution is outside the credible Python bootstrap subset.",
+      "fallback": "reject"
+    }
+  ]
+}

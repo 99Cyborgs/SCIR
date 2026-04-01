@@ -1,0 +1,19 @@
+{
+  "report_id": "fixture-feature-tier-d-proc-macro",
+  "subject": "fixture.rust_importer.d_proc_macro",
+  "source_language": "rust",
+  "summary": {
+    "A": 0,
+    "B": 0,
+    "C": 0,
+    "D": 1
+  },
+  "items": [
+    {
+      "feature": "proc macro semantics",
+      "tier": "D",
+      "rationale": "Proc macro semantics are explicitly outside the first executable Rust bootstrap slice.",
+      "fallback": "reject"
+    }
+  ]
+}

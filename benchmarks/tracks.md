@@ -11,3 +11,12 @@ Status: Normative
 ## Policy
 
 Track `A` and `B` can start early. Track `C` and `D` require stronger harnessing but must be specified early.
+
+For the current executable freeze:
+
+- Track `A` runs on the fixed bootstrap corpus and records both median and aggregate token-ratio diagnostics, with status governed by the median-based `S3`/`K2` rules plus `S4`/`K4`,
+- Track `B` runs on the fixed bootstrap corpus and is gated by Tier `A` compile/test rates plus opaque-fraction limits,
+- Track `B` idiomaticity remains recorded evidence rather than a separate hard gate,
+- Track `C` remains specified but does not emit executable result bundles,
+- Track `D` emits separate executable result bundles for Rust `N` and Python `D-PY`,
+- `D-JS` remains doctrine-only and emits no executable result bundle in Phase 6B.

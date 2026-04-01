@@ -4,6 +4,7 @@ import json
 import pathlib
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -17,6 +18,8 @@ REQUIRED_FILES = [
     "AGENTS.md",
     "ARCHITECTURE.md",
     "SYSTEM_BOUNDARY.md",
+    "REPO_MAP.md",
+    "EXECUTION_QUEUE.md",
     "IMPLEMENTATION_PLAN.md",
     "VALIDATION_STRATEGY.md",
     "BENCHMARK_STRATEGY.md",
@@ -53,12 +56,20 @@ REQUIRED_FILES = [
     "schemas/opaque_boundary_contract.schema.json",
     "schemas/decision_register.schema.json",
     "schemas/open_questions.schema.json",
+    "schemas/execution_queue.schema.json",
     "plans/PLANS.md",
     "plans/milestone_01_h_core.md",
     "plans/milestone_02_python_importer.md",
     "plans/milestone_03_l_lowering.md",
     "plans/milestone_04_reconstruction.md",
     "plans/milestone_05_benchmark_harness.md",
+    "plans/milestone_06a_rust_subset.md",
+    "plans/milestone_06b_dual_track_d_activation.md",
+    "plans/milestone_07_typescript_witness_slice.md",
+    "plans/2026-03-16-executable-bootstrap-path.md",
+    "plans/2026-03-16-track-a-scirh-compaction.md",
+    "plans/2026-03-24-post-6b-architecture-roadmap.md",
+    "plans/2026-03-27-autonomous-execution-queue.md",
     "frontend/README.md",
     "frontend/python/AGENTS.md",
     "frontend/rust/AGENTS.md",
@@ -90,6 +101,13 @@ REQUIRED_FILES = [
     ".github/workflows/validate.yml",
     ".github/workflows/benchmarks.yml",
     "scripts/validate_repo_contracts.py",
+    "scripts/build_execution_queue.py",
+    "scripts/scir_h_bootstrap_model.py",
+    "scripts/scir_python_bootstrap.py",
+    "scripts/scir_rust_bootstrap.py",
+    "scripts/python_importer_conformance.py",
+    "scripts/rust_importer_conformance.py",
+    "scripts/scir_bootstrap_pipeline.py",
     "scripts/benchmark_contract_dry_run.py",
     "reports/README.md",
     "reports/examples/module_manifest.example.json",
@@ -103,6 +121,7 @@ REQUIRED_FILES = [
     "reports/examples/benchmark_result.example.json",
     "reports/exports/decision_register.export.json",
     "reports/exports/open_questions.export.json",
+    "reports/exports/execution_queue.export.json",
 ]
 
 EXPECTED_INVARIANT_CODES = {
@@ -154,7 +173,7 @@ SCHEMA_EXPECTATIONS = {
             "evidence",
         ],
         "properties": {
-            "profile": {"enum": ["R", "N", "P", "D"]},
+            "profile": {"enum": ["R", "N", "P", "D-PY", "D-JS"]},
             "preservation_level": {"enum": ["P0", "P1", "P2", "P3", "PX"]},
             "equivalence_mode": {
                 "enum": [
@@ -181,7 +200,7 @@ SCHEMA_EXPECTATIONS = {
             "evidence",
         ],
         "properties": {
-            "profile": {"enum": ["R", "N", "P", "D"]},
+            "profile": {"enum": ["R", "N", "P", "D-PY", "D-JS"]},
             "preservation_level": {"enum": ["P0", "P1", "P2", "P3", "PX"]},
             "status": {"enum": ["pass", "mixed", "fail"]},
             "observables": {
@@ -276,7 +295,7 @@ SCHEMA_EXPECTATIONS = {
             "baselines": {"type": "array"},
             "profiles": {
                 "type": "array",
-                "items": {"enum": ["R", "N", "P", "D"]},
+                "items": {"enum": ["R", "N", "P", "D-PY", "D-JS"]},
             },
             "success_gates": {"type": "array"},
             "kill_gates": {"type": "array"},
@@ -294,7 +313,7 @@ SCHEMA_EXPECTATIONS = {
         ],
         "properties": {
             "track": {"enum": ["A", "B", "C", "D"]},
-            "profile": {"enum": ["R", "N", "P", "D"]},
+            "profile": {"enum": ["R", "N", "P", "D-PY", "D-JS"]},
             "metrics": {"type": "object"},
             "baseline_comparison": {"type": "object"},
             "status": {"enum": ["pass", "mixed", "fail"]},
@@ -313,7 +332,7 @@ SCHEMA_EXPECTATIONS = {
             "provenance_complete",
         ],
         "properties": {
-            "profile": {"enum": ["R", "N", "P", "D"]},
+            "profile": {"enum": ["R", "N", "P", "D-PY", "D-JS"]},
             "preservation_level": {"enum": ["P0", "P1", "P2", "P3", "PX"]},
             "compile_pass": {"type": "boolean"},
             "test_pass": {"type": "boolean"},
@@ -397,6 +416,57 @@ SCHEMA_EXPECTATIONS = {
             },
         },
     },
+    "schemas/execution_queue.schema.json": {
+        "required": [
+            "generation_timestamp",
+            "active_milestone",
+            "autonomy_mode",
+            "source_documents",
+            "queue_items",
+            "blocking_open_questions",
+            "next_action",
+            "escalation_threshold",
+        ],
+        "properties": {
+            "autonomy_mode": {"enum": ["high", "moderate", "conservative"]},
+            "source_documents": {"type": "array"},
+            "queue_items": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": [
+                        "queue_id",
+                        "title",
+                        "source_milestone_or_phase",
+                        "status",
+                        "why_now",
+                        "prerequisites",
+                        "work_instructions",
+                        "touched_surfaces",
+                        "validation",
+                        "escalate_only_if",
+                        "done_evidence",
+                        "blocking_open_questions",
+                    ],
+                    "properties": {
+                        "status": {
+                            "enum": ["ready", "blocked", "in-progress", "done", "deferred"]
+                        },
+                        "prerequisites": {"type": "array"},
+                        "touched_surfaces": {"type": "array"},
+                        "validation": {"type": "array"},
+                        "done_evidence": {"type": "array"},
+                        "blocking_open_questions": {"type": "array"},
+                    },
+                },
+            },
+            "blocking_open_questions": {"type": "array"},
+            "next_action": {
+                "type": "object",
+                "required": ["queue_id", "title"],
+            },
+        },
+    },
 }
 
 EXAMPLE_ARTIFACTS = [
@@ -462,6 +532,41 @@ OPEN_QUESTIONS_HEADER = [
 OPEN_QUESTIONS_EXPORT_REL = "reports/exports/open_questions.export.json"
 OPEN_QUESTIONS_SCHEMA_REL = "schemas/open_questions.schema.json"
 OPEN_QUESTIONS_BLOCKER_VALUES = ["yes", "no"]
+EXECUTION_QUEUE_EXPORT_REL = "reports/exports/execution_queue.export.json"
+EXECUTION_QUEUE_BUILD_SCRIPT_REL = "scripts/build_execution_queue.py"
+TYPESCRIPT_PLACEHOLDER_CASES_ROOT_REL = pathlib.Path("tests") / "typescript_importer" / "cases"
+TYPESCRIPT_ADMITTED_CASE_IDS = [
+    "a_interface_decl",
+    "a_interface_local_witness_use",
+]
+TYPESCRIPT_REJECTED_CASE_IDS = [
+    "d_function_decl",
+    "d_async_function",
+    "d_class_implements_interface",
+    "d_prototype_assignment",
+    "d_decorator_class",
+    "d_proxy_construct",
+    "d_type_level_runtime_gate",
+]
+TYPESCRIPT_ADMITTED_FILE_SET = {
+    "README.md",
+    "source.ts",
+    "expected.scirh",
+    "module_manifest.json",
+    "feature_tier_report.json",
+    "validation_report.json",
+}
+TYPESCRIPT_REJECTED_FILE_SET = {
+    "README.md",
+    "source.ts",
+    "module_manifest.json",
+    "feature_tier_report.json",
+    "validation_report.json",
+}
+TYPESCRIPT_DECLARED_PROFILES = ["R", "D-JS"]
+TYPESCRIPT_PLACEHOLDER_VALIDATOR = "typescript-phase7-placeholder-bundle"
+TYPESCRIPT_ADMITTED_SUMMARY = {"A": 1, "B": 0, "C": 0, "D": 0}
+TYPESCRIPT_REJECTED_SUMMARY = {"A": 0, "B": 0, "C": 0, "D": 1}
 
 
 def check_required_files(root: pathlib.Path):
@@ -489,11 +594,180 @@ def check_nonempty_markdown(root: pathlib.Path):
             failures.append(f"{path.relative_to(root)}: empty markdown file")
     return failures
 
+
+def load_json_artifact(root: pathlib.Path, rel_path: pathlib.Path, failures: list[str]):
+    try:
+        return json.loads((root / rel_path).read_text(encoding="utf-8"))
+    except Exception as exc:  # pragma: no cover - bootstrap script
+        failures.append(f"{rel_path}: {exc}")
+        return None
+
+
+def check_typescript_placeholder_case(
+    root: pathlib.Path,
+    case_id: str,
+    *,
+    expected_files: set[str],
+    expected_tier: str,
+    expected_summary: dict[str, int],
+    expected_status: str,
+    expected_severity: str,
+    required_message_markers: list[str],
+    require_reject_fallback: bool,
+):
+    failures = []
+    case_rel = TYPESCRIPT_PLACEHOLDER_CASES_ROOT_REL / case_id
+    case_path = root / case_rel
+    if not case_path.is_dir():
+        failures.append(f"{case_rel}: missing case directory")
+        return failures
+
+    actual_files = {item.name for item in case_path.iterdir()}
+    missing_files = sorted(expected_files - actual_files)
+    unexpected_files = sorted(actual_files - expected_files)
+
+    if missing_files:
+        failures.append(f"{case_rel}: missing files {', '.join(missing_files)}")
+    if unexpected_files:
+        failures.append(f"{case_rel}: unexpected files {', '.join(unexpected_files)}")
+
+    subject = f"fixture.typescript_importer.{case_id}"
+    source_rel = case_rel / "source.ts"
+
+    manifest_rel = case_rel / "module_manifest.json"
+    manifest = load_json_artifact(root, manifest_rel, failures)
+    if manifest is not None:
+        if manifest.get("module_id") != subject:
+            failures.append(f"{manifest_rel}: expected module_id {subject!r}")
+        if manifest.get("layer") != "scir_h":
+            failures.append(f"{manifest_rel}: expected layer 'scir_h'")
+        if manifest.get("source_language") != "typescript":
+            failures.append(f"{manifest_rel}: expected source_language 'typescript'")
+        if manifest.get("source_path") != source_rel.as_posix():
+            failures.append(
+                f"{manifest_rel}: expected source_path {source_rel.as_posix()!r}"
+            )
+        if manifest.get("declared_profiles") != TYPESCRIPT_DECLARED_PROFILES:
+            failures.append(
+                f"{manifest_rel}: expected declared_profiles {TYPESCRIPT_DECLARED_PROFILES!r}"
+            )
+        if manifest.get("declared_tier") != expected_tier:
+            failures.append(f"{manifest_rel}: expected declared_tier {expected_tier!r}")
+
+    feature_rel = case_rel / "feature_tier_report.json"
+    feature_report = load_json_artifact(root, feature_rel, failures)
+    if feature_report is not None:
+        if feature_report.get("subject") != subject:
+            failures.append(f"{feature_rel}: expected subject {subject!r}")
+        if feature_report.get("source_language") != "typescript":
+            failures.append(f"{feature_rel}: expected source_language 'typescript'")
+        if feature_report.get("summary") != expected_summary:
+            failures.append(f"{feature_rel}: expected summary {expected_summary!r}")
+        items = feature_report.get("items")
+        if not isinstance(items, list) or not items:
+            failures.append(f"{feature_rel}: expected non-empty items list")
+        else:
+            first_item = items[0]
+            if first_item.get("tier") != expected_tier:
+                failures.append(f"{feature_rel}: expected first item tier {expected_tier!r}")
+            if require_reject_fallback and first_item.get("fallback") != "reject":
+                failures.append(f"{feature_rel}: expected first item fallback 'reject'")
+
+    validation_rel = case_rel / "validation_report.json"
+    validation_report = load_json_artifact(root, validation_rel, failures)
+    if validation_report is not None:
+        if validation_report.get("artifact") != subject:
+            failures.append(f"{validation_rel}: expected artifact {subject!r}")
+        if validation_report.get("layer") != "scir_h":
+            failures.append(f"{validation_rel}: expected layer 'scir_h'")
+        if validation_report.get("validator") != TYPESCRIPT_PLACEHOLDER_VALIDATOR:
+            failures.append(
+                f"{validation_rel}: expected validator {TYPESCRIPT_PLACEHOLDER_VALIDATOR!r}"
+            )
+        if validation_report.get("status") != expected_status:
+            failures.append(f"{validation_rel}: expected status {expected_status!r}")
+        diagnostics = validation_report.get("diagnostics")
+        if not isinstance(diagnostics, list) or not diagnostics:
+            failures.append(f"{validation_rel}: expected non-empty diagnostics list")
+        else:
+            first_diagnostic = diagnostics[0]
+            if first_diagnostic.get("severity") != expected_severity:
+                failures.append(
+                    f"{validation_rel}: expected first diagnostic severity {expected_severity!r}"
+                )
+            message = first_diagnostic.get("message", "")
+            message_lower = message.lower()
+            for marker in required_message_markers:
+                if marker.lower() not in message_lower:
+                    failures.append(
+                        f"{validation_rel}: expected first diagnostic message to mention {marker!r}"
+                    )
+
+    return failures
+
+
+def check_typescript_placeholder_corpus(root: pathlib.Path):
+    failures = []
+    cases_root = root / TYPESCRIPT_PLACEHOLDER_CASES_ROOT_REL
+    if not cases_root.is_dir():
+        return [f"{TYPESCRIPT_PLACEHOLDER_CASES_ROOT_REL}: missing directory"]
+
+    expected_case_ids = sorted(TYPESCRIPT_ADMITTED_CASE_IDS + TYPESCRIPT_REJECTED_CASE_IDS)
+    actual_case_ids = sorted(path.name for path in cases_root.iterdir() if path.is_dir())
+    missing_case_ids = [case_id for case_id in expected_case_ids if case_id not in actual_case_ids]
+    unexpected_case_ids = [case_id for case_id in actual_case_ids if case_id not in expected_case_ids]
+
+    if missing_case_ids:
+        failures.append(
+            f"{TYPESCRIPT_PLACEHOLDER_CASES_ROOT_REL}: missing case directories {', '.join(missing_case_ids)}"
+        )
+    if unexpected_case_ids:
+        failures.append(
+            f"{TYPESCRIPT_PLACEHOLDER_CASES_ROOT_REL}: unexpected case directories {', '.join(unexpected_case_ids)}"
+        )
+
+    for case_id in TYPESCRIPT_ADMITTED_CASE_IDS:
+        failures.extend(
+            check_typescript_placeholder_case(
+                root,
+                case_id,
+                expected_files=TYPESCRIPT_ADMITTED_FILE_SET,
+                expected_tier="A",
+                expected_summary=TYPESCRIPT_ADMITTED_SUMMARY,
+                expected_status="warn",
+                expected_severity="warn",
+                required_message_markers=["no live TypeScript importer"],
+                require_reject_fallback=False,
+            )
+        )
+
+    for case_id in TYPESCRIPT_REJECTED_CASE_IDS:
+        failures.extend(
+            check_typescript_placeholder_case(
+                root,
+                case_id,
+                expected_files=TYPESCRIPT_REJECTED_FILE_SET,
+                expected_tier="D",
+                expected_summary=TYPESCRIPT_REJECTED_SUMMARY,
+                expected_status="fail",
+                expected_severity="error",
+                required_message_markers=[
+                    "canonical SCIR-H is intentionally absent",
+                    "no live TypeScript importer",
+                ],
+                require_reject_fallback=True,
+            )
+        )
+
+    return failures
+
+
 def check_agents_contract(root: pathlib.Path):
     failures = []
     text = (root / "AGENTS.md").read_text(encoding="utf-8")
     required_substrings = [
         "IMPLEMENTATION_PLAN.md",
+        "REPO_MAP.md",
         "plans/PLANS.md",
         "P0",
         "Tier A",
@@ -1016,11 +1290,33 @@ def check_open_questions_export(root: pathlib.Path):
     return failures
 
 
+def check_execution_queue_export(root: pathlib.Path):
+    command = [sys.executable, str(root / EXECUTION_QUEUE_BUILD_SCRIPT_REL), "--mode", "check"]
+    completed = subprocess.run(
+        command,
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode == 0:
+        return []
+
+    failures = [f"{EXECUTION_QUEUE_EXPORT_REL}: synchronization check failed"]
+    output = "\n".join(
+        part.strip() for part in [completed.stdout, completed.stderr] if part and part.strip()
+    )
+    if output:
+        failures.extend(f"{EXECUTION_QUEUE_BUILD_SCRIPT_REL}: {line}" for line in output.splitlines())
+    return failures
+
+
 def run_checks(root: pathlib.Path):
     failures = []
     failures.extend(f"missing file: {rel}" for rel in check_required_files(root))
     failures.extend(check_json_files(root))
     failures.extend(check_nonempty_markdown(root))
+    failures.extend(check_typescript_placeholder_corpus(root))
     failures.extend(check_agents_contract(root))
     failures.extend(check_validator_invariant_coverage(root))
     failures.extend(check_schema_metadata(root))
@@ -1028,6 +1324,7 @@ def run_checks(root: pathlib.Path):
     failures.extend(check_example_artifacts(root))
     failures.extend(check_decision_register_export(root))
     failures.extend(check_open_questions_export(root))
+    failures.extend(check_execution_queue_export(root))
     return failures
 
 
@@ -1070,31 +1367,41 @@ def mutate_break_open_questions_export(root: pathlib.Path):
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def run_negative_fixture(root: pathlib.Path, name: str, mutate, expected_markers):
-    with tempfile.TemporaryDirectory(prefix="scir_repo_check_") as tmp:
-        fixture_root = pathlib.Path(tmp) / "repo"
-        shutil.copytree(root, fixture_root, ignore=shutil.ignore_patterns("__pycache__"))
-        mutate(fixture_root)
-        failures = run_checks(fixture_root)
-
-    if not failures:
-        return [f"self-test {name}: expected failure but validation passed"]
-
-    missing_markers = [
-        marker for marker in expected_markers if not any(marker in failure for failure in failures)
-    ]
-    if missing_markers:
-        return [
-            f"self-test {name}: missing expected failure markers "
-            f"{', '.join(missing_markers)}"
-        ]
-
-    return []
+def mutate_break_execution_queue_export(root: pathlib.Path):
+    path = root / "reports" / "exports" / "execution_queue.export.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["next_action"]["queue_id"] = "Q-07-001"
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def run_self_tests(root: pathlib.Path):
-    failures = []
-    cases = [
+def mutate_widen_execution_queue_scope(root: pathlib.Path):
+    path = root / "EXECUTION_QUEUE.md"
+    text = path.read_text(encoding="utf-8")
+    target = (
+        "- Work instructions: `Keep the first witness-bearing second-language item limited to a planning handoff for TypeScript "
+        "interface-shaped witnesses; do not admit executable D-JS lowering, reconstruction, or benchmark work under the current roadmap.`"
+    )
+    replacement = (
+        "- Work instructions: `Keep the first witness-bearing second-language item limited to a planning handoff for TypeScript "
+        "interface-shaped witnesses; admit executable D-JS lowering, reconstruction, and benchmark work under the current roadmap.`"
+    )
+    path.write_text(text.replace(target, replacement, 1), encoding="utf-8")
+
+
+def mutate_add_rejected_typescript_expected_scirh(root: pathlib.Path):
+    path = root / TYPESCRIPT_PLACEHOLDER_CASES_ROOT_REL / "d_function_decl" / "expected.scirh"
+    path.write_text("unexpected placeholder drift\n", encoding="utf-8")
+
+
+def mutate_break_rejected_typescript_manifest_tier(root: pathlib.Path):
+    path = root / TYPESCRIPT_PLACEHOLDER_CASES_ROOT_REL / "d_function_decl" / "module_manifest.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["declared_tier"] = "A"
+    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
+def get_self_test_cases():
+    return [
         (
             "missing required file",
             mutate_remove_required_file,
@@ -1139,25 +1446,84 @@ def run_self_tests(root: pathlib.Path):
                 "blocker",
             ],
         ),
+        (
+            "execution queue export drift",
+            mutate_break_execution_queue_export,
+            [
+                EXECUTION_QUEUE_EXPORT_REL,
+                "synchronization check failed",
+            ],
+        ),
+        (
+            "execution queue scope widening",
+            mutate_widen_execution_queue_scope,
+            [
+                EXECUTION_QUEUE_BUILD_SCRIPT_REL,
+                "cannot widen executable D-JS scope",
+            ],
+        ),
+        (
+            "typescript rejected expected.scirh drift",
+            mutate_add_rejected_typescript_expected_scirh,
+            [
+                "d_function_decl",
+                "expected.scirh",
+            ],
+        ),
+        (
+            "typescript rejected manifest tier drift",
+            mutate_break_rejected_typescript_manifest_tier,
+            [
+                "d_function_decl",
+                "declared_tier",
+            ],
+        ),
     ]
 
+
+def run_negative_fixture(root: pathlib.Path, name: str, mutate, expected_markers):
+    with tempfile.TemporaryDirectory(prefix="scir_repo_check_") as tmp:
+        fixture_root = pathlib.Path(tmp) / "repo"
+        shutil.copytree(root, fixture_root, ignore=shutil.ignore_patterns("__pycache__"))
+        mutate(fixture_root)
+        failures = run_checks(fixture_root)
+
+    if not failures:
+        return [f"self-test {name}: expected failure but validation passed"]
+
+    missing_markers = [
+        marker for marker in expected_markers if not any(marker in failure for failure in failures)
+    ]
+    if missing_markers:
+        return [
+            f"self-test {name}: missing expected failure markers "
+            f"{', '.join(missing_markers)}"
+        ]
+
+    return []
+
+
+def run_self_tests(root: pathlib.Path, cases):
+    failures = []
     for name, mutate, expected_markers in cases:
         failures.extend(run_negative_fixture(root, name, mutate, expected_markers))
 
     return failures
 
 
-def print_success(mode: str):
+def print_success(mode: str, *, self_test_case_count: int | None = None):
     print(f"[{mode}] repository contract validation passed")
     print(
         "Checked "
         f"{len(REQUIRED_FILES)} required files, markdown non-emptiness, JSON parseability, "
         "root AGENTS contract, validator invariant coverage, schema metadata, "
         "report-schema completeness, schema-valid example artifacts, "
-        "and synchronized decision-register/open-questions exports."
+        "and synchronized decision-register/open-questions/execution-queue exports."
     )
-    if mode == "test":
-        print("Repository checker self-tests passed (6 negative fixtures).")
+    if mode == "test" and self_test_case_count is not None:
+        print(
+            f"Repository checker self-tests passed ({self_test_case_count} negative fixtures)."
+        )
 
 
 def main():
@@ -1175,15 +1541,18 @@ def main():
             print(f" - {item}")
         sys.exit(1)
 
+    self_test_case_count = None
     if args.mode == "test":
-        self_test_failures = run_self_tests(root)
+        self_test_cases = get_self_test_cases()
+        self_test_case_count = len(self_test_cases)
+        self_test_failures = run_self_tests(root, self_test_cases)
         if self_test_failures:
             print("[test] repository contract self-tests failed")
             for item in self_test_failures:
                 print(f" - {item}")
             sys.exit(1)
 
-    print_success(args.mode)
+    print_success(args.mode, self_test_case_count=self_test_case_count)
     sys.exit(0)
 
 if __name__ == "__main__":

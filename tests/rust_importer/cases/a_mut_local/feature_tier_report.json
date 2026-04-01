@@ -1,0 +1,28 @@
+{
+  "report_id": "fixture-feature-tier-a-mut-local",
+  "subject": "fixture.rust_importer.a_mut_local",
+  "source_language": "rust",
+  "summary": {
+    "A": 3,
+    "B": 0,
+    "C": 0,
+    "D": 0
+  },
+  "items": [
+    {
+      "feature": "plain free function",
+      "tier": "A",
+      "rationale": "A direct Rust free function maps into the compact canonical SCIR-H function form."
+    },
+    {
+      "feature": "mutable local reassignment",
+      "tier": "A",
+      "rationale": "A Rust mutable local lowers into explicit var and set operations."
+    },
+    {
+      "feature": "scalar branch on intrinsic comparison",
+      "tier": "A",
+      "rationale": "The branch condition maps to the canonical lt intrinsic instead of a language-specific operator helper."
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "report_id": "fixture-validation-d-self-ref-pin",
+  "artifact": "fixture.rust_importer.d_self_ref_pin",
+  "layer": "scir_h",
+  "validator": "rust-bootstrap-importer",
+  "spec_version": "v0.1-draft",
+  "status": "fail",
+  "diagnostics": [
+    {
+      "code": "RS-D002",
+      "severity": "error",
+      "message": "Self-referential pin patterns are rejected in the Rust bootstrap fixture subset.",
+      "location": "input/src/lib.rs:1"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "module_id": "fixture.python_importer.b_class_field_update",
+  "layer": "scir_h",
+  "source_language": "python",
+  "source_path": "tests/python_importer/cases/b_class_field_update/source.py",
+  "declared_profiles": [
+    "R",
+    "D-PY"
+  ],
+  "declared_tier": "B",
+  "dependencies": [
+    "python:builtins"
+  ],
+  "exports": [
+    "Counter",
+    "Counter__init__",
+    "Counter__bump"
+  ],
+  "opaque_boundary_count": 0
+}

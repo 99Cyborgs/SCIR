@@ -1,0 +1,18 @@
+{
+  "module_id": "fixture.python_importer.b_while_break_continue",
+  "layer": "scir_h",
+  "source_language": "python",
+  "source_path": "tests/python_importer/cases/b_while_break_continue/source.py",
+  "declared_profiles": [
+    "R",
+    "D-PY"
+  ],
+  "declared_tier": "B",
+  "dependencies": [
+    "python:builtins"
+  ],
+  "exports": [
+    "step_with_escape"
+  ],
+  "opaque_boundary_count": 0
+}

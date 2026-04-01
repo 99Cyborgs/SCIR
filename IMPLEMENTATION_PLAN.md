@@ -18,11 +18,19 @@ Do not start a later phase before the previous phase meets its gate, unless `DEC
 | 3 | `SCIR-L` core and lowering | `specs/scir_l_spec.md`, `specs/concurrency_model.md`, `validators/scir_l/AGENTS.md`, `validators/translation/AGENTS.md`, `plans/milestone_03_l_lowering.md` | validated `H -> L` lowering with no `L`-only semantics |
 | 4 | reconstruction pipeline | `docs/reconstruction_policy.md`, `schemas/preservation_report.schema.json`, `schemas/reconstruction_report.schema.json`, `plans/milestone_04_reconstruction.md` | round-trip evidence for the targeted subset with preservation downgrades explicit |
 | 5 | benchmark harness | `benchmarks/*`, `schemas/benchmark_manifest.schema.json`, `schemas/benchmark_result.schema.json`, `plans/milestone_05_benchmark_harness.md` | Track A and B run on the targeted subset; Track C harness contract exists |
-| 6 | Rust subset and initial optimization | `frontend/rust/*`, `docs/runtime_doctrine.md`, `specs/scir_l_spec.md`, `plans/PLANS.md` | Rust safe subset imports; optimization work is profile-gated and benchmarked |
+| 6A | Rust safe-subset importer and round-trip evidence | `frontend/rust/*`, `tests/rust_importer/*`, `scripts/scir_rust_bootstrap.py`, `scripts/scir_bootstrap_pipeline.py`, `specs/scir_h_spec.md`, `specs/scir_l_spec.md`, `docs/runtime_doctrine.md`, `plans/milestone_06a_rust_subset.md` | Rust safe subset imports; Tier `A` cases round-trip through `SCIR-H -> SCIR-L -> Rust`; unsafe boundaries stay explicit |
+| 6B | initial optimization and Track `D` activation | `docs/runtime_doctrine.md`, `docs/target_profiles.md`, `specs/scir_l_spec.md`, `schemas/*`, `benchmarks/*`, `scripts/scir_bootstrap_pipeline.py`, `plans/milestone_06b_dual_track_d_activation.md` | profile-gated optimization is benchmarked on fixed Rust `N` and Python `D-PY` slices; `D-JS` remains doctrine-only; witness-bearing second-language execution stays explicitly deferred |
+| 7 | witness-bearing second-language evidence | `frontend/typescript/*`, `specs/type_effect_capability_model.md`, `VALIDATION_STRATEGY.md`, `validators/validator_contracts.md`, `plans/milestone_07_typescript_witness_slice.md` | TypeScript interface-shaped witness imports are validator- and report-covered; translation validation enforces provenance continuity and profile-qualified downgrades; `D-JS` remains non-executable unless a later plan explicitly widens downstream contracts |
+
+## Post-6B roadmap note
+
+The historical Phase 1-6B sequence remains complete and accepted, and Milestone 02B is now complete as the bounded Python semantic expansion milestone. Its admitted follow-on cases remain fixture-backed, tier-explicit, and importer-only unless a later milestone widens executable lowering, reconstruction, or benchmark scope explicitly.
+
+Phase 7 is now the active new architecture phase after 6B and after the completed Milestone 02B closeout. Its default candidate slice remains TypeScript interface-shaped witness evidence before any Rust trait/impl execution work or broader backend/runtime expansion, and it stays planning-only and non-executable until later downstream contracts are published.
 
 ## Phase details
 
-### Phase 1 — `SCIR-H` core
+### Phase 1 - `SCIR-H` core
 
 Required outcomes:
 
@@ -36,7 +44,7 @@ Failure mode:
 
 - grammar churn or unresolved core semantics prevent frontend work.
 
-### Phase 2 — Python subset importer
+### Phase 2 - Python subset importer
 
 Required outcomes:
 
@@ -49,7 +57,7 @@ Failure mode:
 
 - targeted subset still requires too much Tier `C` or Tier `D`.
 
-### Phase 3 — `SCIR-L` core and lowering
+### Phase 3 - `SCIR-L` core and lowering
 
 Required outcomes:
 
@@ -62,19 +70,19 @@ Failure mode:
 
 - meaning exists only in `SCIR-L`.
 
-### Phase 4 — reconstruction
+### Phase 4 - reconstruction
 
 Required outcomes:
 
 - reconstruction comes primarily from `SCIR-H`,
-- profile `R` and `D` downgrades are explicit,
+- profile `R` and `D-PY` downgrades are explicit,
 - compile/test and idiomaticity evidence exist.
 
 Failure mode:
 
 - reconstruction ugliness or failed round-trip dominates.
 
-### Phase 5 — benchmark harness
+### Phase 5 - benchmark harness
 
 Required outcomes:
 
@@ -87,17 +95,48 @@ Failure mode:
 
 - the program cannot falsify itself.
 
-### Phase 6 — Rust subset and optimization
+### Phase 6A - Rust safe subset
 
 Required outcomes:
 
-- witness and alias model are exercised by a second language,
+- a fixed Rust bootstrap corpus exists,
+- the Rust importer emits canonical `SCIR-H`,
+- the Rust slice exercises borrowed-record field places,
+- supported Rust Tier `A` cases round-trip through reconstruction with compile/test evidence,
+- explicit unsafe boundaries remain Tier `C`.
+
+Failure mode:
+
+- the Rust toolchain is absent or the safe subset still requires too much opaque fallback.
+
+### Phase 6B - optimization
+
+Required outcomes:
+
+- Rust alias-sensitive and Python host-sensitive fixed slices emit executable Track `D` evidence,
 - optimization work is profile-gated,
+- monolithic profile `D` is superseded by `D-PY` and `D-JS`,
+- witness-bearing second-language execution remains explicitly deferred to a later milestone,
 - no optimization claim bypasses benchmark evidence.
 
 Failure mode:
 
 - repository complexity expands faster than information gain.
+
+### Phase 7 - witness-bearing second-language evidence
+
+Required outcomes:
+
+- Milestone 02B is complete before broader frontend scope grows again,
+- TypeScript interface-shaped witness import is explicit as the first witness-bearing second-language slice,
+- witness semantics stay explicit in `SCIR-H` and do not migrate into `SCIR-L`-only meaning,
+- translation validation blocks on `H -> L` provenance continuity, profile-qualified downgrade reporting, and no optimizer-only facts flowing back into `SCIR-H`,
+- `D-JS` remains doctrine-only unless a later plan explicitly adds executable lowering, reconstruction, and benchmark gates,
+- no new native backend track is introduced as part of this phase.
+
+Failure mode:
+
+- witness-bearing work broadens host/runtime claims faster than validator, preservation, and benchmark doctrine can justify.
 
 ## Planning trigger
 

@@ -1,0 +1,16 @@
+{
+  "report_id": "fixture-validation-c-opaque-call",
+  "artifact": "fixture.python_importer.c_opaque_call",
+  "layer": "scir_h",
+  "validator": "python-bootstrap-importer",
+  "spec_version": "v0.1-draft",
+  "status": "warn",
+  "diagnostics": [
+    {
+      "code": "PY-C001",
+      "severity": "warn",
+      "message": "foreign_api.ping remains an explicit opaque boundary in this bootstrap slice.",
+      "location": "source.py:5"
+    }
+  ]
+}

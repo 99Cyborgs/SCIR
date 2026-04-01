@@ -1,0 +1,6 @@
+module fixture.python_importer.b_direct_call
+fn identity x int -> int !
+  return x
+
+fn call_identity x int -> int !
+  return identity(x)

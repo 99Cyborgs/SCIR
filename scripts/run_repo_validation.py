@@ -39,6 +39,7 @@ def main() -> int:
     non_rust_commands = [
         [sys.executable, "scripts/validate_repo_contracts.py", "--mode", "validate"],
         [sys.executable, "scripts/python_importer_conformance.py", "--mode", "validate-fixtures"],
+        [sys.executable, "scripts/typescript_importer_conformance.py", "--mode", "validate-fixtures"],
         [sys.executable, "scripts/scir_bootstrap_pipeline.py", "--mode", "validate"],
     ]
     rust_commands = [

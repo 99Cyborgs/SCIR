@@ -1,0 +1,6 @@
+module fixture.python_importer.a_async_await
+async fn fetch_value -> int !
+  return 1
+
+async fn load_once -> int !await
+  return await fetch_value()

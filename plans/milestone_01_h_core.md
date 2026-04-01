@@ -1,5 +1,5 @@
 # Milestone 01 — H Core
-Status: proposed
+Status: complete
 
 ## Objective
 
@@ -29,9 +29,16 @@ Freeze the minimum credible `SCIR-H` core and the repository contracts needed to
 - `specs/ownership_alias_model.md`
 - `specs/provenance_and_stable_id_spec.md`
 - `specs/validator_invariants.md`
+- `specs/concurrency_model.md`
+- `docs/scir_h_overview.md`
+- `ARCHITECTURE.md`
+- `validators/validator_contracts.md`
 - `schemas/*`
 - `VALIDATION_STRATEGY.md`
 - `BENCHMARK_STRATEGY.md`
+- `OPEN_QUESTIONS.md`
+- `ASSUMPTIONS.md`
+- `DECISION_REGISTER.md`
 
 ## Invariants
 
@@ -42,8 +49,8 @@ Freeze the minimum credible `SCIR-H` core and the repository contracts needed to
 
 ## Risks
 
-- unresolved exception and concurrency grammar questions
-- grammar too large or too small for frontends
+- minimal `try/catch` and `select` forms may still prove too narrow for some frontends
+- `SCIR-L` lowering details for these forms remain a Phase 3 concern
 
 ## Validation steps
 
@@ -62,3 +69,16 @@ Revert the last semantic expansion, record the issue in `OPEN_QUESTIONS.md`, and
 - complete validator invariant table
 - parseable JSON schemas
 - updated decision register if core doctrine changes
+
+## Completion evidence
+
+- `specs/scir_h_spec.md` now includes minimal canonical `try/catch` and channel `select`
+- `OQ-008` and `OQ-009` are resolved and removed from `OPEN_QUESTIONS.md`
+- `ASSUMPTIONS.md` and `DECISION_REGISTER.md` reflect the resolved v0.1 forms
+- `python scripts/validate_repo_contracts.py --mode validate` passed on 2026-03-15
+- `python scripts/validate_repo_contracts.py --mode test` passed on 2026-03-15
+- `python scripts/benchmark_contract_dry_run.py` passed on 2026-03-15
+
+## Handoff note
+
+Phase 1 closed; Python importer planning can begin next week.

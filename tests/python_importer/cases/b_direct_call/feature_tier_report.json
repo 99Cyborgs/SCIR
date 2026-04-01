@@ -1,0 +1,18 @@
+{
+  "report_id": "fixture-feature-tier-b-direct-call",
+  "subject": "fixture.python_importer.b_direct_call",
+  "source_language": "python",
+  "summary": {
+    "A": 0,
+    "B": 1,
+    "C": 0,
+    "D": 0
+  },
+  "items": [
+    {
+      "feature": "direct local call preservation",
+      "tier": "B",
+      "rationale": "A fixed local call site can normalize into canonical call syntax, but this slice is accepted only as importer-level SCIR-H evidence and stays outside executable lowering and reconstruction."
+    }
+  ]
+}

@@ -47,6 +47,15 @@ method(I, m) = fn(self: σ, τ1..τn) -> τ ! εm
 Γ ; W ; K ; R ⊢ throw e : α ! { throw(E) }
 ```
 
+### Try catch
+
+```text
+Gamma ; W ; K ; R |- b_try : tau ! eps_try
+Gamma, x:E ; W ; K ; R |- b_catch : tau ! eps_catch
+----------------------------------------------------------------
+Gamma ; W ; K ; R |- try b_try catch(x: E) b_catch : tau ! ((eps_try - {throw(E)}) U eps_catch)
+```
+
 ### Borrow mutable
 
 ```text
@@ -76,6 +85,10 @@ no_live_aliases(p)
 - effect rows are finite and explicit at public boundaries,
 - hidden effects are invalid,
 - `unsafe` and `opaque` are effects as well as boundary categories,
+- a `catch(x: E)` boundary discharges only the exact `throw(E)` obligation from the guarded block,
+- all non-throw effects remain explicit and visible across `try/catch`,
+- other `throw(T)` obligations remain explicit unless a matching catch boundary is present,
+- canonical v0.1 `SCIR-H` allows only the single-catch form above; `finally`, multi-catch, and pattern-heavy handlers are out of scope,
 - effect elimination or specialization belongs to lowering or optimization, not canonical `SCIR-H`.
 
 ## Exported interface rule
@@ -84,5 +97,5 @@ Public or exported declarations must carry explicit type, effect, and capability
 
 ## Profile interaction
 
-- `R` and `D` usually preserve more effect visibility.
+- `R`, `D-PY`, and `D-JS` usually preserve more effect visibility.
 - `N` and `P` may lower or specialize effects only when legal under the active preservation claim.

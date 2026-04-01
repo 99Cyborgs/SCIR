@@ -1,0 +1,12 @@
+{
+  "module_id": "fixture.typescript_importer.d_decorator_class",
+  "layer": "scir_h",
+  "source_language": "typescript",
+  "source_path": "tests/typescript_importer/cases/d_decorator_class/source.ts",
+  "declared_profiles": [
+    "R",
+    "D-JS"
+  ],
+  "declared_tier": "D",
+  "dependencies": []
+}

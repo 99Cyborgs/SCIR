@@ -1,0 +1,10 @@
+module fixture.python_importer.b_class_field_update
+type Counter record { value int }
+
+fn Counter__init__ self Counter value int -> Counter !write
+  set self.value value
+  return self
+
+fn Counter__bump self Counter step Callable -> int !write
+  set self.value step(self.value)
+  return self.value

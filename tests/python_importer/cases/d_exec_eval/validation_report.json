@@ -1,0 +1,16 @@
+{
+  "report_id": "fixture-validation-d-exec-eval",
+  "artifact": "fixture.python_importer.d_exec_eval",
+  "layer": "scir_h",
+  "validator": "python-bootstrap-importer",
+  "spec_version": "v0.1-draft",
+  "status": "fail",
+  "diagnostics": [
+    {
+      "code": "PY-D001",
+      "severity": "error",
+      "message": "exec/eval is rejected in the Python bootstrap fixture subset.",
+      "location": "source.py:2"
+    }
+  ]
+}

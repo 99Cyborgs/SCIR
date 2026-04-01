@@ -1,0 +1,9 @@
+{
+  "report_id": "fixture-validation-a-basic-function",
+  "artifact": "fixture.python_importer.a_basic_function",
+  "layer": "scir_h",
+  "validator": "python-bootstrap-importer",
+  "spec_version": "v0.1-draft",
+  "status": "pass",
+  "diagnostics": []
+}

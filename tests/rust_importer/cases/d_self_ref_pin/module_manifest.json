@@ -1,0 +1,19 @@
+{
+  "module_id": "fixture.rust_importer.d_self_ref_pin",
+  "layer": "scir_h",
+  "source_language": "rust",
+  "source_path": "tests/rust_importer/cases/d_self_ref_pin/input/src/lib.rs",
+  "declared_profiles": [
+    "R",
+    "N"
+  ],
+  "declared_tier": "D",
+  "dependencies": [
+    "rust:std"
+  ],
+  "exports": [
+    "SelfRef",
+    "make_self_ref"
+  ],
+  "opaque_boundary_count": 0
+}

@@ -18,3 +18,13 @@ Preferred early corpora:
 - exclude unsupported-heavy corpora from support claims,
 - do not use proprietary-only corpora for the primary evidence set,
 - keep held-out data for Track `C` and repository repair tasks.
+
+## Current executable corpus
+
+The current executable harness is fixed to:
+
+- `python-bootstrap-fixtures` for Track `A` and Track `B`,
+- `python-bootstrap-fixtures` for Python `D-PY` Track `D`,
+- `rust-bootstrap-fixtures` for Rust `N` Track `D`.
+
+Broadening beyond those corpora requires a separate plan and must not weaken the existing benchmark doctrine.

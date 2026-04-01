@@ -13,11 +13,12 @@ Status: Informative
 | `frontend/` | importer doctrine and language-local scope |
 | `validators/` | validator stack contracts and local rules |
 | `benchmarks/` | empirical evaluation doctrine |
-| `reports/` | checked-in example report artifacts, derived exports for normative registers, and later generated validation and benchmark bundles |
+| `reports/` | checked-in example report artifacts, derived exports for normative registers and the execution queue, and later generated validation and benchmark bundles |
+| `tests/` | checked-in golden corpora and importer conformance fixtures |
 | `tooling/` | tool interface contracts |
 | `ci/` | CI and release policy |
 | `.github/` | automation entry points |
-| `scripts/` | bootstrap validation helpers |
+| `scripts/` | bootstrap validation and importer-conformance helpers |
 
 ## Future code roots
 
@@ -31,7 +32,6 @@ These directories are expected later. Do not create them ad hoc without a plan.
 | `runtime/` | profile-specific runtime support |
 | `backends/` | reconstruction and emission backends |
 | `benchmarks/harness/` | executable benchmark runner |
-| `tests/` | golden corpora, validator, lowering, and reconstruction tests |
 
 ## Responsibility rule
 

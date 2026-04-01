@@ -1,0 +1,6 @@
+module fixture.rust_importer.a_mut_local
+fn clamp_nonneg x int -> int !write
+  var y int x
+  if lt y 0
+    set y 0
+  return y

@@ -1,0 +1,23 @@
+{
+  "report_id": "fixture-feature-tier-a-async-await",
+  "subject": "fixture.rust_importer.a_async_await",
+  "source_language": "rust",
+  "summary": {
+    "A": 2,
+    "B": 0,
+    "C": 0,
+    "D": 0
+  },
+  "items": [
+    {
+      "feature": "simple async function",
+      "tier": "A",
+      "rationale": "A structured async Rust function stays explicit in canonical SCIR-H."
+    },
+    {
+      "feature": "single await point",
+      "tier": "A",
+      "rationale": "A direct await lowers into the same explicit await expression used by the Python bootstrap slice."
+    }
+  ]
+}

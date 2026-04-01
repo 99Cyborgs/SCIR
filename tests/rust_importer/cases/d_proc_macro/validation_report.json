@@ -1,0 +1,16 @@
+{
+  "report_id": "fixture-validation-d-proc-macro",
+  "artifact": "fixture.rust_importer.d_proc_macro",
+  "layer": "scir_h",
+  "validator": "rust-bootstrap-importer",
+  "spec_version": "v0.1-draft",
+  "status": "fail",
+  "diagnostics": [
+    {
+      "code": "RS-D001",
+      "severity": "error",
+      "message": "Proc macro semantics are rejected in the Rust bootstrap fixture subset.",
+      "location": "input/src/lib.rs:1"
+    }
+  ]
+}

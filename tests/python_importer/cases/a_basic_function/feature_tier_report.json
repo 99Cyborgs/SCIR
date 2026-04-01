@@ -1,0 +1,28 @@
+{
+  "report_id": "fixture-feature-tier-a-basic-function",
+  "subject": "fixture.python_importer.a_basic_function",
+  "source_language": "python",
+  "summary": {
+    "A": 3,
+    "B": 0,
+    "C": 0,
+    "D": 0
+  },
+  "items": [
+    {
+      "feature": "plain function definition",
+      "tier": "A",
+      "rationale": "A simple function lowers directly into the compact canonical SCIR-H function form."
+    },
+    {
+      "feature": "local reassignment",
+      "tier": "A",
+      "rationale": "Local mutation maps to an explicit mutable binder plus explicit set sites."
+    },
+    {
+      "feature": "scalar comparison branch",
+      "tier": "A",
+      "rationale": "The branch condition uses an explicit intrinsic comparison rather than a hidden host operator."
+    }
+  ]
+}

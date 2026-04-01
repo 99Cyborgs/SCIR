@@ -1,0 +1,18 @@
+{
+  "report_id": "fixture-feature-tier-b-if-else-return",
+  "subject": "fixture.python_importer.b_if_else_return",
+  "source_language": "python",
+  "summary": {
+    "A": 0,
+    "B": 1,
+    "C": 0,
+    "D": 0
+  },
+  "items": [
+    {
+      "feature": "explicit if/else return normalization",
+      "tier": "B",
+      "rationale": "A fixed-shape if/else that returns directly from both branches normalizes cleanly into canonical SCIR-H, but this follow-on slice remains importer-only with no executable lowering or reconstruction claim."
+    }
+  ]
+}

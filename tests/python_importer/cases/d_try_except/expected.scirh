@@ -1,0 +1,6 @@
+module fixture.python_importer.d_try_except
+fn guard may_fail Callable x int -> int !throw
+  try
+    return may_fail(x)
+  catch err ValueError
+    return 0

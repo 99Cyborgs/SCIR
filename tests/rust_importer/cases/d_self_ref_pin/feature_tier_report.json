@@ -1,0 +1,19 @@
+{
+  "report_id": "fixture-feature-tier-d-self-ref-pin",
+  "subject": "fixture.rust_importer.d_self_ref_pin",
+  "source_language": "rust",
+  "summary": {
+    "A": 0,
+    "B": 0,
+    "C": 0,
+    "D": 1
+  },
+  "items": [
+    {
+      "feature": "self-referential pin pattern",
+      "tier": "D",
+      "rationale": "Self-referential pin and alias-sensitive patterns are explicitly rejected in Phase 6A.",
+      "fallback": "reject"
+    }
+  ]
+}

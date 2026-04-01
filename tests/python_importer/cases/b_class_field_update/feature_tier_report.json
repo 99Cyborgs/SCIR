@@ -1,0 +1,23 @@
+{
+  "report_id": "fixture-feature-tier-b-class-field-update",
+  "subject": "fixture.python_importer.b_class_field_update",
+  "source_language": "python",
+  "summary": {
+    "A": 0,
+    "B": 2,
+    "C": 0,
+    "D": 0
+  },
+  "items": [
+    {
+      "feature": "bounded record-like class import with field update method",
+      "tier": "B",
+      "rationale": "A single plain class with one explicit instance field and one fixed field-update method can normalize into a canonical record declaration plus plain functions, but this slice remains importer-only and does not widen executable claims."
+    },
+    {
+      "feature": "explicit instance-field read/write normalization through a direct local call",
+      "tier": "B",
+      "rationale": "The fixed self.value = step(self.value) method body reuses canonical field-place and direct-call syntax while broader Python object semantics remain deferred."
+    }
+  ]
+}

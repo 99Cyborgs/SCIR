@@ -5,7 +5,7 @@
   "source_path": "examples/python/clocked_math.py",
   "declared_profiles": [
     "R",
-    "D"
+    "D-PY"
   ],
   "declared_tier": "C",
   "dependencies": [

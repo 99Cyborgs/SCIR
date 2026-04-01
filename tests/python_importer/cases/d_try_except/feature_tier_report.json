@@ -1,0 +1,18 @@
+{
+  "report_id": "fixture-feature-tier-d-try-except",
+  "subject": "fixture.python_importer.d_try_except",
+  "source_language": "python",
+  "summary": {
+    "A": 0,
+    "B": 1,
+    "C": 0,
+    "D": 0
+  },
+  "items": [
+    {
+      "feature": "single-handler try/except normalization",
+      "tier": "B",
+      "rationale": "A minimal unnamed except ValueError block can normalize into canonical try/catch, but the importer synthesizes the catch binder and keeps callable and throw modeling coarse."
+    }
+  ]
+}

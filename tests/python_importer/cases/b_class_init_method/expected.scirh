@@ -1,0 +1,9 @@
+module fixture.python_importer.b_class_init_method
+type Counter record { value int }
+
+fn Counter__init__ self Counter value int -> Counter !write
+  set self.value value
+  return self
+
+fn Counter__get self Counter -> int !
+  return self.value

@@ -21,8 +21,8 @@ These assumptions are bounded defaults. If an implementation cannot satisfy one 
 | R3 | JSON Schema Draft 2020-12 is the schema baseline. |
 | R4 | Bootstrap commands in `Makefile` remain the repository entry points until replaced by stricter equivalents. |
 | R5 | `SCIR-H` is the only canonical semantic storage form; `SCIR-L` is derivative. |
-| R6 | `select` is not in the v0.1 concurrency grammar unless `OQ-009` is resolved. |
-| R7 | Structured `try/catch` is not in the v0.1 `SCIR-H` grammar unless `OQ-008` is resolved. |
+| R6 | `select` is canonical v0.1 `SCIR-H` only in minimal channel-select form with explicit `send` or `recv` arms; default, timeout, fairness, and priority semantics remain out of scope. |
+| R7 | Structured `try/catch` is canonical v0.1 `SCIR-H` only in minimal single-catch form `try { ... } catch(x: T) { ... }`; `finally` and multi-catch remain out of scope. |
 | R8 | The first executable benchmark harness may begin as a doctrine and report validator before full runtime integration exists. |
 | R9 | Importers must classify unsupported features explicitly even before they have executable code. |
 | R10 | Reconstruction claims default to `P1` unless stronger evidence exists. |

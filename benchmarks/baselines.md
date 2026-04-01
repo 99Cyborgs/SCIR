@@ -16,3 +16,11 @@ Status: Normative
 Every benchmark manifest must identify the strongest expected baseline for its task family. Results must be interpreted against that baseline first, not against a weak comparator.
 
 `typed-AST` is the canonical shorthand for the typed AST baseline used throughout this repository.
+
+For the current executable Track `A` and Track `B` harness, direct source and `typed-AST` are mandatory in every manifest. Additional baselines remain track-specific.
+
+For executable Phase 6B Track `D` manifests:
+
+- Rust `N` must include `direct source`, `typed-AST`, and `SSA-like internal IR`,
+- Python `D-PY` must include `direct source` and `typed-AST`,
+- `D-JS` remains doctrine-only and therefore has no executable baseline bundle in this phase.

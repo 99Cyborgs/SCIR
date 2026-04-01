@@ -8,24 +8,10 @@
       "blocker": "no"
     },
     {
-      "id": "OQ-002",
-      "question": "Should profile `D` split into Python-host and JS-host variants?",
-      "impact": "host-runtime fidelity and benchmarks",
-      "default_until_resolved": "keep a single `D` profile; qualify host runtime in reports",
-      "blocker": "no"
-    },
-    {
       "id": "OQ-003",
       "question": "How much of `SCIR-H` should be user-visible versus tool-mediated?",
       "impact": "UX and tooling design",
       "default_until_resolved": "`SCIR-H` remains inspectable text; no separate authoring language",
-      "blocker": "no"
-    },
-    {
-      "id": "OQ-004",
-      "question": "Does Path B require different success thresholds than Path C or D?",
-      "impact": "benchmark interpretation",
-      "default_until_resolved": "use current global thresholds until a path split is justified",
       "blocker": "no"
     },
     {
@@ -48,20 +34,6 @@
       "impact": "grammar and reconstruction",
       "default_until_resolved": "keep generators out of `SCIR-H` v0.1 core",
       "blocker": "no"
-    },
-    {
-      "id": "OQ-008",
-      "question": "The source material defines `throw` and `try` typing rules, but the published `SCIR-H` grammar includes `throw` and no `try/catch`. What is the canonical v0.1 form?",
-      "impact": "exception modeling",
-      "default_until_resolved": "v0.1 core includes `throw`; structured catch syntax is deferred and unsupported unless a frontend-specific plan states otherwise",
-      "blocker": "yes"
-    },
-    {
-      "id": "OQ-009",
-      "question": "The build-order notes mention `select`, but the published `SCIR-H` grammar has `spawn`, `send`, and `recv` only. Is `select` in v0.1?",
-      "impact": "concurrency grammar",
-      "default_until_resolved": "`select` is deferred from v0.1",
-      "blocker": "yes"
     },
     {
       "id": "OQ-010",
@@ -117,6 +89,20 @@
       "question": "Which proof assistant split is appropriate: Lean, Coq, or both?",
       "impact": "proof roadmap",
       "default_until_resolved": "proof work is non-blocking for phase 1",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-018",
+      "question": "What is the minimum TypeScript interface-shaped witness slice that justifies a dedicated Phase 7 milestone without broadening host-runtime claims?",
+      "impact": "milestone scoping for witness-bearing second-language evidence",
+      "default_until_resolved": "keep the slice limited to interface declarations plus module-local witness consumption with explicit host assumptions, importer-only evidence, and no executable `D-JS` claim",
+      "blocker": "no"
+    },
+    {
+      "id": "OQ-019",
+      "question": "Which downstream contracts must become blocking before TypeScript witness work can claim executable `D-JS` support?",
+      "impact": "validator and benchmark sequencing for `D-JS`",
+      "default_until_resolved": "require explicit lowering, translation-validation, reconstruction, and benchmark gates, with report-visible witness semantics and profile-qualified downgrade obligations, before any executable `D-JS` claim",
       "blocker": "no"
     }
   ]

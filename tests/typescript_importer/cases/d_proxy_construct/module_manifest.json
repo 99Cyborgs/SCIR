@@ -1,0 +1,12 @@
+{
+  "module_id": "fixture.typescript_importer.d_proxy_construct",
+  "layer": "scir_h",
+  "source_language": "typescript",
+  "source_path": "tests/typescript_importer/cases/d_proxy_construct/source.ts",
+  "declared_profiles": [
+    "R",
+    "D-JS"
+  ],
+  "declared_tier": "D",
+  "dependencies": []
+}

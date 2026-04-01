@@ -1,0 +1,16 @@
+{
+  "report_id": "fixture-validation-b-async-arg-await",
+  "artifact": "fixture.python_importer.b_async_arg_await",
+  "layer": "scir_h",
+  "validator": "python-bootstrap-importer",
+  "spec_version": "v0.1-draft",
+  "status": "warn",
+  "diagnostics": [
+    {
+      "code": "PY-B004",
+      "severity": "warn",
+      "message": "Parameterized async await imports as Tier B canonical SCIR-H only; no executable lowering, translation, or reconstruction path is claimed for this follow-on case.",
+      "location": "source.py:1"
+    }
+  ]
+}

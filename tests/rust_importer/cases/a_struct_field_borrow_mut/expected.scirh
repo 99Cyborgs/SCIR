@@ -1,0 +1,7 @@
+module fixture.rust_importer.a_struct_field_borrow_mut
+type Counter record { value int }
+
+fn clamp_counter counter borrow_mut<Counter> -> int !write
+  if lt counter.value 0
+    set counter.value 0
+  return counter.value

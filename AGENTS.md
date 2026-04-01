@@ -40,24 +40,37 @@ Do not silently merge incompatible semantics. Record unresolved conflicts in `OP
 Always read these before coding:
 
 1. `SYSTEM_BOUNDARY.md`
-2. `ARCHITECTURE.md`
-3. `specs/scir_h_spec.md`
-4. `specs/scir_l_spec.md`
-5. `specs/type_effect_capability_model.md`
-6. `specs/ownership_alias_model.md`
-7. `specs/interop_and_opaque_boundary_spec.md`
-8. `specs/validator_invariants.md`
-9. `docs/target_profiles.md`
-10. `docs/preservation_contract.md`
-11. `docs/feature_tiering.md`
-12. `VALIDATION_STRATEGY.md`
-13. `BENCHMARK_STRATEGY.md`
+2. `REPO_MAP.md`
+3. `ARCHITECTURE.md`
+4. `specs/scir_h_spec.md`
+5. `specs/scir_l_spec.md`
+6. `specs/type_effect_capability_model.md`
+7. `specs/ownership_alias_model.md`
+8. `specs/interop_and_opaque_boundary_spec.md`
+9. `specs/validator_invariants.md`
+10. `docs/target_profiles.md`
+11. `docs/preservation_contract.md`
+12. `docs/feature_tiering.md`
+13. `VALIDATION_STRATEGY.md`
+14. `BENCHMARK_STRATEGY.md`
 
 Read the nearest local `AGENTS.md` before editing inside a subtree.
 
 ## Commands
 
 Use the repository root.
+
+Canonical Windows-safe validation entrypoint:
+
+```bash
+python scripts/run_repo_validation.py
+```
+
+Full Rust-inclusive validation entrypoint:
+
+```bash
+python scripts/run_repo_validation.py --require-rust
+```
 
 ```bash
 make build

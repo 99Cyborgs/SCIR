@@ -1,0 +1,11 @@
+module fixture.python_importer.b_while_break_continue
+fn step_with_escape step Callable x int -> int !write
+  loop loop0
+    if lt x 0
+      if eq x -1
+        break loop0
+      set x step(x)
+      continue loop0
+    else
+      break loop0
+  return x

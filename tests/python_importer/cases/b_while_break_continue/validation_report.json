@@ -1,0 +1,16 @@
+{
+  "report_id": "fixture-validation-b-while-break-continue",
+  "artifact": "fixture.python_importer.b_while_break_continue",
+  "layer": "scir_h",
+  "validator": "python-bootstrap-importer",
+  "spec_version": "v0.1-draft",
+  "status": "warn",
+  "diagnostics": [
+    {
+      "code": "PY-B006",
+      "severity": "warn",
+      "message": "Fixed-shape while-loop break/continue imports as Tier B canonical SCIR-H only; no executable lowering, translation, or reconstruction path is claimed for this follow-on case.",
+      "location": "source.py:1"
+    }
+  ]
+}

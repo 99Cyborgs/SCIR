@@ -1,0 +1,18 @@
+{
+  "report_id": "fixture-feature-tier-a-interface-decl",
+  "subject": "fixture.typescript_importer.a_interface_decl",
+  "source_language": "typescript",
+  "summary": {
+    "A": 1,
+    "B": 0,
+    "C": 0,
+    "D": 0
+  },
+  "items": [
+    {
+      "feature": "reserved interface-declaration placeholder bundle",
+      "tier": "A",
+      "rationale": "This admitted first-slice TypeScript case is checked in only as reserved placeholder evidence for the published bundle shape; it is not a live importer result and does not widen executable claims."
+    }
+  ]
+}

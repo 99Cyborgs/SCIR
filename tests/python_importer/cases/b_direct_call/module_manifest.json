@@ -1,0 +1,19 @@
+{
+  "module_id": "fixture.python_importer.b_direct_call",
+  "layer": "scir_h",
+  "source_language": "python",
+  "source_path": "tests/python_importer/cases/b_direct_call/source.py",
+  "declared_profiles": [
+    "R",
+    "D-PY"
+  ],
+  "declared_tier": "B",
+  "dependencies": [
+    "python:builtins"
+  ],
+  "exports": [
+    "identity",
+    "call_identity"
+  ],
+  "opaque_boundary_count": 0
+}

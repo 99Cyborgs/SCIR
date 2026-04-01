@@ -1,0 +1,9 @@
+{
+  "report_id": "fixture-validation-a-mut-local",
+  "artifact": "fixture.rust_importer.a_mut_local",
+  "layer": "scir_h",
+  "validator": "rust-bootstrap-importer",
+  "spec_version": "v0.1-draft",
+  "status": "pass",
+  "diagnostics": []
+}

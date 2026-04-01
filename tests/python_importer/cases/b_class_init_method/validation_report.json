@@ -1,0 +1,16 @@
+{
+  "report_id": "fixture-validation-b-class-init-method",
+  "artifact": "fixture.python_importer.b_class_init_method",
+  "layer": "scir_h",
+  "validator": "python-bootstrap-importer",
+  "spec_version": "v0.1-draft",
+  "status": "warn",
+  "diagnostics": [
+    {
+      "code": "PY-B007",
+      "severity": "warn",
+      "message": "Bounded class-field import remains Tier B canonical SCIR-H only; no executable lowering, translation, or reconstruction path is claimed for this follow-on case.",
+      "location": "source.py:1"
+    }
+  ]
+}

@@ -19,3 +19,5 @@ Every benchmark result must record:
 - tuning split if any,
 - held-out evaluation split,
 - known contamination caveats.
+
+The current executable Track `A` and Track `B` manifests for the fixed bootstrap corpus must still carry explicit contamination-control metadata even though the corpus is intentionally small and fixed.

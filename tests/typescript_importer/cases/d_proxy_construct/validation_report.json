@@ -1,0 +1,16 @@
+{
+  "report_id": "fixture-validation-d-proxy-construct",
+  "artifact": "fixture.typescript_importer.d_proxy_construct",
+  "layer": "scir_h",
+  "validator": "typescript-phase7-placeholder-bundle",
+  "spec_version": "v0.1-draft",
+  "status": "fail",
+  "diagnostics": [
+    {
+      "code": "TS-PH106",
+      "severity": "error",
+      "message": "This reserved Phase 7 rejected boundary placeholder records that proxy construction remains outside the first TypeScript interface-only slice; canonical SCIR-H is intentionally absent and no live TypeScript importer has executed.",
+      "location": "source.ts:1"
+    }
+  ]
+}

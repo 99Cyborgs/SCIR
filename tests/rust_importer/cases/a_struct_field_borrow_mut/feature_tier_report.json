@@ -1,0 +1,28 @@
+{
+  "report_id": "fixture-feature-tier-a-struct-field-borrow-mut",
+  "subject": "fixture.rust_importer.a_struct_field_borrow_mut",
+  "source_language": "rust",
+  "summary": {
+    "A": 3,
+    "B": 0,
+    "C": 0,
+    "D": 0
+  },
+  "items": [
+    {
+      "feature": "named record type declaration",
+      "tier": "A",
+      "rationale": "A simple Rust struct lowers to a named record type declaration in the bootstrap slice."
+    },
+    {
+      "feature": "borrow_mut parameter",
+      "tier": "A",
+      "rationale": "A borrowed mutable parameter remains explicit through borrow_mut<T> in canonical SCIR-H."
+    },
+    {
+      "feature": "record field place read and write",
+      "tier": "A",
+      "rationale": "The bootstrap Rust slice uses explicit field places rather than hidden projection semantics."
+    }
+  ]
+}

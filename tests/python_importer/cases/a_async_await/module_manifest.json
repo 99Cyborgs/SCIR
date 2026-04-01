@@ -1,0 +1,19 @@
+{
+  "module_id": "fixture.python_importer.a_async_await",
+  "layer": "scir_h",
+  "source_language": "python",
+  "source_path": "tests/python_importer/cases/a_async_await/source.py",
+  "declared_profiles": [
+    "R",
+    "D-PY"
+  ],
+  "declared_tier": "A",
+  "dependencies": [
+    "python:builtins"
+  ],
+  "exports": [
+    "fetch_value",
+    "load_once"
+  ],
+  "opaque_boundary_count": 0
+}

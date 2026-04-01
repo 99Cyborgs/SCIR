@@ -1,0 +1,23 @@
+{
+  "report_id": "fixture-feature-tier-b-while-call-update",
+  "subject": "fixture.python_importer.b_while_call_update",
+  "source_language": "python",
+  "summary": {
+    "A": 0,
+    "B": 2,
+    "C": 0,
+    "D": 0
+  },
+  "items": [
+    {
+      "feature": "fixed-shape while-loop guard normalization",
+      "tier": "B",
+      "rationale": "A bounded while loop can normalize into canonical loop plus explicit guard-and-break structure, but this slice remains importer-only and adds no executable downstream claim."
+    },
+    {
+      "feature": "loop-carried mutation through a direct local call",
+      "tier": "B",
+      "rationale": "A loop body that updates a local through a direct local call is accepted only as canonical SCIR-H evidence and remains outside lowering, translation, and reconstruction."
+    }
+  ]
+}

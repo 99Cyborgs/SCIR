@@ -1,0 +1,16 @@
+{
+  "report_id": "fixture-validation-b-while-call-update",
+  "artifact": "fixture.python_importer.b_while_call_update",
+  "layer": "scir_h",
+  "validator": "python-bootstrap-importer",
+  "spec_version": "v0.1-draft",
+  "status": "warn",
+  "diagnostics": [
+    {
+      "code": "PY-B005",
+      "severity": "warn",
+      "message": "Fixed-shape while-loop update imports as Tier B canonical SCIR-H only; no executable lowering, translation, or reconstruction path is claimed for this follow-on case.",
+      "location": "source.py:1"
+    }
+  ]
+}

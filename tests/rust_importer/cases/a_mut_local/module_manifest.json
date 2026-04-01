@@ -1,0 +1,17 @@
+{
+  "module_id": "fixture.rust_importer.a_mut_local",
+  "layer": "scir_h",
+  "source_language": "rust",
+  "source_path": "tests/rust_importer/cases/a_mut_local/input/src/lib.rs",
+  "declared_profiles": [
+    "R"
+  ],
+  "declared_tier": "A",
+  "dependencies": [
+    "rust:std"
+  ],
+  "exports": [
+    "clamp_nonneg"
+  ],
+  "opaque_boundary_count": 0
+}
