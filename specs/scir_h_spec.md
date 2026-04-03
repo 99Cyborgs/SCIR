@@ -3,205 +3,186 @@ Status: Normative
 
 ## Scope
 
-`SCIR-H` is the canonical high-level semantic representation used for inspection, stable transformation, AI-facing editing, and reconstruction.
+`SCIR-H` is the only normative semantic representation in the SCIR MVP.
+`SCIR-Hc` is a derived non-normative compression view over validated `SCIR-H`.
+
+The active canonical subset is exactly the subset implemented by `scripts/scir_h_bootstrap_model.py` and exercised by the checked-in Python and Rust fixture corpora.
+The executable kernel boundary is summarized below and must stay aligned with `SPEC_COMPLETENESS_CHECKLIST.md` and the bootstrap model metadata.
 
 ## Non-negotiable properties
 
 - structured control
 - explicit mutation
-- explicit effect rows
-- explicit capability requirements
-- explicit witness passing
-- explicit ownership or alias modes
-- explicit unsafe and opaque boundaries
-- stable symbol identity
-- canonical formatting
+- explicit field places where source semantics depend on projection
+- explicit opaque and unsafe boundaries at importer level
+- deterministic canonical formatting
+- semantic lineage identity independent of spec version
 
-## Sorts and core type forms
-
-Core sorts:
+## Active sorts
 
 - `Module`
-- `Symbol`
+- `Import`
 - `Type`
-- `Effect`
-- `Capability`
-- `Witness`
-- `Value`
+- `Function`
+- `Statement`
+- `Expression`
 - `Place`
 
-Core ownership or alias modes:
+## Active ownership and effect surface
 
-- `own<T>`
+Active type-level ownership modes:
+
+- plain value types
 - `borrow<T>`
 - `borrow_mut<T>`
-- `share<T>`
-- `gc<T>`
 - `opaque<T>`
 
-Core operational effect families:
+Active effects:
 
-- `read`
+- empty effect row `!`
 - `write`
-- `alloc`
-- `throw`
-- `io`
 - `await`
-- `spawn`
-- `send`
-- `recv`
-- `nondet`
-- `unsafe`
 - `opaque`
+- `unsafe`
+- importer-only `throw` effect marker for the bounded Tier `B` `try/catch` slice
+
+Anything broader is deferred and must not appear as active canonical syntax.
 
 ## Canonical formatting rules
 
-1. canonical storage is indentation-sensitive and newline-delimited; braces and semicolons are non-canonical
+1. canonical storage is indentation-sensitive and newline-delimited
 2. suites use two-space indentation
-3. one declaration form per construct kind
-4. imports sorted by class then lexical identifier
-5. declarations topologically ordered by dependency
-6. every public binder carries a stable identifier
-7. public declarations carry explicit type, effect, capability, and witness signatures
-8. effect rows render as bare `!` for empty or `!a,b` for non-empty
-9. direct symbol and local calls render as `f(args)`; `invoke` remains reserved for witness or interface dispatch
-10. mutable locals render as `var` binders plus explicit `set` sites; plain local references are canonical reads
-11. canonical storage omits human comments
-12. no implicit receiver, implicit conversion, or ambient import semantics remain
+3. canonical storage has no comments
+4. imports are sorted by kind then identifier
+5. direct calls render as `f(args)`
+6. mutable locals render as `var` plus explicit `set`
+7. field places render as `name.field`
+8. effect rows render as `!` or `!a,b`
+9. canonical storage is the input to the canonical content hash
+10. pretty or review views are non-canonical
 
-## Canonical grammar
+## Derived `SCIR-Hc` contract
+
+`SCIR-Hc` is not canonical syntax and does not widen the semantic surface.
+It exists only as a compressed representation derived from validated `SCIR-H`.
+
+The active `SCIR-Hc` executable contract is:
+
+- derive from normalized canonical `SCIR-H`,
+- preserve `P1` semantic equivalence back to canonical `SCIR-H`,
+- carry the derived-only authority marker plus machine-readable omission provenance,
+- permit omission of inferable effect rows, local binding type markers, and return types,
+- treat witness inlining as reserved until canonical witness syntax is active,
+- treat capability hoisting as compression of boundary metadata, not as canonical syntax.
+
+No lowering, reconstruction, or preservation claim may originate directly from stored `SCIR-Hc`.
+Those paths must first reconstruct canonical `SCIR-H`.
+See `specs/scir_hc_doctrine.md` for the blocking authority-boundary, derivation, round-trip, and benchmark-claim rules.
+
+## Executable kernel boundary
+
+| construct | canonical parser/formatter | downstream status |
+| --- | --- | --- |
+| module header | yes | fully supported in MVP |
+| `import sym` | yes | fully supported in MVP |
+| `import type` | yes | fully supported in MVP |
+| record `type` declaration | yes | fully supported in MVP |
+| plain `fn` | yes | fully supported in MVP |
+| `async fn` | yes | fully supported in MVP |
+| `var` | yes | fully supported in MVP |
+| `set` local place | yes | fully supported in MVP |
+| `set` field place | yes | fully supported in MVP |
+| `return` | yes | fully supported in MVP |
+| `if` / `else` | yes | fully supported in MVP |
+| `loop` | yes | canonical parser/validator surface only; importer-only beyond that |
+| `break` | yes | canonical parser/validator surface only; importer-only beyond that |
+| `continue` | yes | canonical parser/validator surface only; importer-only beyond that |
+| single-handler `try` / `catch name Type` | yes | canonical parser/validator surface only; importer-only beyond that |
+| direct call `f(args)` | yes | fully supported in MVP |
+| `await` | yes | fully supported in MVP |
+| intrinsic scalar comparison | yes | fully supported in MVP |
+| explicit field place `a.b` | yes | fully supported in MVP |
+| opaque or unsafe boundary call | yes | boundary-only importer surface; executable evidence remains subset-bound |
+
+`fully supported in MVP` in this table means the construct remains inside the currently admitted parser, validator, lowering, reconstruction, or boundary path documented in `SPEC_COMPLETENESS_CHECKLIST.md`. It does not widen importer parity, backend parity, or language-scope claims.
+
+## Active canonical grammar
 
 ```ebnf
 Module      ::= "module" ModId NL TopDecl*
-TopDecl     ::= Import | Decl
-Import      ::= "import" ("sym" | "type" | "cap" | "mod") LocalId Ref NL
-Decl        ::= TypeDecl | IfaceDecl | WitnessDecl | FnDecl | ForeignDecl | OpaqueDecl
-
-TypeDecl    ::= "type" TypeId Type NL
-IfaceDecl   ::= "iface" IfaceId TypeParams? NL Suite
-WitnessDecl ::= "witness" WitnessId IfaceRef NL Suite
-FnDecl      ::= Async? "fn" FnId TypeParams? ParamSig* "->" Type Effects Caps? NL Suite
+TopDecl     ::= Import | TypeDecl | FnDecl
+Import      ::= "import" ("sym" | "type") LocalId Ref NL
+TypeDecl    ::= "type" TypeId TypeExpr NL
+FnDecl      ::= Async? "fn" FnId ParamSig* "->" Type Effects NL Suite
 Async       ::= "async"
 ParamSig    ::= LocalId Type
 Effects     ::= "!" | "!" Effect ("," Effect)*
-Caps        ::= ("using" "{" CapReqList? "}")?
 Suite       ::= INDENT Stmt* DEDENT
 
-Stmt        ::= "let" LocalId Expr
-              | "var" LocalId Type Expr
+Stmt        ::= "var" LocalId Type Expr
               | "set" Place Expr
               | "return" Expr
-              | "throw" Expr
               | "if" Expr NL Suite ("else" NL Suite)?
-              | "match" Expr NL Suite
               | "loop" LoopId NL Suite
-              | "break" LoopId ArgList?
+              | "break" LoopId
               | "continue" LoopId
               | "try" NL Suite "catch" LocalId Type NL Suite
-              | "select" NL Suite
-              | "unsafe" UnsafeTag NL Suite
-              | "opaque" OpaqueTag NL Suite
-
-SelectArm   ::= "recv" Expr "as" LocalId NL Suite
-              | "send" Expr Expr NL Suite
 
 Expr        ::= Literal
               | Place
               | Ref "(" ArgList? ")"
-              | "invoke" IfaceMethodRef WitnessArg "(" ArgList? ")"
-              | "record" "{" FieldInit* "}"
-              | "variant" VariantTag "(" ArgList? ")"
-              | "borrow" Place
-              | "borrow_mut" Place
               | "await" Expr
-              | "spawn" Expr
-              | "send" Expr "," Expr
-              | "recv" Expr
-              | "cast" CastKind Expr "to" Type
-              | "new_gc" Type Expr?
-              | "perform" EffectOp "(" ArgList? ")"
               | IntrinsicExpr
 
 IntrinsicExpr ::= ("lt" | "le" | "eq" | "ne" | "gt" | "ge") Expr Expr
 
 Place       ::= LocalId ("." FieldId)*
-
-Type        ::= PrimType
+TypeExpr    ::= PrimType
               | TypeId
-              | "record" "{" FieldType* "}"
-              | "variant" "{" VariantType* "}"
-              | "result" "<" Type "," Type ">"
-              | "task" "<" Type ">"
-              | "chan" "<" Type ">"
-              | "fn" "(" TypeList? ")" "->" Type Effects
-              | "witness" "<" IfaceRef ">"
-              | "cap" "<" CapId ">"
-              | "own" "<" Type ">"
-              | "borrow" "<" Type ">"
-              | "borrow_mut" "<" Type ">"
-              | "share" "<" Type ">"
-              | "gc" "<" Type ">"
-              | "opaque" "<" OpaqueId ">"
+              | "record" "{" FieldType+ "}"
 
 FieldType   ::= FieldId Type
-FieldInit   ::= FieldId Expr
-VariantType ::= VariantTag TypeList?
 ```
 
-## Deliberate v0.1 exclusions
+## Deferred from the active grammar
 
-The source architecture leaves the following unresolved. They are not part of canonical v0.1 `SCIR-H` unless explicitly revised.
+The following are explicitly not part of the active canonical `SCIR-H` kernel:
 
-- first-class generator syntax
-- profile-specific comment preservation in canonical text
+- `iface`
+- `witness`
+- capability `using` clauses
+- `throw`
+- `match`
+- `select`
+- `unsafe` suites
+- `opaque` suites
+- `invoke`
+- `spawn`, `send`, `recv`
+- channel, task, result, or variant types
+- expression-level `borrow` / `borrow_mut`
 
-These are tracked in `OPEN_QUESTIONS.md`.
-
-## Minimal v0.1 structured control forms
-
-- `try/catch` is a suite-level structured control form only: `try` newline-indented suite followed by `catch x T` newline-indented suite.
-- Canonical v0.1 permits exactly one `catch` with an explicit binder and explicit caught type.
-- `finally`, multi-catch, pattern-heavy exception syntax, and new rethrow syntax are out of scope.
-- `select` is a suite-level structured control form over explicit channel operations only.
-- Each `select` arm is either `recv chan as x` newline-indented suite or `send chan value` newline-indented suite.
-- Choice is nondeterministic among ready arms; unchosen arms do not perform their channel operation.
-- Default arms, timeout arms, fairness promises, and priority semantics are out of scope.
-
-## Bootstrap compaction notes
-
-- The executable bootstrap subset uses the compact canonical surface directly:
-- `var y int x`
-- `set y 0`
-- `set counter.value 0`
-- `return await fetch_value()`
-- `if lt y 0`
-- `if lt counter.value 0`
-- Legacy brace-delimited bootstrap text such as `let cell`, `write`, `read`, or `call f(args)` is non-canonical after the compaction cutover.
-- Comparison helpers such as `python:operator.lt` are not canonical bootstrap imports; scalar comparisons render as intrinsic expressions such as `lt x y`.
-- The Rust Phase 6A slice permits readable field places such as `counter.value` and type declarations such as `type Counter record { value int }`.
+These may remain as future design notes only. They are not current claims.
 
 ## Semantic obligations
 
 `SCIR-H` must make explicit:
 
-- control and exceptional edges, including `try/catch` boundaries and `select` choice sites,
-- mutation sites,
-- readable and writable field places where source semantics depend on projection,
-- capability use,
-- effect obligations,
-- witness materialization or passing,
-- unsafe or opaque boundaries,
-- cross-module dependencies.
+- structured control boundaries
+- mutation sites
+- readable and writable field places
+- async suspension points
+- opaque and unsafe boundary calls
+- cross-module imports
 
 ## Importer obligations
 
 An importer emitting `SCIR-H` must also emit:
 
-- a `module_manifest`,
-- a `feature_tier_report`,
-- a `validation_report`,
-- `opaque_boundary_contract` records for all `C`-tier boundaries.
+- a `module_manifest`
+- a `feature_tier_report`
+- a `validation_report`
+- an `opaque_boundary_contract` for every Tier `C` region
 
 ## Validation obligations
 
-See `specs/validator_invariants.md`.
+Canonical `SCIR-H` and derived `SCIR-Hc` obligations live in `specs/validator_invariants.md`.

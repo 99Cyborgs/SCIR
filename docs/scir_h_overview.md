@@ -1,63 +1,63 @@
 # SCIR-H Overview
 Status: Informative
 
-`SCIR-H` is the canonical semantic layer.
+`SCIR-H` is the canonical semantic layer and the only normative source of truth in the MVP.
+`SCIR-Hc` is the derived compressed companion view used for AI-facing lexical comparisons.
 
 ## Role
 
-`SCIR-H` exists to make these explicit:
+`SCIR-H` makes explicit:
 
-- module and symbol boundaries,
-- types,
-- effects,
-- capabilities,
-- witness passing,
-- ownership and alias modes,
-- control structure,
-- mutation sites,
-- unsafe and opaque boundaries,
-- stable IDs and provenance.
+- module boundaries
+- imports
+- record types
+- function signatures
+- mutation
+- structured control
+- field places
+- async suspension
+- opaque and unsafe boundaries
+- semantic lineage
 
-## Design constraints
+## Active subset
 
-`SCIR-H` must be:
+The active canonical subset is the subset implemented by `scripts/scir_h_bootstrap_model.py`.
+That subset now includes the importer-only `!throw` effect marker on the bounded Tier `B` `try/catch` slice, while standalone `throw` syntax remains deferred.
 
-- canonical enough for formatting and diff stability,
-- structured enough for reconstruction,
-- explicit enough for validation,
-- regular enough for AI-facing editing,
-- small enough to avoid semantic sprawl.
+Anything broader is deferred until grammar, parser, validator, lowering, reconstruction, and tests agree.
 
-## Minimal v0.1 control surface
+## Dual representation
 
-- structured exception handling exists only as `try { ... } catch(x: T) { ... }`
-- structured concurrency choice exists only as `select { ... }` over explicit channel `send` or `recv` arms
-- `finally`, multi-catch, default arms, timeout arms, and priority semantics are outside canonical v0.1
+The active implementation now maintains two `SCIR-H`-family surfaces:
+
+- canonical explicit `SCIR-H` for validation, reconstruction, identity, and preservation claims
+- derived compressed `SCIR-Hc` for lexical-efficiency benchmarking and AI-facing transport
+
+`SCIR-Hc` may elide inferable effect rows, return types, and local binding type markers, but it must round-trip back to canonical `SCIR-H` without semantic drift.
 
 ## Canonicality rules
 
-- indentation-sensitive suites with two-space indentation,
-- newline-delimited storage with no canonical braces or semicolons,
-- one declaration form per construct kind,
-- sorted imports,
-- topologically ordered declarations,
-- stable identifiers on public structure,
-- compact effect rows (`!` or `!a,b`),
-- direct calls rendered as `f(args)`,
-- explicit mutable binders via `var` and explicit writes via `set`,
-- readable field places rendered explicitly such as `counter.value`,
-- intrinsic scalar comparisons rendered explicitly (`lt`, `le`, `eq`, `ne`, `gt`, `ge`),
-- no hidden conversions,
-- no hidden ambient capabilities,
-- no comments in canonical storage.
+- indentation-sensitive suites
+- newline-delimited storage
+- no comments in canonical storage
+- direct calls as `f(args)`
+- explicit `var` and `set`
+- explicit field places
+- deterministic storage for hashing
+
+## Compression rules
+
+- `SCIR-Hc` is generated only from validated `SCIR-H`
+- `SCIR-Hc` does not define semantics independently
+- `SCIR-Hc` carries a derived-only authority marker plus per-node omission provenance
+- lowering, reconstruction, and backend emission must reject direct `SCIR-Hc` input
+- boundary capability hoisting stays metadata-only in the current subset
+- deferred witness syntax remains deferred in both explicit and compressed views
 
 ## Non-goals
 
 `SCIR-H` is not:
 
-- a user-friendly mainstream language,
-- a low-level optimizer IR,
-- a raw source AST,
-- a place to preserve every source-language accident.
-
-See `specs/scir_h_spec.md`.
+- a user-facing authoring language
+- a low-level optimizer IR
+- the place to hide host or boundary semantics

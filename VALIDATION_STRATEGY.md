@@ -3,203 +3,237 @@ Status: Normative
 
 ## Objective
 
-Validation is the enforcement layer for SCIR invariants. Unsupported or weakly modeled semantics must fail fast or downgrade explicitly.
+Validation is the enforcement layer for the narrowed SCIR MVP.
+The validator stack must make unsupported, deferred, or downgraded behavior explicit.
 
-## Validation order
+## Active validation order
 
 1. repository contract validation
-2. importer conformance validation
-3. `SCIR-H` validation
-4. `SCIR-L` lowering precondition checks
-5. `SCIR-L` validation
-6. translation validation on selected steps
-7. reconstruction validation
-8. benchmark contract validation
+2. derived-export synchronization
+3. active and negative corpus manifest validation
+4. sweep manifest validation
+5. active preservation-stage expectation validation
+6. Python importer fixture validation
+7. Rust importer fixture validation
+8. seeded invalid `SCIR-H` rejection
+9. seeded invalid `SCIR-L` rejection
+10. canonical formatter and identity stability checks
+11. `SCIR-H` validation
+12. `SCIR-Hc` derivation, doctrine, and round-trip validation
+13. `H -> L` provenance and lowering-rule validation
+14. `SCIR-L` validation
+15. sweep smoke over the frozen Tier `A` micro corpus plus regression comparison when a baseline artifact exists
+16. admitted helper-free Wasm emission validation
+17. Python reconstruction validation
+18. benchmark manifest and Track `A` / `B` validation
 
 ## Validator stack
 
 | Validator | Input | Output | Blocking |
 | --- | --- | --- | --- |
-| repository contract checker | repository files | console report | yes |
-| importer conformance checker | fixed source subset + generated importer output + checked-in importer fixture bundle | `module_manifest` + `feature_tier_report` + `validation_report` | yes |
+| repository contract checker | repository files, schemas, examples, derived exports | console report | yes |
+| importer conformance checker | fixed source subset plus checked-in bundle | `module_manifest`, `feature_tier_report`, `validation_report` | yes |
 | `SCIR-H` validator | canonical `SCIR-H` | `validation_report` | yes |
-| `SCIR-L` validator | canonical `SCIR-L` | `validation_report` | yes |
-| translation validator | paired artifacts across stages | `preservation_report` or downgrade | selected but blocking for safety-critical lowering steps |
-| reconstruction checker | reconstructed source + tests | `reconstruction_report` + `preservation_report` | yes for round-trip claims |
-| benchmark contract checker | manifests and result bundles | `benchmark_result` structure validation | yes |
+| `SCIR-Hc` validator | derived `SCIR-Hc` plus canonical round-trip target and benchmark-claim scope where applicable | `validation_report` | yes |
+| translation validator | paired `SCIR-H` and `SCIR-L` artifacts | `preservation_report` | yes on active lowering paths |
+| `SCIR-L` validator | structured lowered module | `validation_report` | yes |
+| Wasm emitter checker | admitted `SCIR-L` subset plus bounded backend contract | WAT text plus `preservation_report` | yes on admitted helper-free Wasm cases |
+| reconstruction validator | canonical `SCIR-H` plus reconstructed Python | `reconstruction_report`, `preservation_report` | yes on active Python round trips |
+| benchmark contract checker | benchmark doctrine plus executable Track `A` / `B` bundle | `benchmark_manifest`, `benchmark_result` validation | yes |
 
-## Report discipline
-
-Every non-trivial stage change must emit or update the relevant report type.
+## Active report discipline
 
 | Scenario | Required reports |
 | --- | --- |
 | importer change | `module_manifest`, `feature_tier_report`, `validation_report` |
-| `SCIR-H` semantic change | `validation_report`, possibly `preservation_report` if reconstruction is affected |
-| `H -> L` lowering change | `validation_report` for `SCIR-L`, `preservation_report`, translation-validation evidence |
-| reconstruction change | `reconstruction_report`, `preservation_report` |
-| benchmark harness or result change | `benchmark_manifest`, `benchmark_result` |
-| execution-queue change | `execution_queue` export |
+| `SCIR-H` or `SCIR-Hc` semantic-path change | `validation_report` and checklist updates |
+| `H -> L` lowering change | `validation_report` for `SCIR-L`, `preservation_report`, lowering-rule coverage |
+| Python reconstruction change | `reconstruction_report`, `preservation_report` |
+| Wasm-contract change | emitted WAT contract, path-qualified `preservation_report`, and backend docs |
+| benchmark change | `benchmark_manifest`, `benchmark_result`, `comparison_summary`, `contamination_report`, `benchmark_report` |
+| queue, decision, or open-question change | derived export regeneration |
 
 Schemas live in `schemas/`.
-
-For the current Phase 7 TypeScript witness slice, the conformance-checker contract is partially active:
-
-- the TypeScript checker must mirror the Python and Rust importer conformance model where the Phase 7 placeholder corpus permits
-- `validate-fixtures` is now active for checked-in dormant placeholder-corpus integrity
-- `test` remains reserved for future generated-vs-golden conformance against live importer output
-- repository validation must continue to enforce the fixed nine-case dormant TypeScript placeholder corpus shape at the repo-contract layer, including admitted-vs-rejected file-set rules, rejected-case `expected.scirh` absence, placeholder report posture, and explicit non-live diagnostic markers
-- the active `validate-fixtures` checker must treat admitted `expected.scirh` files as non-canonical sentinels rather than parseable canonical `SCIR-H`
-- the reserved `test` path in `scripts/typescript_importer_conformance.py` must fail clearly as non-live and must not claim generated-vs-golden validation
 
 ## Blocking rules
 
 A change must not merge when any of the following is true:
 
-- hard invariant violation remains unresolved,
-- profile claim is missing,
-- preservation level is missing,
-- tier classification is missing where source coverage changed,
-- opaque boundary lacks a contract,
-- translation step increased claims without evidence,
-- canonical `SCIR-H` contains richer `try/catch` or `select` surface than the published v0.1 contract,
-- benchmark gates were affected but benchmark docs were not updated.
+- `SCIR-H` claims a construct the parser does not accept,
+- `SCIR-Hc` drifts from canonical `SCIR-H` under parse-format or semantic round-trip checks,
+- `SCIR-Hc` becomes semantic authority, carries unexplained omission provenance, or enters a forbidden downstream path directly,
+- `SCIR-L` introduces semantics without a validated `SCIR-H` origin and named lowering rule,
+- an active preservation report omits `path`, `profile`, `preservation_level`, `downgrades`, or `boundary_annotations`,
+- active corpus preservation ceilings or per-stage expectations drift from observed behavior without explicit downgrade evidence,
+- benchmark reports leak `SCIR-Hc` evidence across `claim_class` / `evidence_class` boundaries,
+- Python reconstruction claims a stronger profile or preservation level than the executable proof loop supports,
+- Rust importer evidence silently widens into active Rust reconstruction or benchmark claims,
+- an admitted helper-free Wasm case stops emitting stable WAT or starts requiring helper imports or runtime shims,
+- Wasm wording implies native or host parity,
+- deferred TypeScript or Track `D` surfaces re-enter active validation without root-doc updates,
+- example artifacts or derived exports drift from their normative sources.
 
 ## Acceptance criteria by layer
 
 ### `SCIR-H`
 
-Must reject:
+Canonical `SCIR-H` must reject:
 
 - hidden control transfer,
-- implicit effects,
-- implicit mutation,
+- implicit effects or mutation,
 - ambiguous name resolution,
-- undeclared capability use,
-- undeclared opaque or unsafe region,
-- `try/catch` outside the canonical single-catch shape `try` / `catch x T` suites,
-- `select` arms that are not explicit channel `send` or `recv`,
-- `select` default, timeout, fairness, or priority semantics,
-- hidden exception discharge or hidden concurrency choice edges,
-- missing stable IDs where required,
 - non-canonical formatting,
-- legacy bootstrap brace/semicolon text after the compact canonical cutover,
-- `call f(args)`, `let cell`, `write`, or `read` in canonical bootstrap `SCIR-H`.
-- field-place syntax outside the canonical `LocalId(.FieldId)*` form.
+- legacy brace-delimited bootstrap syntax,
+- constructs outside the active subset, including `iface`, `witness`, `match`, `select`, standalone `throw` syntax, `invoke`, and suite-form `unsafe` or `opaque` regions.
 
-Bootstrap canonical validation is parse -> normalize -> format equality on the supported subset, not raw string matching against hand-maintained literals.
+The importer-only `!throw` effect marker remains admitted only on the bounded Tier `B` `try/catch` slice and does not promote standalone `throw` support.
+
+Canonical bootstrap validation is parse -> normalize -> format equality on the supported subset.
+
+### `SCIR-Hc`
+
+Derived `SCIR-Hc` must reject:
+
+- compressed text that does not normalize under parse -> format equality,
+- compressed text that lacks the derived-only authority marker,
+- compressed nodes that omit canonical information without valid `compression_origin` provenance,
+- `SCIR-Hc` artifacts that differ from deterministic `SCIR-H -> SCIR-Hc` derivation,
+- compressed text that fails to reconstruct canonical `SCIR-H`,
+- any round-trip that changes semantic lineage or canonical `SCIR-H` formatting,
+- compression claims that contradict boundary metadata or normalization statistics.
 
 ### `SCIR-L`
 
-Must reject:
+Active `SCIR-L` must reject:
 
-- malformed SSA or block parameters,
-- ops outside the frozen bootstrap set,
-- missing or inconsistent provenance,
-- unsound effect or memory token threading,
-- hidden merge state outside block parameters,
-- `field.addr` without a corresponding validated `SCIR-H` field place,
-- control-flow edges not justified by the lowered `SCIR-H`,
-- `opaque.call` without a corresponding explicit opaque boundary,
-- Phase 6B optimizer rewrites outside the published `N` and `D-PY` contracts,
-- `SCIR-L`-only semantic obligations.
+- ops outside the frozen subset,
+- malformed block parameters or control edges,
+- missing provenance origin,
+- provenance origin that no longer maps back into the emitting `SCIR-H` module,
+- missing lowering rule,
+- invalid op-to-lowering-rule pairings,
+- `field.addr` without an `SCIR-H` field-place basis,
+- `opaque.call` without an explicit boundary basis,
+- any L-only semantic obligation.
 
 ### Translation validation
 
-Must downgrade or fail when:
+Active translation validation applies only to the bounded `H -> L` paths already justified by the executable Python proof loop and the importer-bounded Rust evidence path.
 
-- structured control loss exceeds the declared profile,
-- host, FFI, or scheduling assumptions become stronger,
-- opaque boundaries increase without disclosure,
-- witness, capability, or ownership meaning changes without contract coverage.
+It must fail or downgrade when:
 
-For the current bootstrap Phase 3 slice, translation validation must also enforce:
+- structured control is lost beyond the declared profile,
+- opaque or unsafe boundaries stop being explicit,
+- a Tier `A` case gains boundary annotations,
+- a `P3` case stops reporting its boundary-only downgrade,
+- a stage overclaims stronger preservation than its fixture ceiling or declared stage expectation,
+- a stage weakens preservation without diagnostics, downgrade reasons, boundary annotations, or an explicit non-pass status,
+- lowering provenance continuity breaks.
 
-- `a_basic_function` and `a_async_await` remain `R/P1`,
-- `c_opaque_call` remains `D-PY/P3`,
-- importer-only `SCIR-H` cases such as `b_if_else_return`, `b_direct_call`, `b_async_arg_await`, `b_while_call_update`, `b_while_break_continue`, `b_class_init_method`, `b_class_field_update`, and the bounded Python `d_try_except` slice emit no `SCIR-L` or translation artifacts on the executable path,
-- `a_mut_local`, `a_struct_field_borrow_mut`, and `a_async_await` remain `R/P1` on the Rust Phase 6A path,
-- `c_unsafe_call` remains `N/P3`,
-- `opaque` observables remain present on the opaque case and absent on the Tier A cases.
+### Wasm emission validation
 
-For post-02B and future witness-bearing second-language work, translation validation must also enforce:
+Active Wasm emission validation applies only to the admitted helper-free local-slot subset.
+It now also includes the bounded record-cell ABI for `fixture.rust_importer.a_struct_field_borrow_mut`.
+That record-cell ABI must remain frozen to the fixed Rust slice unless a later recorded contract decision widens it.
 
-- importer-only expansion slices emit no executable `SCIR-L`, translation, reconstruction, or benchmark artifacts until a published downstream contract exists for those slices,
-- TypeScript interface-shaped witness evidence remains explicit in reports and does not rely on hidden host-runtime or backend assumptions,
-- the first Phase 7 TypeScript slice is limited to interface-shaped witness declarations and module-local consumption doctrine, not general function, class, async, or prototype execution semantics,
-- the first checked-in TypeScript fixture contract reuses the existing importer bundle model: admitted cases carry source text, canonical `SCIR-H`, `module_manifest`, `feature_tier_report`, and `validation_report`, while rejected boundary cases omit canonical `SCIR-H`,
-- `H -> L` provenance continuity remains blocking for any newly admitted witness-bearing path,
-- downgrade reporting remains profile-qualified and cannot be replaced by informal milestone prose,
-- optimizer-only facts do not flow back into canonical `SCIR-H`,
-- `D-JS` executable claims remain invalid until a later milestone adds explicit lowering, translation-validation, reconstruction, and benchmark gates.
+It must fail when:
+
+- emitted WAT introduces helper imports or runtime shims,
+- a bounded local-slot case stops emitting path-qualified `l_to_wasm` evidence,
+- `cmp` emission widens beyond the current less-than-zero bootstrap shape,
+- `field.addr` emission widens beyond the fixed record-cell ABI,
+- Python field-place or any additional record shape becomes Wasm-emittable without a new contract decision,
+- field-place lowering is normalized into imported memory, hidden host layout, or non-shared-handle callers,
+- direct-call emission widens beyond the fixed same-module scalar call shape.
+
+Wasm validation must additionally fail when:
+
+- a record field offset diverges from canonical field declaration order,
+- a record shape includes non-`int` fields in the first post-scalar slice,
+- a record handle crosses an imported, opaque, or otherwise non-shared ABI boundary,
+- the emitted module relies on imported memory, hidden allocator state, or host object layout,
+- preservation evidence omits the field-offset map, shared-handle caller contract, or candidate-specific downgrade reasons,
+- or a non-candidate record, alias, or memory shape is emitted as if it were inside the bounded ABI.
+
+### Admitted helper-free Wasm-emission modules
+
+- `fixture.python_importer.a_basic_function`
+- `fixture.python_importer.b_direct_call`
+- `fixture.rust_importer.a_mut_local`
+- `fixture.rust_importer.a_struct_field_borrow_mut`
 
 ### Reconstruction validation
 
-Must fail when:
+Active reconstruction validation applies only to Python reconstruction from validated `SCIR-H`.
+
+It must fail when:
 
 - reconstructed Python does not compile,
-- reconstructed Python changes the fixture behavior under the bootstrap execution harness,
-- `reconstruction_report` claims a profile or preservation level stronger than the fixed bootstrap case matrix,
-- `preservation_report` drops required opaque accounting or introduces opaque observables on a Tier `A` case,
-- `provenance_complete` is true while any non-empty canonical `SCIR-H` line lacks a provenance entry,
-- rejected Tier `D` cases emit reconstruction outputs.
+- reconstructed Python fails the fixture behavior check,
+- provenance completeness is overstated,
+- a supported Tier `A` case gains boundary annotations,
+- an opaque Python case loses its boundary annotation.
 
-For the current bootstrap Phase 4 slice, reconstruction validation must also enforce:
+Rust reconstruction remains a deferred surface. It is not part of the active MVP gate.
 
-- `a_basic_function` and `a_async_await` remain `R/P1`,
-- `c_opaque_call` remains `D-PY/P3`,
-- importer-only `SCIR-H` cases such as `b_if_else_return`, `b_direct_call`, `b_async_arg_await`, `b_while_call_update`, `b_while_break_continue`, `b_class_init_method`, `b_class_field_update`, and the bounded Python `d_try_except` slice emit no reconstruction artifacts,
-- idiomaticity is recorded but is not a separate blocking threshold,
-- compile/test evidence and provenance completeness are blocking.
+### SCIR-Hc doctrine tests
 
-For the current Rust Phase 6A slice, reconstruction validation must also enforce:
+The default gate must run `tests/test_scirhc_doctrine.py` and fail when the repository stops rejecting:
 
-- `a_mut_local`, `a_struct_field_borrow_mut`, and `a_async_await` remain `R/P1`,
-- `c_unsafe_call` does not emit reconstruction outputs,
-- missing `rustc` or `cargo` is a blocking validation failure for the Rust path.
+- non-deterministic `SCIR-H -> SCIR-Hc` derivation,
+- round-trip equivalence failure,
+- illegal direct `SCIR-Hc` pipeline usage,
+- hidden semantic injection,
+- benchmark-claim overreach.
 
 ## Operational command contract
 
-`make validate` must remain the top-level blocking validation command.
+`make validate` remains the top-level blocking validation command.
 
 At minimum it must:
 
-- verify repository structure,
-- parse all JSON schemas,
-- validate checked-in example report and manifest artifacts against their schemas,
-- validate the checked-in decision-register export against both `DECISION_REGISTER.md` and its schema,
-- validate the checked-in open-questions export against both `OPEN_QUESTIONS.md` and its schema,
-- validate the checked-in execution-queue export against `EXECUTION_QUEUE.md`, the active milestone, and its schema,
-- validate the checked-in Python importer fixture corpus against its conformance checker when that corpus exists,
-- validate the checked-in Rust importer fixture corpus against its conformance checker when that corpus exists,
-- validate the checked-in TypeScript importer fixture corpus against the TypeScript conformance checker `validate-fixtures` mode,
-- validate the executable bootstrap importer against the checked-in Python fixture goldens,
-- allow checked-in Python importer fixtures such as `b_if_else_return`, `b_direct_call`, `b_async_arg_await`, `b_while_call_update`, `b_while_break_continue`, `b_class_init_method`, `b_class_field_update`, and `d_try_except` to stop at validated canonical `SCIR-H` when they are explicitly marked outside the executable lowering and reconstruction path,
-- validate the executable Rust importer against the checked-in Rust fixture goldens,
-- once a live TypeScript importer exists and the placeholder corpus is promoted to live goldens, run the TypeScript conformance checker `test` mode against the fixed interface-witness corpus and keep the slice importer-only unless a later milestone widens downstream contracts,
-- validate bootstrap `SCIR-H`, `SCIR-L`, translation, and reconstruction reports for the supported executable slice,
-- require `rustc` and `cargo` before executing the Rust Phase 6A lowering and reconstruction path,
-- validate the compact bootstrap `SCIR-H` parser/formatter round-trip and reject legacy bootstrap syntax as non-canonical,
-- reject bootstrap `SCIR-L` artifacts that drift beyond the frozen op set, token model, or translation claims,
-- keep benchmark-only post-`SCIR-L` emitters out of reconstruction claims,
-- reject bootstrap reconstruction artifacts that overclaim profile or preservation, lose opaque accounting, misreport compile/test results, or claim complete provenance with missing canonical-line coverage,
-- reject executable `D-JS` or witness-bearing second-language artifacts that lack a published validator and report contract,
-- reject Phase 7 TypeScript planning-slice artifacts that emit executable `SCIR-L`, translation, reconstruction, or benchmark outputs before a published downstream contract exists,
-- reject dormant first-slice TypeScript placeholder-corpus drift in case IDs, admitted-vs-rejected file sets, declared tiers, report summaries, validation statuses, and non-live boundary markers until the TypeScript checker exists,
-- reject first-slice TypeScript fixture bundles that omit required importer reports or that include canonical `SCIR-H` for rejected boundary cases,
-- reject any future TypeScript conformance checker that diverges from the published corpus layout, mode contract, or importer-only boundary for the first slice,
-- verify required docs exist,
-- verify benchmark doctrine files exist,
-- exit non-zero on missing required files or malformed JSON.
+- verify required docs, specs, schemas, and scripts exist,
+- parse all JSON artifacts,
+- validate checked-in example artifacts against their schemas,
+- validate `DECISION_REGISTER.md`, `OPEN_QUESTIONS.md`, and `EXECUTION_QUEUE.md` against their checked-in exports,
+- validate active proof-loop corpus manifests, negative-fixture manifests, and sweep manifests,
+- validate the Python importer fixture corpus,
+- validate the Rust importer fixture corpus,
+- validate seeded invalid canonical `SCIR-H` examples,
+- validate seeded invalid derivative `SCIR-L` examples,
+- validate canonical formatter round-trip, identity stability, and pretty-view noninterference,
+- validate `SCIR-Hc` parse-format equality, doctrine checks, plus semantic round-trip to canonical `SCIR-H`,
+- validate the active Python proof loop,
+- run sweep smoke on the frozen Tier `A` micro corpus and compare against the latest successful baseline artifact when available,
+- require `comparison_summary.json` and `contamination_report.json` for executable sweep smoke,
+- validate the admitted helper-free Wasm emitter slice and its path-qualified `l_to_wasm` reports,
+- validate the active Track `A` / `B` benchmark harness and its claim-bound report surfaces,
+- reject TypeScript placeholder-corpus drift from the active validation baseline,
+- enforce `NOT_ACTIVE.md` markers on deferred or archived surfaces that remain on disk.
+
+Deferred surfaces may remain on disk, but they are not part of the default blocking gate unless `DEFERRED_COMPONENTS.md` promotes them back into scope.
+
+## Optional deeper validation
+
+`python scripts/run_repo_validation.py --require-rust` remains the optional compatibility entrypoint for environments that want an explicit usable Rust toolchain before running the importer-first Rust `H -> L` validation slice.
+That optional slice validates Rust import, canonical `SCIR-H`, bounded derivative lowering, `SCIR-L`, helper-free Wasm emission for the admitted Rust local-mutation case, and path-qualified translation preservation only.
+It does not activate Rust reconstruction, Rust benchmark gates, or broader backend claims.
+It is not the default MVP gate.
+
+`python scripts/run_repo_validation.py --include-track-c-pilot` remains the optional compatibility entrypoint for the first executable Track `C` pilot.
+That optional slice validates the same repository, importer, lowering, reconstruction, and Track `A` / `B` surfaces as the default gate, then runs the bounded Python single-function repair pilot on the fixed proof-loop cases only.
+It keeps `c_opaque_call` boundary-accounting-only, compares against direct source, typed-AST, and regularized-core baselines, and does not activate Track `C` as a default benchmark gate.
+
+`python scripts/benchmark_contract_dry_run.py --claim-run` remains the explicit claim-grade benchmark lane for Track `A` and Track `B`.
+That lane must fail if baseline results are missing, corpus hash mismatches are detected, a reproducibility block is missing, contamination is detected, or none of the active claim-gate conditions hold.
 
 ## Evidence for done
 
 A validation-sensitive task is not done unless:
 
-- the relevant validator contract file is current,
+- touched specs and docs agree,
 - the relevant schemas are current,
-- the relevant report examples are derivable from the spec and schema-valid,
-- checked-in importer fixtures, generated-vs-golden conformance checks, and the executable bootstrap pipeline are current when importer code remains bootstrap-only,
-- derived exports remain synchronized with their normative markdown source,
-- the execution queue remains synchronized with its markdown source and roadmap constraints,
+- active example artifacts are schema-valid,
+- invalid canonical `SCIR-H` fixtures still fail,
+- derived exports remain synchronized,
 - `make validate` passes.

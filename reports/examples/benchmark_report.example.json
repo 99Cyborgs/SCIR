@@ -1,0 +1,92 @@
+{
+  "run_id": "example-benchmark-run-20260403T170000Z",
+  "commit_sha": "example-commit-sha",
+  "spec_version": "v0.1-draft",
+  "tool_version": "scir-benchmark-audit-v1",
+  "claim_mode": "claim",
+  "corpus_manifest": "reports/examples/corpus_manifest.example.json",
+  "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "generated_at": "2026-04-03T17:00:00+00:00",
+  "tracks": {
+    "A": "pass",
+    "B": "pass"
+  },
+  "explicit_representation_metrics": {
+    "LCR": 1.6569,
+    "GR": 0.9545,
+    "SE": 0.213,
+    "SCPR": 1.0,
+    "round_trip": 1.0
+  },
+  "compressed_representation_metrics": {
+    "LCR_scirhc": 1.5061,
+    "GR_scirhc": 0.9545,
+    "SCPR_scirhc": 1.0
+  },
+  "claim_class": "LEXICAL_COMPRESSION_ONLY",
+  "evidence_class": [
+    "scirhc_lcr_vs_ast"
+  ],
+  "claim_gate": {
+    "passed": true,
+    "ai_thesis_status": "supported",
+    "satisfied_conditions": [
+      "scirhc_lcr_vs_ast"
+    ],
+    "evaluated_conditions": [
+      {
+        "id": "scirhc_lcr_vs_ast",
+        "statement": "SCIR-Hc beats typed-AST on LCR.",
+        "baseline_name": "typed-AST",
+        "metric": "LCR_scirhc",
+        "observed_value": 1.5061,
+        "baseline_value": 6.7672,
+        "delta": -5.2611,
+        "threshold": 0.0,
+        "comparison": "lt",
+        "passed": true
+      }
+    ]
+  },
+  "failure_attribution": {
+    "primary_cause": "unavoidable_explicitness",
+    "token_inflation": 0.0,
+    "structural_redundancy": 0.1508,
+    "unavoidable_explicitness": 0.1611
+  },
+  "claims": [
+    {
+      "statement": "SCIR-Hc beats typed-AST on LCR.",
+      "corpus_manifest": "reports/examples/corpus_manifest.example.json",
+      "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "baseline_name": "typed-AST",
+      "metric": "LCR_scirhc",
+      "observed_value": 1.5061,
+      "baseline_value": 6.7672,
+      "delta": -5.2611,
+      "confidence_range": null
+    }
+  ],
+  "disclaimers": [
+    "Results are limited to the fixed Python proof-loop corpus and do not imply whole-language support.",
+    "Wasm and reconstruction evidence remain profile-qualified and do not imply native or host parity.",
+    "SCIR-Hc is a derived AI-facing form and must round-trip through canonical SCIR-H before downstream claims.",
+    "Dataset split mode: simulated_no_training."
+  ],
+  "artifacts": {
+    "comparison_summary": "comparison_summary.example.json",
+    "contamination_report": "contamination_report.example.json",
+    "sweep_result": "sweep_result.example.json"
+  },
+  "reproducibility_block": {
+    "command": "python scripts/benchmark_contract_dry_run.py --claim-run",
+    "environment": {
+      "python_executable": "python",
+      "python_version": "3.11.0",
+      "platform": "example-platform",
+      "cwd": "G:/GitHub/incubate/SCIR"
+    },
+    "seed": 0,
+    "timestamp": "2026-04-03T17:00:00+00:00"
+  }
+}

@@ -23,6 +23,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
         description="Run the canonical SCIR validation baseline with optional Rust enforcement."
     )
     parser.add_argument(
+        "--include-track-c-pilot",
+        action="store_true",
+        help="Also run the optional non-default Track C benchmark pilot without changing the default gate.",
+    )
+    parser.add_argument(
         "--require-rust",
         action="store_true",
         help="Fail if rustc/cargo are unavailable instead of skipping the Rust validation slice.",
@@ -36,35 +41,40 @@ def main() -> int:
     rust_available = bool(rust_resolution["available"])
     rust_env = rust_toolchain_env() if rust_available else None
 
-    non_rust_commands = [
+    benchmark_command = [sys.executable, "scripts/benchmark_contract_dry_run.py"]
+    if args.include_track_c_pilot:
+        benchmark_command.append("--include-track-c-pilot")
+
+    baseline_commands = [
         [sys.executable, "scripts/validate_repo_contracts.py", "--mode", "validate"],
+        [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_scirhc_doctrine.py"],
         [sys.executable, "scripts/python_importer_conformance.py", "--mode", "validate-fixtures"],
-        [sys.executable, "scripts/typescript_importer_conformance.py", "--mode", "validate-fixtures"],
-        [sys.executable, "scripts/scir_bootstrap_pipeline.py", "--mode", "validate"],
-    ]
-    rust_commands = [
         [sys.executable, "scripts/rust_importer_conformance.py", "--mode", "validate-fixtures"],
+        [sys.executable, "scripts/scir_bootstrap_pipeline.py", "--mode", "validate"],
+        [sys.executable, "scripts/scir_sweep.py", "--manifest", "tests/sweeps/python_proof_loop_smoke.json"],
+        benchmark_command,
+    ]
+    deep_rust_commands = [
         [sys.executable, "scripts/scir_bootstrap_pipeline.py", "--language", "rust", "--mode", "validate"],
-        [sys.executable, "scripts/benchmark_contract_dry_run.py"],
     ]
 
-    for command in non_rust_commands:
+    for command in baseline_commands:
         run_command(command)
 
-    rust_status = "executed"
-    benchmark_status = "executed"
-    if rust_available:
-        for command in rust_commands:
+    deep_rust_status = "skipped_not_requested"
+    conditional_track_c_status = "skipped_not_requested"
+    if args.require_rust:
+        if not rust_available:
+            print(
+                f"Rust validation requires a usable toolchain: {rust_resolution['reason']}",
+                file=sys.stderr,
+            )
+            return 1
+        for command in deep_rust_commands:
             run_command(command, env=rust_env)
-    elif args.require_rust:
-        print(
-            f"Rust validation requires a usable toolchain: {rust_resolution['reason']}",
-            file=sys.stderr,
-        )
-        return 1
-    else:
-        rust_status = "skipped_unusable_toolchain"
-        benchmark_status = "skipped_unusable_toolchain"
+        deep_rust_status = "executed"
+    if args.include_track_c_pilot:
+        conditional_track_c_status = "executed"
 
     print(
         json.dumps(
@@ -75,9 +85,14 @@ def main() -> int:
                 "rust_toolchain_reason": rust_resolution["reason"],
                 "cargo_version": rust_resolution["cargo_version"],
                 "rustc_version": rust_resolution["rustc_version"],
-                "rust_validation_status": rust_status,
-                "benchmark_validation_status": benchmark_status,
+                "baseline_validation_status": "executed",
+                "rust_importer_validation_status": "executed",
+                "benchmark_validation_status": "executed",
+                "sweep_validation_status": "executed",
+                "conditional_track_c_validation_status": conditional_track_c_status,
+                "deep_rust_validation_status": deep_rust_status,
                 "full_rust_validation_command": "python scripts/run_repo_validation.py --require-rust",
+                "conditional_track_c_validation_command": "python scripts/run_repo_validation.py --include-track-c-pilot",
             },
             indent=2,
         )
