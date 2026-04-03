@@ -1,0 +1,217 @@
+{
+  "corpus_id": "invalid-scir-h-invariants",
+  "kind": "negative_validation",
+  "fixtures": [
+    {
+      "id": "invalid_scir_h.hidden_control.finally",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/invalid_finally.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "forbidden hidden control transfer"
+      ],
+      "hash": "sha256:61059d1ce05a2cfb6abbf826e824fd3ee7e5494e42710a07eb755dcef38784d1",
+      "expected_diagnostic_codes": [
+        "H001"
+      ]
+    },
+    {
+      "id": "invalid_scir_h.hidden_control.select",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/unsupported_select.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "forbidden hidden control transfer"
+      ],
+      "hash": "sha256:07b060ceffa14ae0d9e89873c82c63de00bdf48f4a20065a5745e237c5e1b85c",
+      "expected_diagnostic_codes": [
+        "H001"
+      ]
+    },
+    {
+      "id": "invalid_scir_h.implicit_mutation.param_assignment",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/invalid_implicit_mutation.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "implicit mutation"
+      ],
+      "hash": "sha256:41d5d9a52dfa9e64838a5e43cead8d31a949eecafbe1f1d98866d7467922872f",
+      "expected_diagnostic_codes": [
+        "H002"
+      ]
+    },
+    {
+      "id": "invalid_scir_h.implicit_effect.await_without_row",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/invalid_missing_await_effect.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "implicit effect"
+      ],
+      "hash": "sha256:9e6cb5a760e13d311b47d1aab557e6fd13c23f3dd39605335e43dd2ee91fc6a3",
+      "expected_diagnostic_codes": [
+        "H003"
+      ]
+    },
+    {
+      "id": "invalid_scir_h.implicit_effect.unused_row",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/invalid_unused_effect.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "unused explicit effect"
+      ],
+      "hash": "sha256:5f6eeaa794fb9180dcced549fe8b9c02f6a4d930b801c8a352d7b2c6ed3a7adc",
+      "expected_diagnostic_codes": [
+        "H003"
+      ]
+    },
+    {
+      "id": "invalid_scir_h.implicit_effect.throw_without_row",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/invalid_missing_throw_effect.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "missing throw propagation"
+      ],
+      "hash": "sha256:cc82623cf3e8ba06fd8b36cfde21c8d22ad7b686e7c941e0d31796c1efcc82d0",
+      "expected_diagnostic_codes": [
+        "H003"
+      ]
+    },
+    {
+      "id": "invalid_scir_h.name_resolution.unresolved",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/invalid_unresolved_name.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "unresolved reference"
+      ],
+      "hash": "sha256:d5d0f4627e55630cf72a66e3a400614f564ce093ed85d40cccb4fe6f79b874c2",
+      "expected_diagnostic_codes": [
+        "H004"
+      ]
+    },
+    {
+      "id": "invalid_scir_h.canonical_format.indent",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/invalid_noncanonical_indent.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "canonical formatting violation"
+      ],
+      "hash": "sha256:d161157936b37191181a6b719319139b2afe09e0e54c4057fa76f1bf2c74a8a9",
+      "expected_diagnostic_codes": [
+        "H005"
+      ]
+    },
+    {
+      "id": "invalid_scir_h.deterministic_storage.unsorted",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/invalid_nondeterministic_storage.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "non-deterministic canonical storage"
+      ],
+      "hash": "sha256:d7d2172f8e75c8e583f1cc543836239a7a54815d9b75a4d9b2b13dc81baf9202",
+      "expected_diagnostic_codes": [
+        "H006"
+      ]
+    },
+    {
+      "id": "invalid_scir_h.field_place.unknown_field",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/invalid_missing_field_place.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "invalid field place"
+      ],
+      "hash": "sha256:d5ed1909134bd8234dcf85bb511741fc935d862aa54615416c93d87cce67dcc6",
+      "expected_diagnostic_codes": [
+        "H007"
+      ]
+    },
+    {
+      "id": "invalid_scir_h.ownership.borrow_mutation",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/invalid_borrow_mutation.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "illegal mutation through borrow<T>"
+      ],
+      "hash": "sha256:809376fa52e878c18e34720d2cc8c95ec5b5bb542af846d1f150fa54e122462c",
+      "expected_diagnostic_codes": [
+        "H010"
+      ]
+    },
+    {
+      "id": "invalid_scir_h.boundary.missing_contract",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/invalid_missing_boundary_contract.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "missing boundary contract"
+      ],
+      "hash": "sha256:eb1d488206ada230d7bccce691a545ff70a902c68f885ae291723fa62aa715cc",
+      "expected_diagnostic_codes": [
+        "H008"
+      ]
+    },
+    {
+      "id": "invalid_scir_h.boundary.missing_capabilities_metadata",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/invalid_boundary_missing_capabilities.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "missing boundary capability metadata"
+      ],
+      "hash": "sha256:5854ca36aee9ea93fb22dba95213368971729f32491d434abf93509836abc808",
+      "boundary_contract_path": "tests/invalid_scir_h/invalid_boundary_missing_capabilities_contract.json",
+      "expected_diagnostic_codes": [
+        "H008"
+      ]
+    },
+    {
+      "id": "invalid_scir_h.unsupported.legacy_brace",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/legacy_brace_syntax.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "unsupported legacy syntax"
+      ],
+      "hash": "sha256:5623aa86f39f37a7aab21845e74e510fd81b74c5d768175915a76c837374422a",
+      "expected_diagnostic_codes": [
+        "H009"
+      ]
+    }
+  ]
+}

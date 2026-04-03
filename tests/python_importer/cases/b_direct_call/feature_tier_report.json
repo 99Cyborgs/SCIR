@@ -3,16 +3,16 @@
   "subject": "fixture.python_importer.b_direct_call",
   "source_language": "python",
   "summary": {
-    "A": 0,
-    "B": 1,
+    "A": 1,
+    "B": 0,
     "C": 0,
     "D": 0
   },
   "items": [
     {
       "feature": "direct local call preservation",
-      "tier": "B",
-      "rationale": "A fixed local call site can normalize into canonical call syntax, but this slice is accepted only as importer-level SCIR-H evidence and stays outside executable lowering and reconstruction."
+      "tier": "A",
+      "rationale": "A fixed local direct call site now participates in the active Python proof loop with bounded lowering and reconstruction evidence."
     }
   ]
 }

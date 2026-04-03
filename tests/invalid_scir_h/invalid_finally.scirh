@@ -1,0 +1,8 @@
+module invalid.finally
+fn bad -> int !
+  try
+    return 1
+  catch err Error
+    return 0
+  finally
+    return 2

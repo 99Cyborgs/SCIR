@@ -1,0 +1,5 @@
+module invalid.select
+fn bad -> int !
+  select
+    recv channel as value
+      return value

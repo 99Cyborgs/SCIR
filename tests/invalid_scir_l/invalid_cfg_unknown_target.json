@@ -1,0 +1,24 @@
+{
+  "module_id": "invalid.scir_l.cfg_unknown_target",
+  "functions": [
+    {
+      "name": "bad_cfg",
+      "returns": "int",
+      "params": [],
+      "blocks": [
+        {
+          "id": "entry",
+          "params": [],
+          "instructions": [],
+          "terminator": {
+            "kind": "br",
+            "target": "missing",
+            "args": [],
+            "origin": "invalid.scir_l.cfg_unknown_target::branch",
+            "lowering_rule": "H_BRANCH_JOIN"
+          }
+        }
+      ]
+    }
+  ]
+}

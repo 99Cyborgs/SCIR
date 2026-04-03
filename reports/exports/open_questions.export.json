@@ -2,107 +2,23 @@
   "open_questions": [
     {
       "id": "OQ-001",
-      "question": "Should profile `R` preserve stronger comment and provenance detail in v1?",
-      "impact": "reconstruction and audit tooling",
-      "default_until_resolved": "comments remain out of canonical text; provenance sidecars remain allowed",
+      "question": "How much comment and provenance detail should a future pretty-view retain by default?",
+      "impact": "review ergonomics and audit tooling",
+      "default_until_resolved": "canonical storage stays comment-free; pretty-view may add only non-semantic annotations",
       "blocker": "no"
     },
     {
       "id": "OQ-003",
-      "question": "How much of `SCIR-H` should be user-visible versus tool-mediated?",
-      "impact": "UX and tooling design",
-      "default_until_resolved": "`SCIR-H` remains inspectable text; no separate authoring language",
+      "question": "Should Rust remain importer-only in the MVP or grow into an active round-trip proof loop later?",
+      "impact": "roadmap scope and validation cost",
+      "default_until_resolved": "keep Rust importer-first and do not widen reconstruction or benchmark claims",
       "blocker": "no"
     },
     {
-      "id": "OQ-005",
-      "question": "Can `SCIR-H` live inside MLIR infrastructure without losing normative status?",
-      "impact": "implementation architecture",
-      "default_until_resolved": "treat MLIR as optional infrastructure, not the spec surface",
-      "blocker": "no"
-    },
-    {
-      "id": "OQ-006",
-      "question": "How much laziness, reflection, and template behavior can be captured without collapsing regularity?",
-      "impact": "source coverage and tiers",
-      "default_until_resolved": "keep them outside Tier A unless explicitly proven otherwise",
-      "blocker": "no"
-    },
-    {
-      "id": "OQ-007",
-      "question": "Should generators remain first-class in `SCIR-H` or normalize to iterator/state-machine forms?",
-      "impact": "grammar and reconstruction",
-      "default_until_resolved": "keep generators out of `SCIR-H` v0.1 core",
-      "blocker": "no"
-    },
-    {
-      "id": "OQ-010",
-      "question": "Should strict floating-point behavior be modeled as a separate profile facet?",
-      "impact": "preservation claims for native and portable backends",
-      "default_until_resolved": "keep strict-fp as a contract-bounded note under `P2`",
-      "blocker": "no"
-    },
-    {
-      "id": "OQ-011",
-      "question": "How much analysis metadata should flow back from `SCIR-L` to `SCIR-H`?",
-      "impact": "tooling and debugging",
-      "default_until_resolved": "provenance only; do not reflect optimizer-only facts back into `SCIR-H` yet",
-      "blocker": "no"
-    },
-    {
-      "id": "OQ-012",
-      "question": "Which trusted runtime services deserve first-class semantics rather than opaque boundaries?",
-      "impact": "interop and runtime scope",
-      "default_until_resolved": "keep runtime services opaque unless they are required by the first targeted subset",
-      "blocker": "no"
-    },
-    {
-      "id": "OQ-013",
-      "question": "Which translation-validation obligations should land first?",
-      "impact": "trust reduction sequencing",
-      "default_until_resolved": "start with `H -> L` preservation downgrades and provenance continuity checks",
-      "blocker": "no"
-    },
-    {
-      "id": "OQ-014",
-      "question": "Which intrinsic AI metrics actually predict repository repair success?",
-      "impact": "benchmark strategy",
-      "default_until_resolved": "keep intrinsic metrics informative, not sufficient",
-      "blocker": "no"
-    },
-    {
-      "id": "OQ-015",
-      "question": "How much repository import should be eager versus slice-based on demand?",
-      "impact": "agent workflow scalability",
-      "default_until_resolved": "default to slice-based import driven by impacted dependency cones",
-      "blocker": "no"
-    },
-    {
-      "id": "OQ-016",
-      "question": "How strict should versioning be before 1.0 while semantics are still moving?",
-      "impact": "release process",
-      "default_until_resolved": "allow breaking changes only with migration notes and updated golden tests",
-      "blocker": "no"
-    },
-    {
-      "id": "OQ-017",
-      "question": "Which proof assistant split is appropriate: Lean, Coq, or both?",
-      "impact": "proof roadmap",
-      "default_until_resolved": "proof work is non-blocking for phase 1",
-      "blocker": "no"
-    },
-    {
-      "id": "OQ-018",
-      "question": "What is the minimum TypeScript interface-shaped witness slice that justifies a dedicated Phase 7 milestone without broadening host-runtime claims?",
-      "impact": "milestone scoping for witness-bearing second-language evidence",
-      "default_until_resolved": "keep the slice limited to interface declarations plus module-local witness consumption with explicit host assumptions, importer-only evidence, and no executable `D-JS` claim",
-      "blocker": "no"
-    },
-    {
-      "id": "OQ-019",
-      "question": "Which downstream contracts must become blocking before TypeScript witness work can claim executable `D-JS` support?",
-      "impact": "validator and benchmark sequencing for `D-JS`",
-      "default_until_resolved": "require explicit lowering, translation-validation, reconstruction, and benchmark gates, with report-visible witness semantics and profile-qualified downgrade obligations, before any executable `D-JS` claim",
+      "id": "OQ-004",
+      "question": "Should persistent lineage later absorb a module-level dependency signature in addition to normalized declarations?",
+      "impact": "identity semantics across larger multi-module imports",
+      "default_until_resolved": "keep lineage scoped to normalized module semantics only",
       "blocker": "no"
     }
   ]

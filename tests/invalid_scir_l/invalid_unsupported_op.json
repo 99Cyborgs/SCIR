@@ -1,0 +1,34 @@
+{
+  "module_id": "invalid.scir_l.unsupported_op",
+  "functions": [
+    {
+      "name": "bad_op",
+      "returns": "int",
+      "params": [],
+      "blocks": [
+        {
+          "id": "entry",
+          "params": [],
+          "instructions": [
+            {
+              "id": "sum0",
+              "op": "add",
+              "operands": [
+                1,
+                2
+              ],
+              "origin": "invalid.scir_l.unsupported_op::sum0",
+              "lowering_rule": "H_CONST_RET"
+            }
+          ],
+          "terminator": {
+            "kind": "ret",
+            "value": "sum0",
+            "origin": "invalid.scir_l.unsupported_op::ret",
+            "lowering_rule": "H_RETURN"
+          }
+        }
+      ]
+    }
+  ]
+}

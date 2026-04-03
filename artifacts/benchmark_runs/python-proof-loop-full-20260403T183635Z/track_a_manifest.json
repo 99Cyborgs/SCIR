@@ -1,0 +1,35 @@
+{
+  "benchmark_id": "bootstrap-track-a-python-subset",
+  "track": "A",
+  "task_family": "scir-h-regularity-and-compression",
+  "corpus": {
+    "name": "python-bootstrap-fixtures",
+    "scope": "Fixed executable Python bootstrap cases",
+    "hash": "sha256:41592f102f5fd852200de007698774508f9ffeebd8fb5b4d9d01c85c812873e6"
+  },
+  "baselines": [
+    "direct source",
+    "typed-AST",
+    "lightweight regularized core or s-expression"
+  ],
+  "profiles": [
+    "R",
+    "D-PY"
+  ],
+  "success_gates": [
+    "S3",
+    "S4"
+  ],
+  "kill_gates": [
+    "K2",
+    "K4"
+  ],
+  "contamination_controls": [
+    "hash every published corpus manifest",
+    "separate development, tuning, and held-out evaluation slices",
+    "record prompt templates and baseline adapters",
+    "do not claim generalization from a contaminated or untracked dataset"
+  ],
+  "corpus_manifest": "tests/corpora/python_proof_loop_corpus.json",
+  "corpus_manifest_hash": "sha256:0c3b78d3b092277d89bb79a7df485b3f794b3ae30668acbed4fba318b48e4398"
+}

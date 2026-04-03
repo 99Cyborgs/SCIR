@@ -1,0 +1,335 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SCIR Sweep Summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sweep_id",
+    "run_id",
+    "commit_sha",
+    "spec_version",
+    "tool_version",
+    "corpus_id",
+    "corpus_manifest_hash",
+    "generated_at",
+    "row_count",
+    "stage_summary",
+    "construct_family_summary",
+    "diagnostic_code_summary",
+    "slice_summary",
+    "slice_rankings",
+    "preservation_stage_breakdown"
+  ],
+  "properties": {
+    "sweep_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commit_sha": {
+      "type": "string",
+      "minLength": 1
+    },
+    "spec_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tool_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "corpus_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "corpus_manifest_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "generated_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "row_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "stage_summary": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/namedSummary"
+      }
+    },
+    "construct_family_summary": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/namedSummary"
+      }
+    },
+    "diagnostic_code_summary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "count"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "slice_summary": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/namedSummary"
+      }
+    },
+    "slice_rankings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "most_stable_slice",
+        "most_failure_dense_slice",
+        "fastest_improving_slice"
+      ],
+      "properties": {
+        "most_stable_slice": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "slice_id",
+            "slice_score"
+          ],
+          "properties": {
+            "slice_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "slice_score": {
+              "type": "number"
+            }
+          }
+        },
+        "most_failure_dense_slice": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "slice_id",
+            "failure_density"
+          ],
+          "properties": {
+            "slice_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "failure_density": {
+              "type": "number"
+            }
+          }
+        },
+        "fastest_improving_slice": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "slice_id",
+            "baseline_slice_score",
+            "current_slice_score",
+            "delta"
+          ],
+          "properties": {
+            "slice_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "baseline_slice_score": {
+              "type": "number"
+            },
+            "current_slice_score": {
+              "type": "number"
+            },
+            "delta": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "preservation_stage_breakdown": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifact_id",
+          "stages"
+        ],
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stages": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "source_to_h": {
+                "$ref": "#/$defs/preservationStage"
+              },
+              "scir_h_validation": {
+                "$ref": "#/$defs/preservationStage"
+              },
+              "h_to_l": {
+                "$ref": "#/$defs/preservationStage"
+              },
+              "scir_l_validation": {
+                "$ref": "#/$defs/preservationStage"
+              },
+              "h_to_python": {
+                "$ref": "#/$defs/preservationStage"
+              },
+              "l_to_wasm": {
+                "$ref": "#/$defs/preservationStage"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "statusCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pass",
+        "warn",
+        "fail",
+        "skip"
+      ],
+      "properties": {
+        "pass": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warn": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fail": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "skip": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "namedSummary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "row_count",
+        "status_counts",
+        "validator_pass_rate",
+        "preservation_correctness_rate",
+        "avg_opaque_fraction",
+        "avg_unsupported_fraction",
+        "avg_duration_ms",
+        "slice_score"
+      ],
+      "properties": {
+        "row_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status_counts": {
+          "$ref": "#/$defs/statusCounts"
+        },
+        "validator_pass_rate": {
+          "type": "number"
+        },
+        "preservation_correctness_rate": {
+          "type": "number"
+        },
+        "avg_opaque_fraction": {
+          "type": "number"
+        },
+        "avg_unsupported_fraction": {
+          "type": "number"
+        },
+        "avg_duration_ms": {
+          "type": "number"
+        },
+        "slice_score": {
+          "type": "number"
+        }
+      }
+    },
+    "preservationStage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "preservation_level",
+        "expected_preservation_level",
+        "expectation_status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "warn",
+            "fail",
+            "skip"
+          ]
+        },
+        "preservation_level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expected_preservation_level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expectation_status": {
+          "type": "string",
+          "enum": [
+            "match",
+            "justified_downgrade",
+            "unexplained_downgrade",
+            "overclaim",
+            "status_mismatch",
+            "missing_observation",
+            "not_configured",
+            "not_applicable"
+          ]
+        }
+      }
+    }
+  }
+}

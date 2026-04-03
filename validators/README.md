@@ -1,24 +1,17 @@
 # Validator Stack
 Status: Normative
 
-The validator stack exists to enforce canonical semantics, not to decorate already-invalid artifacts with warnings.
+The validator stack exists to enforce canonical semantics, not to decorate invalid artifacts with warnings.
 
-## Validators
+## Active validators
 
 - `SCIR-H` validator
 - `SCIR-L` validator
-- translation validator
+- translation and preservation validator for active paths
 
-## Required outputs
-
-All validators emit `validation_report` or `preservation_report` artifacts using repository schemas.
-
-## Ordering
+## Active ordering
 
 1. validate `SCIR-H`
-2. lower to `SCIR-L`
+2. lower to `SCIR-L` where the path is active
 3. validate `SCIR-L`
-4. run translation validation on selected transitions
-5. validate reconstruction and benchmark results as needed
-
-See `validators/validator_contracts.md`.
+4. validate preservation and reconstruction reports

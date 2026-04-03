@@ -1,33 +1,25 @@
 # VALIDATION
 
-## Canonical repo validation path
+## Canonical MVP validation path
 
-Use the Windows-safe validation runner:
+Use the Windows-safe MVP runner:
 
 ```bash
 python scripts/run_repo_validation.py
 ```
 
-This runner is the canonical Windows-safe portfolio baseline for repo-local staging.
-It always runs the repository contract, Python importer, Python bootstrap, and benchmark-contract checks.
-The repository contract slice includes synchronized derived exports for the decision register, open questions, and autonomous execution queue.
-On Windows, the runner probes whether the active Rust toolchain is actually usable and may apply a repo-local `RUSTUP_TOOLCHAIN` fallback to the installed MSVC toolchain for subprocesses only.
-If no usable Rust toolchain is available, the Rust validation slice is reported as skipped rather than failing silently.
+This command validates:
 
-Use the full Rust-inclusive validation path when Rust work is in scope:
-
-```bash
-python scripts/run_repo_validation.py --require-rust
-```
-
-## Portfolio governance check
-
-These governance notes are valid only if they remain consistent with:
-
-- `SYSTEM_BOUNDARY.md`
-- `ARCHITECTURE.md`
-- `VALIDATION_STRATEGY.md`
-- `BENCHMARK_STRATEGY.md`
+- repository contracts
+- derived exports
+- Python importer fixture integrity
+- Rust importer fixture integrity
+- active and negative corpus manifest integrity
+- seeded invalid `SCIR-H` and `SCIR-L` invariant corpora
+- slice-based sweep smoke over the fixed Python Tier `A` corpus with persisted artifacts, summaries, and regression comparison when a baseline is available
+- the admitted helper-free Wasm emitter slice
+- the active Python proof loop
+- the active Track `A` / Track `B` benchmark harness
 
 ## Underlying validation commands
 
@@ -35,21 +27,57 @@ These governance notes are valid only if they remain consistent with:
 python scripts/validate_repo_contracts.py --mode validate
 python scripts/build_execution_queue.py --mode check
 python scripts/python_importer_conformance.py --mode validate-fixtures
-python scripts/scir_bootstrap_pipeline.py --mode validate
-python scripts/benchmark_contract_dry_run.py
-```
-
-Optional Rust slice:
-
-```bash
 python scripts/rust_importer_conformance.py --mode validate-fixtures
-python scripts/scir_bootstrap_pipeline.py --language rust --mode validate
+python scripts/scir_bootstrap_pipeline.py --mode validate
+python scripts/scir_sweep.py --manifest tests/sweeps/python_proof_loop_smoke.json
+python scripts/benchmark_contract_dry_run.py
+python scripts/benchmark_contract_dry_run.py --claim-run
+python scripts/benchmark_repro.py --run-id <run-id>
 ```
 
-Direct benchmark validation still requires a usable Rust toolchain for the Rust Track `D` executable slice:
+## Generated artifact synchronization
+
+When Python proof-loop metadata or bounded Track `C` sample-producing logic changes, refresh the checked-in generated artifacts before rerunning validation:
 
 ```bash
-python scripts/benchmark_contract_dry_run.py
+python scripts/sync_python_proof_loop_artifacts.py --mode check
+python scripts/sync_python_proof_loop_artifacts.py --mode write
 ```
 
-Do not treat SCIR as promotion-ready if those validation surfaces are not credible for the proposed extraction target.
+## Optional importer-first Rust validation
+
+The default MVP gate does not require a Rust toolchain.
+When a usable toolchain is available, the optional Rust slice validates the importer-first Rust path only:
+
+- Rust fixture import
+- canonical `SCIR-H` validation
+- bounded `SCIR-H -> SCIR-L` lowering
+- `SCIR-L` validation
+- helper-free Wasm emission for the admitted Rust local-mutation case
+- path-qualified Rust `H -> L` preservation reporting
+
+Command:
+
+```bash
+python scripts/run_repo_validation.py --require-rust
+```
+
+## Optional non-default Track C validation
+
+The default MVP gate still stops at executable Track `A` and Track `B`.
+When explicitly requested, the bounded Track `C` pilot runs over the same fixed Python repair cases without changing the default gate:
+
+```bash
+python scripts/benchmark_contract_dry_run.py --include-track-c-pilot
+python scripts/run_repo_validation.py --include-track-c-pilot
+```
+
+That opt-in pilot keeps `c_opaque_call` boundary-accounting-only and leaves `make benchmark` unchanged.
+
+Explicit benchmark claims still require the dedicated claim lane:
+
+```bash
+python scripts/benchmark_contract_dry_run.py --claim-run
+```
+
+Deferred or archived surfaces that stay on disk are marked with `NOT_ACTIVE.md` and remain outside the default gate.

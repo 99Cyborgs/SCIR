@@ -1,0 +1,5 @@
+module invalid.missing_field_place
+type Counter record { value int }
+
+fn bad counter Counter -> int !
+  return counter.missing

@@ -1,0 +1,16 @@
+{
+  "report_id": "example-preservation-source-to-h-001",
+  "subject": "fixture.python_importer.a_basic_function",
+  "path": "source_to_h",
+  "source_artifact": "frontend/python:tests/python_importer/cases/a_basic_function/input.py",
+  "target_artifact": "scir_h:fixture.python_importer.a_basic_function",
+  "profile": "R",
+  "preservation_level": "P1",
+  "status": "pass",
+  "downgrades": [],
+  "boundary_annotations": [],
+  "evidence": [
+    "python importer fixture validated",
+    "canonical scir-h emitted"
+  ]
+}

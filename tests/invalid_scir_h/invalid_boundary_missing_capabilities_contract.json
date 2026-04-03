@@ -1,0 +1,16 @@
+{
+  "boundary_id": "invalid.boundary_missing_capabilities.boundary.foreign_api_ping",
+  "kind": "opaque_call",
+  "signature": "opaque.call foreign_api_ping() -> opaque<ForeignResult> !opaque",
+  "effects": [
+    "opaque"
+  ],
+  "ownership_transfer": {
+    "inbound": [],
+    "outbound": [
+      "opaque<ForeignResult>"
+    ]
+  },
+  "determinism": "unknown",
+  "audit_note": "Negative fixture: boundary metadata omits required capability requirements."
+}

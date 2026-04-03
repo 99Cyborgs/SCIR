@@ -5,9 +5,13 @@ This directory holds checked-in golden corpora and conformance fixtures.
 
 ## Current contents
 
-- `python_importer/cases/` fixture bundles for the Milestone 02 Python importer bootstrap floor plus importer-only 02B follow-on cases, including fixed-shape `while` loop slices and bounded class-field read/update slices
-- `rust_importer/cases/` fixture bundles for the Phase 6A Rust safe-subset bootstrap slice
-- `typescript_importer/cases/` reserved placeholder tree for the Phase 7 interface-witness slice; both the admitted `A`-case directories and the rejected `D`-case directories now carry non-live placeholder bundle files
+- `python_importer/cases/` fixture bundles for the active Python importer proof loop and importer-only follow-on cases
+- `rust_importer/cases/` fixture bundles for the bounded Rust safe-subset importer slice
+- `corpora/` frozen machine-readable manifests for the active proof-loop corpora
+- `sweeps/` slice definitions for sweep smoke and fuller proof-loop aggregation
+- `invalid_scir_h/` seeded invalid canonical examples keyed to `SCIR-H` invariant codes
+- `invalid_scir_l/` seeded invalid lowered examples keyed to `SCIR-L` invariant codes
+- `typescript_importer/` archived placeholder corpus retained only as historical residue outside the active validation gate
 
 ## Rules
 
@@ -17,13 +21,15 @@ This directory holds checked-in golden corpora and conformance fixtures.
 - importer-only Tier `B` fixtures may stop at validated `SCIR-H` and need not participate in executable lowering, translation, or reconstruction
 - Tier `A` Rust importer fixtures are single-crate Rust 2021 library fixtures with `input/Cargo.toml`, `input/src/lib.rs`, and `input/tests/smoke.rs`
 - Tier `C` Rust importer fixtures include an explicit opaque boundary contract
-- first-slice TypeScript fixture bundles must reuse the importer bundle model already used by Python and Rust: source text plus the required importer reports, with canonical `SCIR-H` present only on admitted cases
-- first-slice TypeScript rejection fixtures must cover nearby unsupported constructs, including functions, `async`, classes, prototype behavior, decorators, proxies, and executable type-level semantics
 - `make test` and `make validate` fail if the Python or Rust importer fixture corpora drift from their conformance rules
+- `make validate` fails if the active corpus manifests, negative-fixture manifests, or sweep manifests drift from their schema or file hashes
+- invalid `SCIR-H` and `SCIR-L` fixtures must continue to fail with their expected invariant codes
 
-## TypeScript corpus
+## Archived TypeScript corpus
 
-The first checked-in TypeScript placeholder corpus is:
+The checked-in TypeScript placeholder tree is retained only as an archived, non-blocking historical surface.
+It is marked with `tests/typescript_importer/NOT_ACTIVE.md` and remains outside the default gate.
+It must not be treated as an active importer, lowering, reconstruction, benchmark, or CI commitment.
 
 - `tests/typescript_importer/cases/a_interface_decl/`
 - `tests/typescript_importer/cases/a_interface_local_witness_use/`
@@ -35,23 +41,4 @@ The first checked-in TypeScript placeholder corpus is:
 - `tests/typescript_importer/cases/d_proxy_construct/`
 - `tests/typescript_importer/cases/d_type_level_runtime_gate/`
 
-Bundle contents are fixed as:
-
-- admitted cases: `source.ts`, `expected.scirh`, `module_manifest.json`, `feature_tier_report.json`, `validation_report.json`
-- rejected cases: `source.ts`, `module_manifest.json`, `feature_tier_report.json`, `validation_report.json`
-
-Current on-disk placeholder state is:
-
-- admitted first-slice TypeScript case directories now contain `README.md` plus placeholder `source.ts`, `expected.scirh`, `module_manifest.json`, `feature_tier_report.json`, and `validation_report.json`
-- rejected first-slice TypeScript case directories now contain `README.md` plus placeholder `source.ts`, `module_manifest.json`, `feature_tier_report.json`, and `validation_report.json`
-- rejected first-slice TypeScript case directories still intentionally omit `expected.scirh`
-- none of these TypeScript placeholder files are live importer outputs
-- repository validation now enforces the fixed nine-case TypeScript placeholder corpus shape, including admitted-vs-rejected file-presence rules, rejected-case `expected.scirh` absence, and placeholder report posture
-
-## TypeScript conformance checker
-
-The dormant TypeScript placeholder corpus is now paired with a language-local conformance checker that mirrors the existing Python and Rust pattern where the Phase 7 placeholder contract permits:
-
-- `validate-fixtures` now checks corpus layout, placeholder text markers, schema-valid reports, and admitted-vs-rejected `expected.scirh` rules for the dormant corpus
-- `test` remains reserved for future generated-vs-golden conformance against a live TypeScript importer implementation
-- repository-contract validation remains the repo-level enforcement layer for the dormant TypeScript placeholder corpus even after `validate-fixtures` activation
+Active validation does not invoke the TypeScript placeholder checker.

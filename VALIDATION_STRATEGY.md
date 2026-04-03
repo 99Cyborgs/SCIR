@@ -95,11 +95,15 @@ Canonical bootstrap validation is parse -> normalize -> format equality on the s
 Derived `SCIR-Hc` must reject:
 
 - compressed text that does not normalize under parse -> format equality,
+- any executable transform attempt that lacks a valid report-scoped generation context,
 - compressed text that lacks the derived-only authority marker,
 - compressed nodes that omit canonical information without valid `compression_origin` provenance,
 - `SCIR-Hc` artifacts that differ from deterministic `SCIR-H -> SCIR-Hc` derivation,
+- lineage references that do not match the canonical `SCIR-H` semantic lineage id and normalized canonical hash,
+- any claim or evaluated metric that lacks complete canonical `SCIR-H` evidence coverage,
 - compressed text that fails to reconstruct canonical `SCIR-H`,
 - any round-trip that changes semantic lineage or canonical `SCIR-H` formatting,
+- any semantic-idempotence check where `normalize(scirh_to_scirh(scirh_to_scirhc(scirh))) != normalize(scirh)`,
 - compression claims that contradict boundary metadata or normalization statistics.
 
 ### `SCIR-L`
@@ -180,11 +184,14 @@ Rust reconstruction remains a deferred surface. It is not part of the active MVP
 
 The default gate must run `tests/test_scirhc_doctrine.py` and fail when the repository stops rejecting:
 
+- SCIR-Hc generation without context,
+- SCIR-Hc generation outside report context,
+- invalid lineage hash or missing lineage coverage,
 - non-deterministic `SCIR-H -> SCIR-Hc` derivation,
 - round-trip equivalence failure,
 - illegal direct `SCIR-Hc` pipeline usage,
 - hidden semantic injection,
-- benchmark-claim overreach.
+- causal metric leakage, metric-authority leakage, or benchmark-claim overreach.
 
 ## Operational command contract
 

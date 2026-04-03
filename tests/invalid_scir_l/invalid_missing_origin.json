@@ -1,0 +1,33 @@
+{
+  "module_id": "invalid.scir_l.missing_origin",
+  "functions": [
+    {
+      "name": "bad_origin",
+      "returns": "int",
+      "params": [],
+      "blocks": [
+        {
+          "id": "entry",
+          "params": [],
+          "instructions": [
+            {
+              "id": "const0",
+              "op": "const",
+              "operands": [
+                1
+              ],
+              "origin": "",
+              "lowering_rule": "H_CONST_RET"
+            }
+          ],
+          "terminator": {
+            "kind": "ret",
+            "value": "const0",
+            "origin": "invalid.scir_l.missing_origin::ret",
+            "lowering_rule": "H_RETURN"
+          }
+        }
+      ]
+    }
+  ]
+}

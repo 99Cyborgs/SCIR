@@ -3,41 +3,31 @@ Status: Normative
 
 ## Purpose
 
-SCIR uses a hybrid model because a single memory discipline does not cover the targeted language set.
+The MVP keeps ownership and alias semantics only where the active Python and Rust slices require them.
 
-## Canonical modes
+## Active modes
 
-| Mode | Meaning | Typical use |
+| Mode | Meaning | Active use |
 | --- | --- | --- |
-| `own<T>` | unique owning value | native-style explicit ownership |
-| `borrow<T>` | shared read-only alias | temporary shared access |
-| `borrow_mut<T>` | unique mutable alias | temporary unique mutation |
-| `share<T>` | shareable synchronized or explicit-shared value | concurrency-safe shared state |
-| `gc<T>` | host or GC-managed value | dynamic-host interop |
-| `opaque<T>` | boundary value with hidden internals | FFI, host, unsafe, unsupported internals |
+| plain value | normal value semantics | Python and Rust subset defaults |
+| `borrow<T>` | read-only borrowed reference | Rust importer type surface |
+| `borrow_mut<T>` | writable borrowed reference | Rust importer type surface |
+| `opaque<T>` | boundary value with hidden internals | Python foreign and Rust unsafe boundaries |
 
 ## Rules
 
-- mutation requires an explicit mutable place or alias mode,
-- alias rules are part of validator obligations for modeled subsets,
-- `gc<T>` and `opaque<T>` weaken static alias guarantees,
-- `opaque<T>` does not imply semantic understanding of the payload.
+- mutation requires an explicit mutable place
+- importer-visible borrow modes must remain explicit
+- `borrow<T>` permits reads only and must not be used as a mutation root
+- `borrow_mut<T>` is the only writable borrow mode in the active subset
+- `opaque<T>` does not imply semantic understanding of the payload
+- `opaque<T>` values must not be projected as record-like values inside the active subset
+- no stronger alias guarantee may be invented during lowering
 
-## Importer expectations
+## Deferred from active use
 
-- Rust safe subsets should map cleanly into `own`, `borrow`, and `borrow_mut` where possible,
-- Python and TypeScript host objects usually land in `gc` or `opaque`,
-- FFI-heavy or unsafe constructs remain `opaque` or explicit unsafe regions,
-- C++-style layout-sensitive code must not be over-claimed as `own`-safe unless the subset contract supports it.
+- `own<T>`
+- `share<T>`
+- `gc<T>` as a first-class canonical commitment
 
-## Lowering expectations
-
-`SCIR-L` may refine region or memory token structure, but it must not strengthen alias guarantees silently.
-
-## Invalid claims
-
-The following are invalid without explicit evidence:
-
-- claiming race freedom over `opaque` shared state,
-- claiming native ownership safety for `gc` host objects,
-- claiming `borrow_mut` legality when live aliases are not discharged.
+These remain future design surfaces, not active MVP claims.

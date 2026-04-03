@@ -1,0 +1,7 @@
+module invalid.implicit_mutation
+fn helper -> int !
+  return 0
+
+fn bad x int -> int !write
+  set helper 0
+  return x

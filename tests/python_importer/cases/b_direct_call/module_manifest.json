@@ -7,7 +7,7 @@
     "R",
     "D-PY"
   ],
-  "declared_tier": "B",
+  "declared_tier": "A",
   "dependencies": [
     "python:builtins"
   ],

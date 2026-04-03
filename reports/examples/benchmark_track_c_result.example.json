@@ -1,0 +1,90 @@
+{
+  "benchmark_id": "example-benchmark-track-c-python-repair-001",
+  "run_id": "example-track-c-pilot-run-2026-04-01",
+  "commit_sha": "example-commit-sha",
+  "spec_version": "v0.1-draft",
+  "tool_version": "scir-benchmark-audit-v1",
+  "system_under_test": "scir-bootstrap-non-default-track-c-pilot",
+  "track": "C",
+  "baseline_name": "scir",
+  "profile": "R",
+  "corpus_manifest_hash": "sha256:41592f102f5fd852200de007698774508f9ffeebd8fb5b4d9d01c85c812873e6",
+  "metrics": {
+    "repair_task_count": 4,
+    "accepted_case_count": 3,
+    "boundary_only_case_count": 1,
+    "repair_accept_rate": 0.75,
+    "repair_test_pass_rate": 0.75,
+    "median_scir_to_source_repair_ratio": 0.9375,
+    "median_scir_to_typed_ast_repair_ratio": 0.1069,
+    "median_scir_to_regularized_core_repair_ratio": 0.5192,
+    "gate_S2_ready": true,
+    "gate_K1_hit": false,
+    "boundary_annotation_fraction": 0.125,
+    "preservation_level_ceiling": "P3",
+    "tier_a_feature_count": 7,
+    "tier_b_feature_count": 0,
+    "tier_c_feature_count": 1,
+    "tier_d_feature_count": 0
+  },
+  "baseline_comparison": {
+    "direct source": -0.0625,
+    "typed-AST": 0.8931,
+    "lightweight regularized core or s-expression": -0.4808
+  },
+  "artifact_rows": [
+    {
+      "run_id": "example-track-c-pilot-run-2026-04-01",
+      "commit_sha": "example-commit-sha",
+      "spec_version": "v0.1-draft",
+      "tool_version": "scir-benchmark-audit-v1",
+      "baseline_name": "scir",
+      "corpus_manifest_hash": "sha256:41592f102f5fd852200de007698774508f9ffeebd8fb5b4d9d01c85c812873e6",
+      "artifact_id": "fixture.python_importer.a_basic_function",
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "stage": "source_to_h",
+      "metrics": {
+        "LCR": 0.9375,
+        "GR": 1.0,
+        "SE": 0.3,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "preservation_requested": "P1",
+      "preservation_observed": "P1",
+      "diagnostic_codes": [],
+      "compile_pass": null,
+      "test_pass": null,
+      "duration_ms": 0,
+      "reproducibility_block": {
+        "command": "python scripts/benchmark_contract_dry_run.py --include-track-c-pilot",
+        "environment": {
+          "python_executable": "python",
+          "python_version": "3.11.0",
+          "platform": "example-platform",
+          "cwd": "G:/GitHub/incubate/SCIR"
+        },
+        "seed": 0,
+        "timestamp": "2026-04-01T00:00:00+00:00"
+      }
+    }
+  ],
+  "reproducibility_block": {
+    "command": "python scripts/benchmark_contract_dry_run.py --include-track-c-pilot",
+    "environment": {
+      "python_executable": "python",
+      "python_version": "3.11.0",
+      "platform": "example-platform",
+      "cwd": "G:/GitHub/incubate/SCIR"
+    },
+    "seed": 0,
+    "timestamp": "2026-04-01T00:00:00+00:00"
+  },
+  "status": "mixed",
+  "evidence": [
+    "non-default executable pilot over fixed Python repair cases",
+    "seeded single-edit repairs restore original behavior for executable non-opaque cases",
+    "c_opaque_call remains boundary-accounting-only",
+    "retained as a bounded diagnostic pilot rather than a promotion claim"
+  ]
+}

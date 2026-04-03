@@ -11,7 +11,9 @@
       "opaque<ForeignResult>"
     ]
   },
-  "capabilities": [],
+  "capabilities": [
+    "capability:foreign_api_ping"
+  ],
   "determinism": "unknown",
   "audit_note": "The Python bootstrap slice treats foreign_api.ping as a Tier C opaque boundary rather than modeled semantics."
 }

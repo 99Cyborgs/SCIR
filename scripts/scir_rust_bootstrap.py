@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""Rust safe-subset importer for the bounded SCIR MVP corpus.
+
+This importer is intentionally importer-first: it emits canonical `SCIR-H` for a
+small fixed Rust subset and keeps unsupported ownership, macro, and self-pin
+surfaces explicit instead of widening executable claims.
+"""
 from __future__ import annotations
 
 import argparse
@@ -159,6 +165,8 @@ class ImporterError(Exception):
 
 @dataclass(frozen=True)
 class Bundle:
+    """Checked-in importer output bundle for one fixed Rust corpus case."""
+
     case_name: str
     files: dict[str, str]
 
@@ -240,7 +248,7 @@ CASE_CONFIG = {
     "c_unsafe_call": {
         "profiles": ["N"],
         "tier": "C",
-        "dependencies": ["rust:std"],
+        "dependencies": ["rust:std", "capability:unsafe_ping"],
         "exports": ["call_unsafe_ping"],
         "status": "warn",
         "feature_items": [
@@ -273,7 +281,7 @@ CASE_CONFIG = {
                 "inbound": [],
                 "outbound": ["int"],
             },
-            "capabilities": [],
+            "capabilities": ["capability:unsafe_ping"],
             "determinism": "unknown",
             "audit_note": "unsafe_ping is treated as a Tier C unsafe boundary rather than modeled Rust semantics in Phase 6A.",
         },
@@ -328,8 +336,131 @@ CASE_CONFIG = {
     },
 }
 
+RUST_IMPORTER_METADATA = {
+    "case_order": [
+        "a_mut_local",
+        "a_struct_field_borrow_mut",
+        "a_async_await",
+        "c_unsafe_call",
+        "d_proc_macro",
+        "d_self_ref_pin",
+    ],
+    "supported_cases": [
+        "a_mut_local",
+        "a_struct_field_borrow_mut",
+        "a_async_await",
+        "c_unsafe_call",
+    ],
+    "tier_a_cases": [
+        "a_mut_local",
+        "a_struct_field_borrow_mut",
+        "a_async_await",
+    ],
+    "rejected_cases": [
+        "d_proc_macro",
+        "d_self_ref_pin",
+    ],
+    "case_contracts": {
+        "a_mut_local": {
+            "profile": "R",
+            "preservation_level": "P1",
+            "requires_opaque_boundary": False,
+            "require_smoke_test": True,
+            "wasm_emittable": True,
+        },
+        "a_struct_field_borrow_mut": {
+            "profile": "R",
+            "preservation_level": "P1",
+            "requires_opaque_boundary": False,
+            "require_smoke_test": True,
+            "wasm_emittable": True,
+        },
+        "a_async_await": {
+            "profile": "R",
+            "preservation_level": "P1",
+            "requires_opaque_boundary": False,
+            "require_smoke_test": True,
+            "wasm_emittable": False,
+        },
+        "c_unsafe_call": {
+            "profile": "N",
+            "preservation_level": "P3",
+            "requires_opaque_boundary": True,
+            "require_smoke_test": False,
+            "wasm_emittable": False,
+        },
+    },
+}
+
+
+def _validate_rust_importer_metadata():
+    """Prevent Rust evidence metadata from drifting beyond the fixed supported corpus."""
+
+    case_order = RUST_IMPORTER_METADATA["case_order"]
+    supported_cases = RUST_IMPORTER_METADATA["supported_cases"]
+    tier_a_cases = RUST_IMPORTER_METADATA["tier_a_cases"]
+    rejected_cases = RUST_IMPORTER_METADATA["rejected_cases"]
+    case_contracts = RUST_IMPORTER_METADATA["case_contracts"]
+
+    declared_cases = set(case_order)
+    configured_cases = set(CASE_CONFIG)
+    source_cases = set(SOURCE_TEXTS)
+    if declared_cases != configured_cases or declared_cases != source_cases:
+        raise ImporterError(
+            "RUST_IMPORTER_METADATA must cover exactly the fixed Rust bootstrap corpus"
+        )
+
+    covered_cases = supported_cases + rejected_cases
+    if covered_cases != case_order:
+        raise ImporterError(
+            "RUST_IMPORTER_METADATA case classifications must preserve the fixed Rust corpus order"
+        )
+    if len(set(covered_cases)) != len(covered_cases):
+        raise ImporterError("RUST_IMPORTER_METADATA case classifications must be disjoint")
+
+    if not set(tier_a_cases).issubset(supported_cases):
+        raise ImporterError("RUST_IMPORTER_METADATA tier_a_cases must remain a subset of supported_cases")
+
+    if set(case_contracts) != set(supported_cases):
+        raise ImporterError(
+            "RUST_IMPORTER_METADATA case_contracts must cover supported Rust cases exactly"
+        )
+
+    for case_name in supported_cases:
+        config = CASE_CONFIG[case_name]
+        contract = case_contracts[case_name]
+        if config["tier"] not in {"A", "C"}:
+            raise ImporterError(
+                f"{case_name}: supported Rust importer case must remain Tier A or Tier C"
+            )
+        if contract["requires_opaque_boundary"] != bool(config["opaque_boundary_contract"]):
+            raise ImporterError(
+                f"{case_name}: Rust opaque-boundary requirement drifted from CASE_CONFIG"
+            )
+        if contract["profile"] not in config["profiles"]:
+            raise ImporterError(
+                f"{case_name}: Rust importer profile must remain declared by CASE_CONFIG"
+            )
+        if contract["require_smoke_test"] and case_name not in TEST_TEXTS:
+            raise ImporterError(f"{case_name}: supported Rust Tier A case must keep a smoke test")
+        if not contract["require_smoke_test"] and case_name in TEST_TEXTS:
+            raise ImporterError(f"{case_name}: non-round-trip Rust case must not keep a smoke test")
+
+    for case_name in tier_a_cases:
+        if CASE_CONFIG[case_name]["tier"] != "A":
+            raise ImporterError(f"{case_name}: Rust tier_a_cases entry must remain Tier A")
+
+    for case_name in rejected_cases:
+        if CASE_CONFIG[case_name]["tier"] != "D":
+            raise ImporterError(f"{case_name}: rejected Rust importer case must remain Tier D")
+
+
+_validate_rust_importer_metadata()
+
 
 def build_supported_module(case_name: str) -> Module:
+    """Return the canonical `SCIR-H` form for an admitted Rust importer case."""
+
     module_id = f"fixture.rust_importer.{case_name}"
     if case_name == "a_mut_local":
         return normalize_module(
@@ -473,6 +604,8 @@ def expected_cargo_text(case_name: str) -> str:
 
 
 def build_bundle(root: pathlib.Path, source_path: pathlib.Path) -> Bundle:
+    """Rebuild the Rust importer bundle while preserving the crate-level fixture contract."""
+
     source_text = source_path.read_text(encoding="utf-8")
     case_name = derive_case_name(source_path)
     if source_text != SOURCE_TEXTS[case_name]:

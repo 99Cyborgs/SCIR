@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""Conformance checker for checked-in Python importer bundles.
+
+These checks enforce that the fixed Python fixture outputs still match the
+importer contract, canonical `SCIR-H`, boundary accounting, and schema-backed
+report surfaces. This is governance validation, not a generic golden-file diff.
+"""
 import argparse
 import json
 import pathlib
@@ -8,7 +14,10 @@ import tempfile
 
 from scir_h_bootstrap_model import ScirHModelError, format_module, parse_module
 from scir_python_bootstrap import ImporterError, VALIDATOR_NAME, build_bundle
-from validate_repo_contracts import collect_instance_validation_errors
+from validate_repo_contracts import (
+    collect_instance_validation_errors,
+    validate_boundary_capability_contract,
+)
 
 
 FIXTURE_ROOT = pathlib.Path("tests") / "python_importer" / "cases"
@@ -72,17 +81,17 @@ CASE_EXPECTATIONS = {
         ],
     },
     "b_direct_call": {
-        "tier": "B",
-        "status": "warn",
+        "tier": "A",
+        "status": "pass",
         "validator": VALIDATOR_NAME,
         "profiles": ["R", "D-PY"],
         "dependencies": ["python:builtins"],
         "exports": ["identity", "call_identity"],
         "opaque_boundary_count": 0,
-        "summary": {"A": 0, "B": 1, "C": 0, "D": 0},
+        "summary": {"A": 1, "B": 0, "C": 0, "D": 0},
         "require_scirh": True,
         "require_opaque_boundary": False,
-        "diagnostic_severities": ["warn"],
+        "diagnostic_severities": [],
         "scirh_markers": [
             "module fixture.python_importer.b_direct_call",
             "fn identity x int -> int !",
@@ -124,8 +133,10 @@ CASE_EXPECTATIONS = {
         "scirh_markers": [
             "module fixture.python_importer.b_while_call_update",
             "fn step_until_nonneg step Callable x int -> int !write",
+            "var current int x",
             "loop loop0",
-            "set x step(x)",
+            "set current step(current)",
+            "return current",
             "break loop0",
         ],
     },
@@ -144,10 +155,13 @@ CASE_EXPECTATIONS = {
         "scirh_markers": [
             "module fixture.python_importer.b_while_break_continue",
             "fn step_with_escape step Callable x int -> int !write",
+            "var current int x",
             "loop loop0",
-            "if eq x -1",
+            "if eq current -1",
             "break loop0",
+            "set current step(current)",
             "continue loop0",
+            "return current",
         ],
     },
     "b_class_init_method": {
@@ -197,7 +211,7 @@ CASE_EXPECTATIONS = {
         "status": "warn",
         "validator": VALIDATOR_NAME,
         "profiles": ["D-PY"],
-        "dependencies": ["python:foreign_api"],
+        "dependencies": ["python:foreign_api", "capability:foreign_api_ping"],
         "exports": ["ping"],
         "opaque_boundary_count": 1,
         "summary": {"A": 1, "B": 0, "C": 1, "D": 0},
@@ -282,6 +296,8 @@ def summarize_item_tiers(items):
 
 
 def check_case(root: pathlib.Path, case_name: str, expectation: dict):
+    """Validate one fixture against the importer contract, tier expectations, and boundary doctrine."""
+
     failures = []
     case_dir = root / FIXTURE_ROOT / case_name
     if not case_dir.exists():
@@ -443,6 +459,7 @@ def check_case(root: pathlib.Path, case_name: str, expectation: dict):
         )
 
     opaque_contract_path = case_dir / OPAQUE_BOUNDARY_REL
+    contract_instance = None
     if expectation["require_opaque_boundary"]:
         if opaque_contract_path.exists():
             contract_instance, contract_failures = validate_json_against_schema(
@@ -468,10 +485,21 @@ def check_case(root: pathlib.Path, case_name: str, expectation: dict):
             f"{source_rel.parent / OPAQUE_BOUNDARY_REL}: only Tier C fixtures may include opaque boundary contracts"
         )
 
+    failures.extend(
+        validate_boundary_capability_contract(
+            manifest_instance,
+            contract_instance,
+            label=str(source_rel.parent),
+            allow_capabilities=expectation["require_opaque_boundary"],
+        )
+    )
+
     return failures
 
 
 def compare_generated_bundle(root: pathlib.Path, case_name: str, expectation: dict):
+    """Regenerate one bundle and require byte-stable agreement with the checked-in contract artifacts."""
+
     failures = []
     case_dir = root / FIXTURE_ROOT / case_name
     try:
@@ -512,6 +540,8 @@ def compare_generated_bundle(root: pathlib.Path, case_name: str, expectation: di
 
 
 def run_checks(root: pathlib.Path):
+    """Run positive and negative conformance checks over the fixed Python importer corpus."""
+
     failures = []
     fixture_root = root / FIXTURE_ROOT
     if not fixture_root.exists():
@@ -604,6 +634,27 @@ def mutate_break_b_class_update_call_shape(root: pathlib.Path):
     path.write_text(text.replace("step(self.value)", "call step(self.value)"), encoding="utf-8")
 
 
+def mutate_remove_boundary_capability_import(root: pathlib.Path):
+    path = root / FIXTURE_ROOT / "c_opaque_call" / "module_manifest.json"
+    data = load_json(path)
+    data["dependencies"] = ["python:foreign_api"]
+    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
+def mutate_add_unused_boundary_capability_import(root: pathlib.Path):
+    path = root / FIXTURE_ROOT / "c_opaque_call" / "module_manifest.json"
+    data = load_json(path)
+    data["dependencies"].append("capability:unused_boundary")
+    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
+def mutate_add_illegal_capability_import_to_tier_a(root: pathlib.Path):
+    path = root / FIXTURE_ROOT / "a_basic_function" / "module_manifest.json"
+    data = load_json(path)
+    data["dependencies"].append("capability:foreign_api_ping")
+    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
 def run_negative_fixture(root: pathlib.Path, name: str, mutate, expected_markers):
     with tempfile.TemporaryDirectory(prefix="scir_python_fixture_") as tmp:
         fixture_root = pathlib.Path(tmp) / "repo"
@@ -688,6 +739,21 @@ def run_self_tests(root: pathlib.Path):
             mutate_break_b_class_update_call_shape,
             ["b_class_field_update", "canonical SCIR-H parse failed"],
         ),
+        (
+            "boundary capability import missing",
+            mutate_remove_boundary_capability_import,
+            ["c_opaque_call", "missing capability imports for boundary requirements"],
+        ),
+        (
+            "boundary capability import unused",
+            mutate_add_unused_boundary_capability_import,
+            ["c_opaque_call", "unused capability imports not referenced by the boundary contract"],
+        ),
+        (
+            "illegal capability import on tier a fixture",
+            mutate_add_illegal_capability_import_to_tier_a,
+            ["a_basic_function", "non-boundary fixtures must not declare capability imports"],
+        ),
     ]
 
     for name, mutate, expected_markers in cases:
@@ -701,11 +767,11 @@ def print_success(mode: str):
     print(
         "Checked fixture completeness, schema-valid bundle artifacts, "
         "tier-specific required files, generated-vs-golden bundle parity, "
-        "parse-normalize-format canonical-SCIR-H expectations "
+        "capability-boundary alignment, parse-normalize-format canonical-SCIR-H expectations "
         f"for {len(CASE_EXPECTATIONS)} Python importer cases."
     )
     if mode == "test":
-        print("Python importer conformance self-tests passed (12 negative fixtures).")
+        print("Python importer conformance self-tests passed (15 negative fixtures).")
 
 
 def main():

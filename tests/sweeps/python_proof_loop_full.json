@@ -1,0 +1,21 @@
+{
+  "sweep_id": "python-proof-loop-full",
+  "corpus_manifest": "tests/corpora/python_proof_loop_corpus.json",
+  "slice_axes": [
+    "frontend",
+    "tier",
+    "split",
+    "profile",
+    "pipeline_stage",
+    "construct_family",
+    "fixture_set"
+  ],
+  "stages": [
+    "source_to_h",
+    "scir_h_validation",
+    "h_to_l",
+    "scir_l_validation",
+    "h_to_python",
+    "l_to_wasm"
+  ]
+}

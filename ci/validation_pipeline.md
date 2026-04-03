@@ -5,19 +5,18 @@ Status: Normative
 
 1. verify required files exist
 2. parse all JSON schemas
-3. validate checked-in example report and manifest artifacts against their schemas
-4. validate the checked-in decision-register export against `DECISION_REGISTER.md` and its schema
-5. validate the checked-in open-questions export against `OPEN_QUESTIONS.md` and its schema
-6. validate the checked-in Python importer fixture corpus and tier-specific required artifacts when that corpus exists
-7. validate the checked-in TypeScript importer placeholder corpus through its active `validate-fixtures` checker
-8. validate the checked-in Rust importer fixture corpus and tier-specific required artifacts when that corpus exists
-9. require `rustc` and `cargo` before executing the Rust Phase 6A pipeline
-10. validate the executable bootstrap importer, lowering, translation, and reconstruction path for the supported Python fixture slice
-11. validate the executable Rust Phase 6A importer, lowering, translation, and Tier `A` reconstruction path
-12. verify top-level doctrine files exist
-13. verify benchmark doctrine files exist
-14. verify workflow files exist
-15. fail on missing or malformed contract files
+3. validate checked-in example artifacts
+4. validate derived exports
+5. validate active and negative corpus manifests plus sweep manifests
+6. validate the Python importer fixture corpus
+7. validate the Rust importer fixture corpus
+8. validate seeded invalid `SCIR-H` and `SCIR-L` examples
+9. validate spec-completeness and identity checks
+10. validate the active Python proof loop
+11. run sweep smoke on the frozen Tier `A` micro corpus and compare against the latest successful baseline artifact when available
+12. require `comparison_summary.json` and `contamination_report.json` for sweep smoke
+13. fail on missing or malformed contract files
+14. fail on regression deltas, preservation expectation drift, or unexpected diagnostic churn
 
 ## Blocking command
 
@@ -25,6 +24,11 @@ Status: Normative
 make validate
 ```
 
-## Expansion rule
+## Fast lanes
 
-Executable validators and importer conformance checks already run under `make validate`, including the dormant TypeScript `validate-fixtures` gate. Further expansion must stay under the same top-level command contract rather than replacing the policy surface silently.
+The quick gate is split into:
+
+1. repo-contract checks
+2. importer fixture conformance
+3. bootstrap pipeline validation
+4. sweep smoke plus regression, comparison, and contamination summaries

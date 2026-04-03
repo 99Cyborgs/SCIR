@@ -1,0 +1,242 @@
+{
+  "run_id": "python-proof-loop-full-20260403T193554Z",
+  "locked_at": "2026-04-03T19:35:54.300239+00:00",
+  "corpus_manifest": "tests/corpora/python_proof_loop_corpus.json",
+  "corpus_manifest_hash": "sha256:0c3b78d3b092277d89bb79a7df485b3f794b3ae30668acbed4fba318b48e4398",
+  "manifest": {
+    "corpus_id": "python-proof-loop-corpus",
+    "kind": "active_roundtrip",
+    "split_contract": {
+      "mode": "simulated_no_training",
+      "train": [],
+      "dev": [],
+      "test": [
+        "fixture.python_importer.a_basic_function",
+        "fixture.python_importer.a_async_await",
+        "fixture.python_importer.b_direct_call",
+        "fixture.python_importer.c_opaque_call"
+      ]
+    },
+    "fixtures": [
+      {
+        "id": "fixture.python_importer.a_basic_function",
+        "language": "python",
+        "path": "tests/python_importer/cases/a_basic_function/source.py",
+        "tier": "A",
+        "expected_support": "roundtrip",
+        "expected_preservation_ceiling": "P1",
+        "expected_preservation_stage_behavior": {
+          "source_to_h": {
+            "status": "pass",
+            "preservation_level": "P1"
+          },
+          "scir_h_validation": {
+            "status": "pass",
+            "preservation_level": "P1"
+          },
+          "h_to_l": {
+            "status": "pass",
+            "preservation_level": "P1"
+          },
+          "scir_l_validation": {
+            "status": "pass",
+            "preservation_level": "P1"
+          },
+          "h_to_python": {
+            "status": "pass",
+            "preservation_level": "P1"
+          },
+          "l_to_wasm": {
+            "status": "pass",
+            "preservation_level": "P2"
+          }
+        },
+        "features": [
+          "plain function definition",
+          "local reassignment",
+          "scalar comparison branch"
+        ],
+        "hash": "sha256:d2e6ac761f971ce37e5fb1a1bef5fb0085b9fec4b26a44bcac7b899c26c6eb4e",
+        "frontend": "python",
+        "split": "test",
+        "origin": "checked_in_fixture",
+        "sample_class": "real",
+        "profiles": [
+          "R",
+          "D-PY"
+        ],
+        "pipeline_stages": [
+          "source_to_h",
+          "scir_h_validation",
+          "h_to_l",
+          "scir_l_validation",
+          "h_to_python",
+          "l_to_wasm"
+        ],
+        "construct_family": "branch-local-mutation",
+        "fixture_set": "python-proof-loop"
+      },
+      {
+        "id": "fixture.python_importer.a_async_await",
+        "language": "python",
+        "path": "tests/python_importer/cases/a_async_await/source.py",
+        "tier": "A",
+        "expected_support": "roundtrip",
+        "expected_preservation_ceiling": "P1",
+        "expected_preservation_stage_behavior": {
+          "source_to_h": {
+            "status": "pass",
+            "preservation_level": "P1"
+          },
+          "scir_h_validation": {
+            "status": "pass",
+            "preservation_level": "P1"
+          },
+          "h_to_l": {
+            "status": "pass",
+            "preservation_level": "P1"
+          },
+          "scir_l_validation": {
+            "status": "pass",
+            "preservation_level": "P1"
+          },
+          "h_to_python": {
+            "status": "pass",
+            "preservation_level": "P1"
+          }
+        },
+        "features": [
+          "async function definition",
+          "simple await"
+        ],
+        "hash": "sha256:f531df1ce161619dd186709880a6257a03af39912d6a10f3bfd52723a6f58cf6",
+        "frontend": "python",
+        "split": "test",
+        "origin": "checked_in_fixture",
+        "sample_class": "real",
+        "profiles": [
+          "R",
+          "D-PY"
+        ],
+        "pipeline_stages": [
+          "source_to_h",
+          "scir_h_validation",
+          "h_to_l",
+          "scir_l_validation",
+          "h_to_python"
+        ],
+        "construct_family": "async-await",
+        "fixture_set": "python-proof-loop"
+      },
+      {
+        "id": "fixture.python_importer.b_direct_call",
+        "language": "python",
+        "path": "tests/python_importer/cases/b_direct_call/source.py",
+        "tier": "A",
+        "expected_support": "roundtrip",
+        "expected_preservation_ceiling": "P1",
+        "expected_preservation_stage_behavior": {
+          "source_to_h": {
+            "status": "pass",
+            "preservation_level": "P1"
+          },
+          "scir_h_validation": {
+            "status": "pass",
+            "preservation_level": "P1"
+          },
+          "h_to_l": {
+            "status": "pass",
+            "preservation_level": "P1"
+          },
+          "scir_l_validation": {
+            "status": "pass",
+            "preservation_level": "P1"
+          },
+          "h_to_python": {
+            "status": "pass",
+            "preservation_level": "P1"
+          },
+          "l_to_wasm": {
+            "status": "pass",
+            "preservation_level": "P2"
+          }
+        },
+        "features": [
+          "direct local call preservation"
+        ],
+        "hash": "sha256:1e5d106998a586aea007ff20f81c2d17c7ad172d78e8a9bea7133f2f64cdb2ec",
+        "frontend": "python",
+        "split": "test",
+        "origin": "checked_in_fixture",
+        "sample_class": "real",
+        "profiles": [
+          "R",
+          "D-PY"
+        ],
+        "pipeline_stages": [
+          "source_to_h",
+          "scir_h_validation",
+          "h_to_l",
+          "scir_l_validation",
+          "h_to_python",
+          "l_to_wasm"
+        ],
+        "construct_family": "direct-call",
+        "fixture_set": "python-proof-loop"
+      },
+      {
+        "id": "fixture.python_importer.c_opaque_call",
+        "language": "python",
+        "path": "tests/python_importer/cases/c_opaque_call/source.py",
+        "tier": "C",
+        "expected_support": "boundary_only",
+        "expected_preservation_ceiling": "P3",
+        "expected_preservation_stage_behavior": {
+          "source_to_h": {
+            "status": "warn",
+            "preservation_level": "P3"
+          },
+          "scir_h_validation": {
+            "status": "pass",
+            "preservation_level": "P3"
+          },
+          "h_to_l": {
+            "status": "pass",
+            "preservation_level": "P3"
+          },
+          "scir_l_validation": {
+            "status": "pass",
+            "preservation_level": "P3"
+          },
+          "h_to_python": {
+            "status": "pass",
+            "preservation_level": "P3"
+          }
+        },
+        "features": [
+          "opaque foreign module call"
+        ],
+        "hash": "sha256:e84bdd675546d4ba8dd038d226285e04e0bc0f813b292b0f88423424664ef142",
+        "frontend": "python",
+        "split": "test",
+        "origin": "checked_in_fixture",
+        "sample_class": "real",
+        "profiles": [
+          "D-PY"
+        ],
+        "pipeline_stages": [
+          "source_to_h",
+          "scir_h_validation",
+          "h_to_l",
+          "scir_l_validation",
+          "h_to_python"
+        ],
+        "construct_family": "opaque-boundary",
+        "fixture_set": "python-proof-loop",
+        "unsupported_tags": [
+          "boundary_only"
+        ]
+      }
+    ]
+  }
+}

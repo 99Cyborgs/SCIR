@@ -31,6 +31,8 @@ These invariants are hard constraints. Validators must reject violations.
 | HC005 | `SCIR-H -> SCIR-Hc` derivation is deterministic and idempotent | context-dependent compression drift |
 | HC006 | every compressed omission is explicitly justified by node provenance and adds no hidden semantics | heuristic reconstruction or semantic injection |
 | HC007 | benchmark reports keep `SCIR-Hc` evidence inside a declared claim class and evidence class | cross-class benchmark leakage |
+| HC008 | every `SCIR-Hc` artifact and `SCIR-Hc` claim surface is bound to canonical module lineage plus normalized canonical hashes with complete evidence coverage | lineage spoofing or partial lineage binding |
+| HC009 | benchmark metric classification blocks causal leakage and semantic-authority implication | indirect semantic authority leakage through metrics |
 
 ## `SCIR-L` invariants
 
@@ -59,8 +61,11 @@ These invariants are hard constraints. Validators must reject violations.
 - active canonical `SCIR-H` is limited to the grammar in `specs/scir_h_spec.md`
 - active derived `SCIR-Hc` must round-trip back to canonical `SCIR-H` before any downstream claim
 - active derived `SCIR-Hc` must carry the derived-only authority marker and machine-readable omission provenance
+- executable `SCIR-Hc` transforms must require report-scoped generation context with lineage-bound token validation
 - lowering, reconstruction, and backend emission must reject direct `SCIR-Hc` input
 - `benchmark_report` must declare `claim_class` and `evidence_class`, and those fields must bound any `SCIR-Hc` claim surface
+- `benchmark_report` must declare `metric_class` and `scir_h_evidence` on every evaluated condition and claim
+- `benchmark_report` lineage references must bind canonical module ids to semantic lineage ids and normalized canonical hashes
 - active canonical `SCIR-L` is limited to the grammar in `specs/scir_l_spec.md`
 - loop and `try/catch` forms may exist in importer-only `SCIR-H` slices without active lowering
 - the importer-only `!throw` effect marker is admitted only on bounded Tier `B` `try/catch` evidence; standalone `throw` syntax remains unsupported

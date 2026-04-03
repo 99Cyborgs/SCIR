@@ -25,6 +25,7 @@
       "enum": [
         "repo",
         "scir_h",
+        "scir_hc",
         "scir_l",
         "translation",
         "benchmark"

@@ -1,11 +1,14 @@
 {
   "report_id": "example-preservation-report-001",
-  "subject": "example.python.fib_only reconstruction",
-  "source_artifact": "frontend/python:example.python.fib_only",
-  "target_artifact": "reconstructed/python/fib_only.py",
+  "subject": "fixture.python_importer.a_basic_function",
+  "path": "h_to_python",
+  "source_artifact": "scir_h:fixture.python_importer.a_basic_function",
+  "target_artifact": "reconstructed/python/a_basic_function.py",
   "profile": "R",
   "preservation_level": "P1",
   "status": "pass",
+  "downgrades": [],
+  "boundary_annotations": [],
   "observables": {
     "preserved": [
       "function boundaries",
@@ -18,6 +21,7 @@
   },
   "evidence": [
     "illustrative fixture only",
-    "preservation labels remain profile-qualified"
+    "compile:pass",
+    "test:pass"
   ]
 }

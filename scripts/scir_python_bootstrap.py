@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+"""Python subset importer for the fixed SCIR proof-loop corpus.
+
+This file does not attempt broad Python understanding. It validates and imports
+only the checked-in bootstrap cases, emits canonical `SCIR-H`, and records the
+case metadata that other validators and benchmark scripts treat as governance
+inputs.
+"""
 from __future__ import annotations
 
 import argparse
@@ -125,6 +132,8 @@ class ImporterError(Exception):
 
 @dataclass(frozen=True)
 class Bundle:
+    """Checked-in importer output bundle for one fixed Python corpus case."""
+
     case_name: str
     files: dict[str, str]
 
@@ -202,25 +211,18 @@ CASE_CONFIG = {
     },
     "b_direct_call": {
         "profiles": ["R", "D-PY"],
-        "tier": "B",
+        "tier": "A",
         "dependencies": ["python:builtins"],
         "exports": ["identity", "call_identity"],
-        "status": "warn",
+        "status": "pass",
         "feature_items": [
             {
                 "feature": "direct local call preservation",
-                "tier": "B",
-                "rationale": "A fixed local call site can normalize into canonical call syntax, but this slice is accepted only as importer-level SCIR-H evidence and stays outside executable lowering and reconstruction.",
+                "tier": "A",
+                "rationale": "A fixed local direct call site now participates in the active Python proof loop with bounded lowering and reconstruction evidence.",
             }
         ],
-        "diagnostics": [
-            {
-                "code": "PY-B003",
-                "severity": "warn",
-                "message": "Direct local call imports as Tier B canonical SCIR-H only; no executable lowering, translation, or reconstruction path is claimed for this follow-on case.",
-                "location": "source.py:1",
-            }
-        ],
+        "diagnostics": [],
         "opaque_boundary_contract": None,
     },
     "b_async_arg_await": {
@@ -366,7 +368,7 @@ CASE_CONFIG = {
     "c_opaque_call": {
         "profiles": ["D-PY"],
         "tier": "C",
-        "dependencies": ["python:foreign_api"],
+        "dependencies": ["python:foreign_api", "capability:foreign_api_ping"],
         "exports": ["ping"],
         "status": "warn",
         "feature_items": [
@@ -399,7 +401,7 @@ CASE_CONFIG = {
                 "inbound": [],
                 "outbound": ["opaque<ForeignResult>"],
             },
-            "capabilities": [],
+            "capabilities": ["capability:foreign_api_ping"],
             "determinism": "unknown",
             "audit_note": "The Python bootstrap slice treats foreign_api.ping as a Tier C opaque boundary rather than modeled semantics.",
         },
@@ -453,8 +455,141 @@ CASE_CONFIG = {
     },
 }
 
+PYTHON_PROOF_LOOP_METADATA = {
+    "case_order": [
+        "a_basic_function",
+        "a_async_await",
+        "b_direct_call",
+        "c_opaque_call",
+        "b_if_else_return",
+        "b_async_arg_await",
+        "b_while_call_update",
+        "b_while_break_continue",
+        "b_class_init_method",
+        "b_class_field_update",
+        "d_try_except",
+        "d_exec_eval",
+    ],
+    "executable_cases": [
+        "a_basic_function",
+        "a_async_await",
+        "b_direct_call",
+        "c_opaque_call",
+    ],
+    "importer_only_cases": [
+        "b_if_else_return",
+        "b_async_arg_await",
+        "b_while_call_update",
+        "b_while_break_continue",
+        "b_class_init_method",
+        "b_class_field_update",
+        "d_try_except",
+    ],
+    "rejected_cases": ["d_exec_eval"],
+    "benchmark_cases": [
+        "a_basic_function",
+        "a_async_await",
+        "b_direct_call",
+        "c_opaque_call",
+    ],
+    "executable_case_contracts": {
+        "a_basic_function": {
+            "profile": "R",
+            "preservation_level": "P1",
+            "requires_opaque_boundary": False,
+            "wasm_emittable": True,
+        },
+        "a_async_await": {
+            "profile": "R",
+            "preservation_level": "P1",
+            "requires_opaque_boundary": False,
+            "wasm_emittable": False,
+        },
+        "b_direct_call": {
+            "profile": "R",
+            "preservation_level": "P1",
+            "requires_opaque_boundary": False,
+            "wasm_emittable": True,
+        },
+        "c_opaque_call": {
+            "profile": "D-PY",
+            "preservation_level": "P3",
+            "requires_opaque_boundary": True,
+            "wasm_emittable": False,
+        },
+    },
+}
+
+
+def _validate_python_proof_loop_metadata():
+    """Keep the executable Python proof loop locked to the declared fixed corpus."""
+
+    case_order = PYTHON_PROOF_LOOP_METADATA["case_order"]
+    executable_cases = PYTHON_PROOF_LOOP_METADATA["executable_cases"]
+    importer_only_cases = PYTHON_PROOF_LOOP_METADATA["importer_only_cases"]
+    rejected_cases = PYTHON_PROOF_LOOP_METADATA["rejected_cases"]
+    benchmark_cases = PYTHON_PROOF_LOOP_METADATA["benchmark_cases"]
+    executable_case_contracts = PYTHON_PROOF_LOOP_METADATA["executable_case_contracts"]
+
+    declared_cases = set(case_order)
+    configured_cases = set(CASE_CONFIG)
+    source_cases = set(SOURCE_TEXTS)
+    if declared_cases != configured_cases or declared_cases != source_cases:
+        raise ImporterError(
+            "PYTHON_PROOF_LOOP_METADATA must cover exactly the fixed Python bootstrap corpus"
+        )
+
+    covered_cases = executable_cases + importer_only_cases + rejected_cases
+    if covered_cases != case_order:
+        raise ImporterError(
+            "PYTHON_PROOF_LOOP_METADATA case classifications must preserve the fixed corpus order"
+        )
+    if len(set(covered_cases)) != len(covered_cases):
+        raise ImporterError("PYTHON_PROOF_LOOP_METADATA case classifications must be disjoint")
+
+    if benchmark_cases != executable_cases:
+        raise ImporterError(
+            "PYTHON_PROOF_LOOP_METADATA benchmark cases must stay locked to executable cases"
+        )
+
+    if set(executable_case_contracts) != set(executable_cases):
+        raise ImporterError(
+            "PYTHON_PROOF_LOOP_METADATA executable_case_contracts must cover executable cases exactly"
+        )
+
+    for case_name in executable_cases:
+        config = CASE_CONFIG[case_name]
+        if config["tier"] not in {"A", "C"}:
+            raise ImporterError(
+                f"{case_name}: executable Python proof-loop case must remain Tier A or Tier C"
+            )
+        contract = executable_case_contracts[case_name]
+        if contract["requires_opaque_boundary"] != bool(config["opaque_boundary_contract"]):
+            raise ImporterError(
+                f"{case_name}: opaque-boundary requirement drifted from CASE_CONFIG"
+            )
+        if contract["profile"] not in config["profiles"]:
+            raise ImporterError(
+                f"{case_name}: executable proof-loop profile must remain declared by CASE_CONFIG"
+            )
+
+    for case_name in importer_only_cases:
+        if CASE_CONFIG[case_name]["tier"] != "B":
+            raise ImporterError(
+                f"{case_name}: importer-only Python proof-loop case must remain Tier B"
+            )
+
+    for case_name in rejected_cases:
+        if CASE_CONFIG[case_name]["tier"] != "D":
+            raise ImporterError(f"{case_name}: rejected Python proof-loop case must remain Tier D")
+
+
+_validate_python_proof_loop_metadata()
+
 
 def build_supported_module(case_name: str) -> Module:
+    """Return the canonical `SCIR-H` authority form for an admitted Python case."""
+
     module_id = f"fixture.python_importer.{case_name}"
     if case_name == "a_basic_function":
         return normalize_module(
@@ -597,17 +732,18 @@ def build_supported_module(case_name: str) -> Module:
                         return_type="int",
                         effects=("write",),
                         body=(
+                            VarDecl("current", "int", NameExpr("x")),
                             LoopStmt(
                                 "loop0",
                                 (
                                     IfStmt(
-                                        condition=IntrinsicExpr("lt", (NameExpr("x"), IntExpr(0))),
-                                        then_body=(SetStmt("x", CallExpr("step", (NameExpr("x"),))),),
+                                        condition=IntrinsicExpr("lt", (NameExpr("current"), IntExpr(0))),
+                                        then_body=(SetStmt("current", CallExpr("step", (NameExpr("current"),))),),
                                         else_body=(BreakStmt("loop0"),),
                                     ),
                                 ),
                             ),
-                            ReturnStmt(NameExpr("x")),
+                            ReturnStmt(NameExpr("current")),
                         ),
                     ),
                 ),
@@ -626,25 +762,26 @@ def build_supported_module(case_name: str) -> Module:
                         return_type="int",
                         effects=("write",),
                         body=(
+                            VarDecl("current", "int", NameExpr("x")),
                             LoopStmt(
                                 "loop0",
                                 (
                                     IfStmt(
-                                        condition=IntrinsicExpr("lt", (NameExpr("x"), IntExpr(0))),
+                                        condition=IntrinsicExpr("lt", (NameExpr("current"), IntExpr(0))),
                                         then_body=(
                                             IfStmt(
-                                                condition=IntrinsicExpr("eq", (NameExpr("x"), IntExpr(-1))),
+                                                condition=IntrinsicExpr("eq", (NameExpr("current"), IntExpr(-1))),
                                                 then_body=(BreakStmt("loop0"),),
                                                 else_body=(),
                                             ),
-                                            SetStmt("x", CallExpr("step", (NameExpr("x"),))),
+                                            SetStmt("current", CallExpr("step", (NameExpr("current"),))),
                                             ContinueStmt("loop0"),
                                         ),
                                         else_body=(BreakStmt("loop0"),),
                                     ),
                                 ),
                             ),
-                            ReturnStmt(NameExpr("x")),
+                            ReturnStmt(NameExpr("current")),
                         ),
                     ),
                 ),
@@ -1189,6 +1326,8 @@ def validate_class_field_update(module: ast.Module):
 
 
 def validate_opaque_call(module: ast.Module):
+    """Admit the Tier C opaque case only when the source stays an explicit boundary, not modeled semantics."""
+
     if len(module.body) != 2:
         raise ImporterError("c_opaque_call: expected one import and one function")
     import_stmt, function = module.body
@@ -1307,6 +1446,8 @@ def relative_source_path(root: pathlib.Path, source_path: pathlib.Path) -> str:
 
 
 def build_bundle(root: pathlib.Path, source_path: pathlib.Path) -> Bundle:
+    """Rebuild the canonical importer bundle and fail if any checked-in artifact drifts."""
+
     source_text = source_path.read_text(encoding="utf-8")
     case_name = derive_case_name(source_path)
     if source_text != SOURCE_TEXTS[case_name]:

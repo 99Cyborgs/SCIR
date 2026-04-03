@@ -1,0 +1,24 @@
+{
+  "report_id": "example-preservation-h-to-python-001",
+  "subject": "fixture.python_importer.c_opaque_call",
+  "path": "h_to_python",
+  "source_artifact": "scir_h:fixture.python_importer.c_opaque_call",
+  "target_artifact": "reconstructed/python/c_opaque_call.py",
+  "profile": "D-PY",
+  "preservation_level": "P3",
+  "status": "pass",
+  "downgrades": [
+    {
+      "reason": "opaque boundary retained as boundary annotation only",
+      "preservation_level": "P3"
+    }
+  ],
+  "boundary_annotations": [
+    "foreign_api.ping boundary"
+  ],
+  "evidence": [
+    "compile:pass",
+    "test:pass",
+    "opaque boundary preserved explicitly"
+  ]
+}

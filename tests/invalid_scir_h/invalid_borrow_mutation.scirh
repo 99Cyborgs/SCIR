@@ -1,0 +1,6 @@
+module invalid.borrow_mutation
+type Counter record { value int }
+
+fn bad counter borrow<Counter> -> int !write
+  set counter.value 0
+  return counter.value

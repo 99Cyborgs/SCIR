@@ -1,0 +1,10 @@
+{
+  "run_id": "python-proof-loop-smoke-20260403T184933Z",
+  "generated_at": "2026-04-03T18:49:33.522601+00:00",
+  "corpus_manifest": "tests/corpora/python_tier_a_micro_corpus.json",
+  "corpus_manifest_hash": "sha256:71b2ed0546551abf292b4ad1ee5912546386936f547c4925a856f6488dbd22a4",
+  "split_mode": "simulated_no_training",
+  "duplicates": [],
+  "near_duplicates": [],
+  "leakage_flags": []
+}

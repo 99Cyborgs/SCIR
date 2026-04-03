@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+"""Canonical SCIR-H and derived SCIR-Hc bootstrap data model.
+
+This file is the executable kernel for canonical storage, normalization,
+formatting, parsing, and lineage binding. `SCIR-H` remains the only semantic
+authority. `SCIR-Hc` is modeled here only as a derived transport/compression
+view with an explicit authority boundary so downstream code cannot treat it as a
+peer source of truth.
+"""
 from __future__ import annotations
 
 import hashlib
@@ -16,6 +24,8 @@ EFFECT_RE = re.compile(r"^![A-Za-z_,]*$")
 INTRINSIC_OPS = ("lt", "le", "eq", "ne", "gt", "ge")
 SCIRHC_AUTHORITY_BOUNDARY = "DERIVED_ONLY"
 
+# Keep the executable kernel metadata adjacent to the model so repository
+# contract checks can detect parser/spec drift before it becomes a broader claim.
 SCIR_H_KERNEL_METADATA = {
     "constructs": (
         {
@@ -334,6 +344,10 @@ class ScirHModelError(Exception):
     pass
 
 
+class ScirhcContextError(Exception):
+    pass
+
+
 class CompressionOrigin(str, Enum):
     INFERRED_TYPE = "INFERRED_TYPE"
     INFERRED_EFFECT = "INFERRED_EFFECT"
@@ -492,6 +506,8 @@ class FunctionDecl:
 
 @dataclass(frozen=True)
 class Module:
+    """Canonical `SCIR-H` storage unit used for hashes, validation, and reconstruction."""
+
     module_id: str
     imports: tuple[ImportDecl, ...]
     type_decls: tuple[TypeDecl, ...]
@@ -519,6 +535,8 @@ class HcFunctionDecl:
 
 @dataclass(frozen=True)
 class HcModule:
+    """Derived `SCIR-Hc` view bound to canonical lineage and a derived-only marker."""
+
     module_id: str
     imports: tuple[ImportDecl, ...]
     type_decls: tuple[TypeDecl, ...]
@@ -716,6 +734,8 @@ def format_type_expr(type_expr) -> str:
 
 
 def normalize_module(module: Module) -> Module:
+    """Enforce canonical `SCIR-H` storage before hashing or downstream use."""
+
     if not MODULE_ID_RE.match(module.module_id):
         raise ScirHModelError(f"invalid module id: {module.module_id!r}")
 
@@ -857,6 +877,8 @@ def format_function(function: FunctionDecl) -> list[str]:
 
 
 def format_module(module: Module) -> str:
+    """Render deterministic canonical `SCIR-H` text for storage and hash input."""
+
     module = normalize_module(module)
     lines = [f"module {module.module_id}"]
     for item in module.imports:
@@ -1094,6 +1116,8 @@ def parse_suite(lines: list[str], index: int, indent: int) -> tuple[tuple[object
 
 
 def parse_module(text: str) -> Module:
+    """Reject any `SCIR-H` text that is not already inside the canonical storage contract."""
+
     if not text.endswith("\n"):
         raise ScirHModelError("canonical SCIR-H text must end with a newline")
     raw_lines = text.splitlines()
@@ -1419,6 +1443,8 @@ def format_hc_function(function: HcFunctionDecl) -> list[str]:
 
 
 def format_scirhc_module(module: HcModule) -> str:
+    """Render derived `SCIR-Hc` text with explicit omission provenance."""
+
     module = normalize_hc_module(module)
     header = f"m {module.module_id} ~D"
     if module.compression_origin:
@@ -1617,6 +1643,8 @@ def parse_hc_suite(lines: list[str], index: int, indent: int) -> tuple[tuple[obj
 
 
 def parse_scirhc_module(text: str) -> HcModule:
+    """Parse compressed text without relaxing the derived-only authority boundary."""
+
     if not text.endswith("\n"):
         raise ScirHModelError("compressed SCIR-Hc text must end with a newline")
     raw_lines = text.splitlines()
@@ -2026,54 +2054,7 @@ def _scirh_stmt_to_scirhc(
 
 
 def scirh_to_scirhc(module: Module, *, boundary_contracts=None) -> HcModule:
-    module = normalize_module(module)
-    record_field_types = _record_field_type_map(module)
-    function_returns = {function.name: function.return_type for function in module.functions}
-    explicit_effects = {function.name: function.effects for function in module.functions}
-    import_effects = {item.local_id: ("opaque",) for item in module.imports if item.kind == "sym"}
-    functions = []
-    for function in module.functions:
-        bindings = {param.name: param.type_name for param in function.params}
-        inferred_return = infer_scirh_function_return_type(module, function)
-        inferred_effects = _body_required_effects(function.body, explicit_effects, import_effects)
-        body = tuple(
-            _scirh_stmt_to_scirhc(item, bindings, function_returns, record_field_types)
-            for item in function.body
-        )
-        compression_origin = []
-        return_type = function.return_type
-        if inferred_return == function.return_type:
-            return_type = None
-            compression_origin.append(
-                CompressionOrigin.OWNERSHIP_ELISION
-                if carries_ownership_type(function.return_type)
-                else CompressionOrigin.INFERRED_TYPE
-            )
-        effects = function.effects
-        if inferred_effects == function.effects:
-            effects = None
-            compression_origin.append(CompressionOrigin.INFERRED_EFFECT)
-        functions.append(
-            HcFunctionDecl(
-                name=function.name,
-                params=function.params,
-                return_type=return_type,
-                effects=effects,
-                body=body,
-                compression_origin=tuple(compression_origin),
-                is_async=function.is_async,
-            )
-        )
-    return normalize_hc_module(
-        HcModule(
-            module_id=module.module_id,
-            imports=module.imports,
-            type_decls=module.type_decls,
-            functions=tuple(functions),
-            authority_boundary=SCIRHC_AUTHORITY_BOUNDARY,
-            compression_origin=(),
-        )
-    )
+    raise ScirhcContextError("Unauthorized SCIR-Hc transform access")
 
 
 def _scirhc_stmt_to_scirh(
@@ -2127,89 +2108,15 @@ def _scirhc_stmt_to_scirh(
 
 
 def scirhc_to_scirh(module: HcModule) -> Module:
-    module = normalize_hc_module(module)
-    record_field_types = _record_field_type_map(module)
-    function_returns = infer_hc_function_return_types(module)
-    function_effects = infer_hc_function_effects(module)
-    functions = []
-    for function in module.functions:
-        bindings = {param.name: param.type_name for param in function.params}
-        body = tuple(
-            _scirhc_stmt_to_scirh(item, bindings, function_returns, record_field_types)
-            for item in function.body
-        )
-        functions.append(
-            FunctionDecl(
-                name=function.name,
-                params=function.params,
-                return_type=function.return_type or function_returns[function.name],
-                effects=function.effects if function.effects is not None else function_effects[function.name],
-                body=body,
-                is_async=function.is_async,
-            )
-        )
-    return normalize_module(
-        Module(
-            module_id=module.module_id,
-            imports=module.imports,
-            type_decls=module.type_decls,
-            functions=tuple(functions),
-        )
-    )
+    raise ScirhcContextError("Unauthorized SCIR-Hc transform access")
 
 
 def scirhc_normalization_stats(module: Module, *, boundary_contracts=None) -> dict[str, int]:
-    module = normalize_module(module)
-    hc_module = scirh_to_scirhc(module, boundary_contracts=boundary_contracts)
-    effect_rows_deduplicated = sum(
-        1
-        for function in hc_module.functions
-        if CompressionOrigin.INFERRED_EFFECT in function.compression_origin
-    )
-    return_types_inferred = sum(
-        1
-        for function in hc_module.functions
-        if any(
-            origin in function.compression_origin
-            for origin in (CompressionOrigin.INFERRED_TYPE, CompressionOrigin.OWNERSHIP_ELISION)
-        )
-    )
-    ownership_markers_elided = sum(
-        1
-        for function in hc_module.functions
-        for stmt in function.body
-        if isinstance(stmt, HcVarDecl) and CompressionOrigin.OWNERSHIP_ELISION in stmt.compression_origin
-    ) + sum(
-        1
-        for function in hc_module.functions
-        if CompressionOrigin.OWNERSHIP_ELISION in function.compression_origin
-    )
-    capabilities_hoisted = 1 if CompressionOrigin.REDUNDANT_CAPABILITY in hc_module.compression_origin else 0
-    return {
-        "effect_rows_deduplicated": effect_rows_deduplicated,
-        "return_types_inferred": return_types_inferred,
-        "ownership_markers_elided": ownership_markers_elided,
-        "single_use_witnesses_inlined": 0,
-        "capabilities_hoisted": capabilities_hoisted,
-    }
+    raise ScirhcContextError("Unauthorized SCIR-Hc transform access")
 
 
 def validate_scirhc_roundtrip(module: Module, *, boundary_contracts=None) -> list[str]:
-    diagnostics = []
-    hc_module = scirh_to_scirhc(module, boundary_contracts=boundary_contracts)
-    hc_text = format_scirhc_module(hc_module)
-    parsed_hc = parse_scirhc_module(hc_text)
-    if parsed_hc != hc_module:
-        diagnostics.append("compressed SCIR-Hc text is not normalized under parse-format equality")
-    roundtripped = scirhc_to_scirh(parsed_hc)
-    if semantic_lineage_id(roundtripped) != semantic_lineage_id(module):
-        diagnostics.append("compressed SCIR-Hc round-trip drifted semantic lineage")
-    if format_module(roundtripped) != format_module(module):
-        diagnostics.append("compressed SCIR-Hc round-trip drifted canonical SCIR-H formatting")
-    stats = scirhc_normalization_stats(module, boundary_contracts=boundary_contracts)
-    if stats["effect_rows_deduplicated"] < 0 or stats["ownership_markers_elided"] < 0:
-        diagnostics.append("compressed SCIR-Hc normalization stats became invalid")
-    return diagnostics
+    raise ScirhcContextError("Unauthorized SCIR-Hc transform access")
 
 
 def _semantic_expr_key(expr):
@@ -2297,6 +2204,8 @@ def semantic_lineage_payload(module: Module) -> dict:
 
 
 def semantic_lineage_id(module: Module) -> str:
+    """Hash semantic payload only, excluding revision-local presentation details."""
+
     payload = json.dumps(
         semantic_lineage_payload(module),
         sort_keys=True,
@@ -2306,6 +2215,8 @@ def semantic_lineage_id(module: Module) -> str:
 
 
 def canonical_content_hash(module: Module) -> str:
+    """Hash canonical storage bytes, not pretty views or other non-authoritative renderings."""
+
     canonical_text = format_module(module)
     return hashlib.sha256(canonical_text.encode("utf-8")).hexdigest()
 

@@ -1,0 +1,8 @@
+{
+  "run_id": "python-proof-loop-full-20260403T165316Z",
+  "corpus_manifest": "artifacts/benchmark_repro/python-proof-loop-full-20260403T165210Z/locked_corpus_manifest.json",
+  "corpus_manifest_hash": "sha256:0c3b78d3b092277d89bb79a7df485b3f794b3ae30668acbed4fba318b48e4398",
+  "manifest_lock": "manifest_lock.json",
+  "claim_mode": "claim",
+  "sweep_manifest": "scir_benchmark_sweep_3fqf4mc6/benchmark_sweep.json"
+}

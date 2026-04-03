@@ -1,0 +1,139 @@
+{
+  "sweep_id": "example-proof-loop-sweep",
+  "run_id": "example-proof-loop-sweep-20260403T170000Z",
+  "commit_sha": "example-commit-sha",
+  "spec_version": "v0.1-draft",
+  "tool_version": "scir-benchmark-audit-v1",
+  "corpus_id": "example-proof-loop-corpus",
+  "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "generated_at": "2026-04-03T17:00:00+00:00",
+  "rows": [
+    {
+      "run_id": "example-proof-loop-sweep-20260403T170000Z",
+      "commit_sha": "example-commit-sha",
+      "spec_version": "v0.1-draft",
+      "tool_version": "scir-benchmark-audit-v1",
+      "baseline_name": "scir",
+      "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "artifact_id": "fixture.python_importer.a_basic_function",
+      "frontend": "python",
+      "tier": "A",
+      "split": "test",
+      "origin": "checked_in_fixture",
+      "sample_class": "real",
+      "profile": "R",
+      "construct_family": "branch-local-mutation",
+      "fixture_set": "example-proof-loop",
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=example-proof-loop",
+      "stage": "source_to_h",
+      "status": "pass",
+      "diagnostic_codes": [],
+      "metrics": {
+        "token_count": 28,
+        "token_count_scirhc": 27,
+        "source_token_count": 19,
+        "edit_distance": 20,
+        "edit_distance_scirhc": 15,
+        "LCR": 1.4737,
+        "LCR_scirhc": 1.4211,
+        "GR": 1.0,
+        "GR_scirhc": 1.0,
+        "SE": 0.2143,
+        "SCPR": null,
+        "SCPR_scirhc": null,
+        "round_trip": null
+      },
+      "preservation_requested": "P1",
+      "preservation_expected": "P1",
+      "preservation_observed": "P1",
+      "preservation_expectation_status": "match",
+      "preservation_downgrade_count": 0,
+      "boundary_annotation_count": 0,
+      "opaque_fraction": 0.0,
+      "unsupported_fraction": 0.0,
+      "unsupported_tags": [],
+      "compile_pass": null,
+      "test_pass": null,
+      "duration_ms": 1,
+      "reproducibility_block": {
+        "command": "python scripts/scir_sweep.py --manifest reports/examples/sweep_manifest.example.json",
+        "environment": {
+          "python_executable": "python",
+          "python_version": "3.11.0",
+          "platform": "example-platform",
+          "cwd": "G:/GitHub/incubate/SCIR"
+        },
+        "seed": 0,
+        "timestamp": "2026-04-03T17:00:00+00:00"
+      }
+    }
+  ],
+  "baseline_rows": [
+    {
+      "run_id": "example-proof-loop-sweep-20260403T170000Z",
+      "commit_sha": "example-commit-sha",
+      "spec_version": "v0.1-draft",
+      "tool_version": "scir-benchmark-audit-v1",
+      "baseline_name": "direct source",
+      "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "artifact_id": "fixture.python_importer.a_basic_function",
+      "frontend": "python",
+      "tier": "A",
+      "split": "test",
+      "origin": "checked_in_fixture",
+      "sample_class": "real",
+      "profile": "R",
+      "construct_family": "branch-local-mutation",
+      "fixture_set": "example-proof-loop",
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=example-proof-loop",
+      "stage": "source_to_h",
+      "status": "pass",
+      "diagnostic_codes": [],
+      "metrics": {
+        "token_count": 19,
+        "source_token_count": 19,
+        "edit_distance": 0,
+        "LCR": 1.0,
+        "GR": 1.0,
+        "SE": 0.1222,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "preservation_requested": "P1",
+      "preservation_expected": null,
+      "preservation_observed": null,
+      "preservation_expectation_status": "not_applicable",
+      "preservation_downgrade_count": 0,
+      "boundary_annotation_count": 0,
+      "opaque_fraction": 0.0,
+      "unsupported_fraction": 0.0,
+      "unsupported_tags": [],
+      "compile_pass": null,
+      "test_pass": null,
+      "duration_ms": 1,
+      "reproducibility_block": {
+        "command": "python scripts/scir_sweep.py --manifest reports/examples/sweep_manifest.example.json",
+        "environment": {
+          "python_executable": "python",
+          "python_version": "3.11.0",
+          "platform": "example-platform",
+          "cwd": "G:/GitHub/incubate/SCIR"
+        },
+        "seed": 0,
+        "timestamp": "2026-04-03T17:00:00+00:00"
+      }
+    }
+  ],
+  "clusters": [],
+  "reproducibility_block": {
+    "command": "python scripts/scir_sweep.py --manifest reports/examples/sweep_manifest.example.json",
+    "environment": {
+      "python_executable": "python",
+      "python_version": "3.11.0",
+      "platform": "example-platform",
+      "cwd": "G:/GitHub/incubate/SCIR"
+    },
+    "seed": 0,
+    "timestamp": "2026-04-03T17:00:00+00:00"
+  }
+}

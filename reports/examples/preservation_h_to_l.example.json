@@ -1,0 +1,16 @@
+{
+  "report_id": "example-preservation-h-to-l-001",
+  "subject": "fixture.python_importer.a_basic_function",
+  "path": "h_to_l",
+  "source_artifact": "scir_h:fixture.python_importer.a_basic_function",
+  "target_artifact": "scir_l:fixture.python_importer.a_basic_function",
+  "profile": "R",
+  "preservation_level": "P1",
+  "status": "pass",
+  "downgrades": [],
+  "boundary_annotations": [],
+  "evidence": [
+    "lowering rules validated",
+    "scir-l provenance continuity checked"
+  ]
+}

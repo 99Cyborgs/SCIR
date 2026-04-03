@@ -1,0 +1,255 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SCIR Baseline Comparison Summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sweep_id",
+    "run_id",
+    "commit_sha",
+    "spec_version",
+    "tool_version",
+    "corpus_id",
+    "corpus_manifest_hash",
+    "generated_at",
+    "comparison_metrics",
+    "aggregate",
+    "slices",
+    "tolerance_failures",
+    "contamination_flags"
+  ],
+  "properties": {
+    "sweep_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commit_sha": {
+      "type": "string",
+      "minLength": 1
+    },
+    "spec_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tool_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "corpus_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "corpus_manifest_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "generated_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "comparison_metrics": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "LCR",
+          "GR",
+          "SE",
+          "SCPR",
+          "round_trip",
+          "LCR_scirhc",
+          "GR_scirhc",
+          "SCPR_scirhc"
+        ]
+      }
+    },
+    "aggregate": {
+      "$ref": "#/$defs/comparisonAggregate"
+    },
+    "slices": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/comparisonSlice"
+      }
+    },
+    "tolerance_failures": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/toleranceFailure"
+      }
+    },
+    "contamination_flags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$defs": {
+    "metricSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "LCR",
+        "GR",
+        "SE",
+        "SCPR",
+        "round_trip",
+        "LCR_scirhc",
+        "GR_scirhc",
+        "SCPR_scirhc"
+      ],
+      "properties": {
+        "LCR": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "GR": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "SE": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "SCPR": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "round_trip": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "LCR_scirhc": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "GR_scirhc": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "SCPR_scirhc": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "comparisonAggregate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scir_metrics",
+        "delta_vs_source",
+        "delta_vs_ast",
+        "delta_vs_normalized"
+      ],
+      "properties": {
+        "scir_metrics": {
+          "$ref": "#/$defs/metricSnapshot"
+        },
+        "delta_vs_source": {
+          "$ref": "#/$defs/metricSnapshot"
+        },
+        "delta_vs_ast": {
+          "$ref": "#/$defs/metricSnapshot"
+        },
+        "delta_vs_normalized": {
+          "$ref": "#/$defs/metricSnapshot"
+        }
+      }
+    },
+    "comparisonSlice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slice_id",
+        "scir_metrics",
+        "delta_vs_source",
+        "delta_vs_ast",
+        "delta_vs_normalized"
+      ],
+      "properties": {
+        "slice_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scir_metrics": {
+          "$ref": "#/$defs/metricSnapshot"
+        },
+        "delta_vs_source": {
+          "$ref": "#/$defs/metricSnapshot"
+        },
+        "delta_vs_ast": {
+          "$ref": "#/$defs/metricSnapshot"
+        },
+        "delta_vs_normalized": {
+          "$ref": "#/$defs/metricSnapshot"
+        }
+      }
+    },
+    "toleranceFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slice_id",
+        "baseline_name",
+        "metric",
+        "delta",
+        "tolerance"
+      ],
+      "properties": {
+        "slice_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baseline_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "metric": {
+          "type": "string",
+          "enum": [
+          "LCR",
+          "GR",
+          "SE",
+          "SCPR",
+          "round_trip",
+          "LCR_scirhc",
+          "GR_scirhc",
+          "SCPR_scirhc"
+        ]
+      },
+        "delta": {
+          "type": "number"
+        },
+        "tolerance": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,22 +1,68 @@
 # Benchmark Tracks
 Status: Normative
 
-| Track | Question | Core metrics |
+| Track | Question | MVP status |
 | --- | --- | --- |
-| `A` | Is `SCIR-H` a regular, explicit, compact-enough representation? | lexical compression ratio, grammar regularity, semantic explicitness, canonical edit distance, context compression potential |
-| `B` | Can supported subsets round-trip through import and reconstruction? | import success, validator pass, compile pass, test pass, reconstruction fidelity index, idiomaticity |
-| `C` | Does SCIR beat strong baselines on generation, editing, or repair? | pass@k, static-check pass rate after generation, test pass, issue resolution, planning recall |
-| `D` | Is the compiler/runtime path plausible for targeted subsets? | runtime, code size, compile time, memory, handler overhead, async overhead |
+| `A` | Are canonical `SCIR-H` and compressed `SCIR-Hc` jointly explicit and compact enough to justify themselves? | active |
+| `B` | Can the Python proof loop round-trip through import, validation, lowering, and reconstruction? | active |
+| `C` | Does SCIR beat strong baselines on tightly controlled repair or editing tasks? | conditional pilot only |
+| `D` | Is runtime or backend performance competitive? | deferred |
 
-## Policy
+## Active executable tracks
 
-Track `A` and `B` can start early. Track `C` and `D` require stronger harnessing but must be specified early.
+- `A`
+- `B`
 
-For the current executable freeze:
+## Conditional tracks
 
-- Track `A` runs on the fixed bootstrap corpus and records both median and aggregate token-ratio diagnostics, with status governed by the median-based `S3`/`K2` rules plus `S4`/`K4`,
-- Track `B` runs on the fixed bootstrap corpus and is gated by Tier `A` compile/test rates plus opaque-fraction limits,
-- Track `B` idiomaticity remains recorded evidence rather than a separate hard gate,
-- Track `C` remains specified but does not emit executable result bundles,
-- Track `D` emits separate executable result bundles for Rust `N` and Python `D-PY`,
-- `D-JS` remains doctrine-only and emits no executable result bundle in Phase 6B.
+- `C`
+
+## Deferred tracks
+
+- `D`
+
+## Track C pilot task family
+
+- `python-single-function-repair`
+
+## Track C executable pilot posture
+
+- `non-default executable pilot only`
+- `opaque-boundary cases remain boundary-accounting-only`
+
+## Track C disposition
+
+- `retain bounded diagnostic pilot`
+- `do not promote to default executable gate`
+- `keep c_opaque_call boundary-accounting-only`
+
+## Track C sample synchronization
+
+- `checked-in sample manifest must equal the current opt-in pilot manifest`
+- `checked-in sample result must equal the current opt-in pilot result`
+- `checked-in sample result must keep accepted_case_count 3 and boundary_only_case_count 1`
+- `checked-in sample result must keep gate_S2_ready true, gate_K1_hit false, and status mixed or pass`
+
+## Track C sample posture re-decision triggers
+
+- `changing checked-in sample status from mixed requires a new decision-register entry and queue update`
+- `changing checked-in sample evidence or retained-diagnostic wording requires a new decision-register entry and queue update`
+- `changing checked-in sample task family, case set, or boundary-accounting posture requires a new decision-register entry and queue update`
+- `changing checked-in sample default-gate or promotion posture requires a new decision-register entry and queue update`
+
+## Track C editorial-only sample refreshes
+
+- `json whitespace, indentation, and trailing-newline normalization that preserves parsed sample content`
+- `json key-order normalization that preserves parsed sample content`
+
+## Track C non-editorial sample refresh provenance
+
+- `cite python scripts/benchmark_contract_dry_run.py --include-track-c-pilot as the regeneration command`
+- `cite python scripts/run_repo_validation.py --include-track-c-pilot as the confirming validation command`
+- `cite the regenerated manifest corpus hash`
+- `cite the regenerated result run_id and system_under_test`
+
+## Rule
+
+Track `C` may not become active until the earlier proof loop remains stable.
+Track `D` is outside the active MVP.

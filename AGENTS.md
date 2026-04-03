@@ -72,6 +72,9 @@ Full Rust-inclusive validation entrypoint:
 python scripts/run_repo_validation.py --require-rust
 ```
 
+This compatibility entrypoint is for environments that want an explicit usable Rust toolchain before running dormant deeper Rust checks.
+It is not the default MVP validation gate.
+
 ```bash
 make build
 make lint

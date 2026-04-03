@@ -1,0 +1,11 @@
+{
+  "sweep_id": "python-proof-loop-smoke",
+  "run_id": "python-proof-loop-smoke-20260403T181609Z",
+  "baseline_run_id": "unavailable",
+  "generated_at": "2026-04-03T18:16:09.489113+00:00",
+  "added_failures": [],
+  "removed_failures": [],
+  "worsened_metrics": [],
+  "improved_metrics": [],
+  "unexpected_diagnostic_codes": []
+}

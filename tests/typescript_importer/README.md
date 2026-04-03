@@ -1,17 +1,16 @@
 # TypeScript Importer Fixtures
 Status: Informative
 
-This subtree is reserved for the Phase 7 TypeScript interface-witness corpus.
+This subtree is an archived placeholder corpus from an earlier planning direction.
 
 Current state:
 
-- the corpus root is checked in as a dormant placeholder corpus
-- the fixed first-slice TypeScript case directories now contain placeholder bundle files only
-- `python scripts/typescript_importer_conformance.py --mode validate-fixtures` is active for this dormant placeholder corpus
-- `python scripts/typescript_importer_conformance.py --mode test` remains reserved and non-live
-- no live TypeScript fixtures are checked in yet
+- the corpus root remains on disk for historical reference only
+- the fixed first-slice TypeScript case directories still contain placeholder bundle files only
+- `scripts/typescript_importer_conformance.py` remains deferred and is not part of the active MVP gate
+- no live TypeScript fixtures are checked in
 - admitted placeholder cases carry `expected.scirh`; rejected placeholder cases intentionally omit `expected.scirh`
-- the slice remains importer-only and non-executable
+- the subtree is non-executable and non-authoritative
 
 Future corpus root:
 
@@ -29,4 +28,4 @@ Fixed first-slice case IDs:
 - `d_proxy_construct`
 - `d_type_level_runtime_gate`
 
-Bundle expectations remain those published in `tests/README.md` and `plans/milestone_07_typescript_witness_slice.md`.
+Bundle contents are historical residue only and do not imply an active roadmap commitment.

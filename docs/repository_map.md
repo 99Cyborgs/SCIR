@@ -6,33 +6,30 @@ Status: Informative
 | Path | Responsibility |
 | --- | --- |
 | `/` | top-level doctrine, sequencing, decisions, and command contract |
-| `docs/` | explanatory doctrine and repository-level navigation |
+| `docs/` | explanatory doctrine and navigation |
 | `specs/` | normative semantics and validator-facing contracts |
-| `schemas/` | machine-readable report and manifest schemas |
-| `plans/` | plan template and milestone seeds |
-| `frontend/` | importer doctrine and language-local scope |
-| `validators/` | validator stack contracts and local rules |
-| `benchmarks/` | empirical evaluation doctrine |
-| `reports/` | checked-in example report artifacts, derived exports for normative registers and the execution queue, and later generated validation and benchmark bundles |
-| `tests/` | checked-in golden corpora and importer conformance fixtures |
-| `tooling/` | tool interface contracts |
+| `schemas/` | report and manifest schemas |
+| `plans/` | plan template, seeds, and active execution plans |
+| `frontend/` | importer doctrine |
+| `validators/` | validator stack contracts |
+| `backends/` | backend contracts; Wasm is active |
+| `benchmarks/` | benchmark doctrine |
+| `reports/` | example artifacts and derived exports |
+| `tests/` | checked-in corpora and invalid examples |
+| `tooling/` | active MVP tooling contracts plus deferred placeholders |
 | `ci/` | CI and release policy |
 | `.github/` | automation entry points |
-| `scripts/` | bootstrap validation and importer-conformance helpers |
+| `scripts/` | executable bootstrap helpers |
 
-## Future code roots
+## Missing but expected later
 
-These directories are expected later. Do not create them ad hoc without a plan.
-
-| Planned path | Responsibility |
+| Path | Status |
 | --- | --- |
-| `frontend/<lang>/importer/` | language-specific importer implementation |
-| `scir-h/` | parser, formatter, canonicalizer |
-| `scir-l/` | lowering and IR utilities |
-| `runtime/` | profile-specific runtime support |
-| `backends/` | reconstruction and emission backends |
-| `benchmarks/harness/` | executable benchmark runner |
+| `grammar/` | not yet a standalone directory |
+| `parser/` | active parser still lives in `scripts/scir_h_bootstrap_model.py` |
+| `formatter/` | active formatter still lives in `scripts/scir_h_bootstrap_model.py` |
+| `runtime/` | not yet materialized as a standalone directory |
 
 ## Responsibility rule
 
-Normative semantics belong in `specs/`, not in ad hoc code comments or tool-specific behavior.
+Normative semantics belong in `specs/`, not in deferred tooling surfaces or historical plans.

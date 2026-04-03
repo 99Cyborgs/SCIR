@@ -1,0 +1,36 @@
+{
+  "module_id": "invalid.scir_l.opaque_structure",
+  "functions": [
+    {
+      "name": "bad_boundary",
+      "returns": "opaque<ForeignResult>",
+      "params": [],
+      "blocks": [
+        {
+          "id": "entry",
+          "params": [
+            "eff0"
+          ],
+          "instructions": [
+            {
+              "id": "opaque0",
+              "op": "opaque.call",
+              "operands": [
+                "foreign_api_ping",
+                "eff0"
+              ],
+              "origin": "invalid.scir_l.opaque_structure::opaque0",
+              "lowering_rule": "H_OPAQUE_CALL"
+            }
+          ],
+          "terminator": {
+            "kind": "ret",
+            "value": "opaque0",
+            "origin": "invalid.scir_l.opaque_structure::ret",
+            "lowering_rule": "H_RETURN"
+          }
+        }
+      ]
+    }
+  ]
+}

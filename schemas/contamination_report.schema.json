@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SCIR Contamination Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "generated_at",
+    "corpus_manifest",
+    "corpus_manifest_hash",
+    "split_mode",
+    "duplicates",
+    "near_duplicates",
+    "leakage_flags"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "corpus_manifest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "corpus_manifest_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "split_mode": {
+      "type": "string",
+      "minLength": 1
+    },
+    "duplicates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/duplicatePair"
+      }
+    },
+    "near_duplicates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/nearDuplicatePair"
+      }
+    },
+    "leakage_flags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$defs": {
+    "duplicatePair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "left_artifact_id",
+        "left_split",
+        "right_artifact_id",
+        "right_split",
+        "shared_hash"
+      ],
+      "properties": {
+        "left_artifact_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "left_split": {
+          "type": "string",
+          "minLength": 1
+        },
+        "right_artifact_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "right_split": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shared_hash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "nearDuplicatePair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "left_artifact_id",
+        "left_split",
+        "right_artifact_id",
+        "right_split",
+        "similarity"
+      ],
+      "properties": {
+        "left_artifact_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "left_split": {
+          "type": "string",
+          "minLength": 1
+        },
+        "right_artifact_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "right_split": {
+          "type": "string",
+          "minLength": 1
+        },
+        "similarity": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

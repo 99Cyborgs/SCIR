@@ -3,7 +3,15 @@ Status: Normative
 
 ## Scope
 
-`SCIR-L` is the lowered control and analysis representation used for SSA-style reasoning, async/effect lowering, optimization, and backend preparation.
+`SCIR-L` is a derivative lowering of validated `SCIR-H`.
+
+It exists only for:
+
+- explicit CFG reasoning
+- SSA-style value flow
+- memory and effect sequencing
+- backend preparation
+- Wasm reference-backend emission
 
 ## Non-negotiable properties
 
@@ -11,25 +19,28 @@ Status: Normative
 - explicit CFG
 - block parameters
 - SSA values
-- explicit effect and memory sequencing where required
-- explicit provenance back to `SCIR-H`
-- lowered async and opaque-boundary structures
-- lower reconstructability than `SCIR-H`
+- explicit memory and effect sequencing where required
+- explicit origin plus named lowering rule
+- no L-only semantic commitments
 
-## Core structure
+## Active canonical surface
 
-Bootstrap `SCIR-L` v0.1 contains:
+The active subset contains:
 
-- modules,
-- functions,
-- blocks,
-- SSA values,
-- memory tokens,
-- effect tokens,
-- block terminators,
-- provenance records.
+- modules
+- functions
+- blocks
+- block parameters
+- the op set `const`, `cmp`, `alloc`, `store`, `load`, `field.addr`, `call`, `async.resume`, `opaque.call`
+- the terminators `ret`, `br`, `cond_br`
 
-## Canonical grammar
+## Text rendering contract
+
+The repository can render canonical `SCIR-L` text for review, but the active validator operates over the structured lowering artifact emitted by `scripts/scir_bootstrap_pipeline.py`.
+
+There is no standalone MVP `SCIR-L` parser package yet.
+
+## Frozen active grammar
 
 ```ebnf
 LModule   ::= "lmodule" ModId "{" LFn+ "}"
@@ -39,115 +50,38 @@ Instr     ::= "%" SsaId "=" Op OperandList ";"
 Terminator::= "br" BlockRef "(" ArgList? ")" ";"
             | "cond_br" SsaId "," BlockRef "(" ArgList? ")" "," BlockRef "(" ArgList? ")" ";"
             | "ret" SsaId ";"
-
 Op        ::= "const" | "cmp" | "alloc" | "store" | "load"
             | "field.addr" | "call" | "async.resume" | "opaque.call"
-
-Operand   ::= SsaId | Lit | SymRef | MemTok | EffTok
-MemTok    ::= "%" "mem" Number
-EffTok    ::= "%" "eff" Number
-SymRef    ::= "sym:" SymId
 ```
-
-## Frozen bootstrap op surface
-
-The Phase 3 bootstrap freeze permits exactly these op families:
-
-- value: `const`, `cmp`
-- memory: `alloc`, `store`, `load`
-- place projection: `field.addr`
-- direct validated call: `call`
-- lowered async suspension: `async.resume`
-- explicit opaque boundary: `opaque.call`
-- control terminators: `ret`, `br`, `cond_br`
-
-Deferred from this freeze:
-
-- generic arithmetic beyond the current comparison lowering
-- witness construction or projection
-- exception lowering
-- loop lowering
-- backend-specific dialect ops
-- `phi`; block parameters are the only merge mechanism
 
 ## Token model
 
-- Memory tokens sequence mutable-cell effects only.
-- Effect tokens sequence non-memory effects in the bootstrap subset.
-- `alloc` consumes a memory token and yields a cell handle.
-- `store` consumes a cell, value, and memory token and yields a new memory token.
-- `load` consumes a cell and memory token and yields an SSA value.
-- `field.addr` projects a named record field cell from a validated record cell handle and carries no independent memory or effect semantics.
-- `call`, `async.resume`, and `opaque.call` consume the active effect token when one is required by the lowered function shape.
-- Branches forward memory and effect state only through block arguments.
+- memory tokens sequence mutable effects
+- effect tokens sequence non-memory effects where the lowered shape requires them
+- block parameters are the only merge mechanism
 
-## Op meaning in the frozen subset
+## Required lowering provenance
 
-- `cmp` is the lowered form of bootstrap intrinsic scalar comparison, starting with `lt`.
-- `field.addr` is the lowered form of bootstrap field-place projection.
-- `call` is only for direct validated symbol calls in the bootstrap subset.
-- `async.resume` is only the lowered form of `await`.
-- `opaque.call` is only the lowered form of an explicit Tier `C` opaque boundary.
+Every semantically meaningful op must carry:
 
-## Bootstrap lowering obligations
+- `origin`
+- `lowering_rule`
 
-For the supported executable slice, `SCIR-L` must be derivable only from validated compact `SCIR-H` and must preserve these mappings:
+See `LOWERING_CONTRACT.md`.
 
-- `var y int x` -> `alloc` + `store`
-- mutable-local read -> `load`
-- `if lt y 0` -> `load` + `cmp` + `cond_br`
-- `set y 0` -> `store`
-- `return 1` -> `const` + `ret`
-- `return await fetch_value()` -> `call` + `async.resume` + `ret`
-- `return foreign_api_ping()` -> `opaque.call` + `ret`
-- borrowed-record parameter plus `counter.value` read -> `field.addr` + `load`
-- `set counter.value 0` -> `field.addr` + `store`
+## Deferred from the active subset
 
-## Required semantics carried from `SCIR-H`
-
-`SCIR-L` must preserve, in lowered form:
-
-- control-flow meaning,
-- value flow,
-- sequencing for memory and non-memory effects where required,
-- async suspension structure for the lowered bootstrap subset,
-- opaque and foreign boundary calls,
-- provenance links to the originating `SCIR-H` nodes.
-
-## Prohibited behavior
-
-- no `SCIR-L`-only semantic obligations,
-- no ops outside the frozen bootstrap surface,
-- no backend-specific semantics without a contract,
-- no optimizer-only facts masquerading as canonical semantics,
-- no missing provenance for lowered nodes that originated in `SCIR-H`.
-
-## Phase 6B optimization contract
-
-Phase 6B optimization is non-canonical and profile-gated.
-
-- Optimized artifacts must stay within the frozen bootstrap op surface.
-- Optimization must not strengthen preservation claims, hide opaque accounting, or feed optimizer-only facts back into canonical `SCIR-H`.
-- Allowed `N` transforms in the bootstrap subset are limited to local-cell promotion, redundant load/store elimination, redundant `field.addr` reuse, and trivial CFG cleanup.
-- Allowed `D-PY` transforms in the bootstrap subset are limited to trivial CFG cleanup and dead temporary elimination; no motion across `opaque.call` or `async.resume` is valid, and no transform may alter Python-host-visible identity or event-loop order.
-- `D-JS` remains doctrine-only in Phase 6B; no executable optimization contract beyond the published host-ordering prohibition is defined here.
-- Benchmark-only post-`SCIR-L` emitters may execute optimized artifacts for Track `D`, but those emitters do not redefine the reconstruction contract.
+- exception lowering
+- loop lowering for importer-only loop cases
+- witness or interface ops
+- backend dialect ops
+- optimizer-only semantics
+- native or host-specific semantics
 
 ## Reconstructability boundary
 
-May remain reconstructable:
-
-- symbol signatures,
-- types,
-- module dependencies,
-- provenance links.
-
-Must not be assumed idiomatically reconstructable:
-
-- exact structured control shape,
-- exact async syntax,
-- exact witness syntax,
-- source-local declaration layout.
+`SCIR-L` is not the default reconstruction source.
+Python reconstruction in the MVP is `SCIR-H`-driven.
 
 ## Validator obligations
 

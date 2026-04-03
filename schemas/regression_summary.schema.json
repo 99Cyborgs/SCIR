@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SCIR Sweep Regression Summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sweep_id",
+    "run_id",
+    "baseline_run_id",
+    "generated_at",
+    "added_failures",
+    "removed_failures",
+    "worsened_metrics",
+    "improved_metrics"
+  ],
+  "properties": {
+    "sweep_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "baseline_run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "baseline_commit_sha": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "added_failures": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/failureDelta"
+      }
+    },
+    "removed_failures": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/failureDelta"
+      }
+    },
+    "worsened_metrics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/metricDelta"
+      }
+    },
+    "improved_metrics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/metricDelta"
+      }
+    },
+    "unexpected_diagnostic_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$defs": {
+    "failureDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "stage",
+        "from_status",
+        "to_status"
+      ],
+      "properties": {
+        "artifact_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stage": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from_status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to_status": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "metricDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metric",
+        "baseline",
+        "current"
+      ],
+      "properties": {
+        "metric": {
+          "type": "string",
+          "minLength": 1
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baseline": {},
+        "current": {},
+        "delta": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

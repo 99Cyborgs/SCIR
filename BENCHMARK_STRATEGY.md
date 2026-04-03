@@ -46,6 +46,8 @@ See `benchmarks/baselines.md` for the adapter contract, including `run_baseline(
 - every claim must name the strongest relevant baseline
 - every claim must cite the corpus manifest hash and comparator metric
 - every `benchmark_report` claim must declare `claim_class` and `evidence_class`
+- every `benchmark_report` that cites `SCIR-Hc` evidence must declare `representation = SCIR-Hc` plus `scir_h_lineage_references`
+- every evaluated condition and claim in a `benchmark_report` that cites `SCIR-Hc` evidence must declare `metric_class` plus `scir_h_evidence`
 - every benchmark must state contamination controls
 - every benchmark must carry a reproducibility block
 - every benchmark must state success and kill gates
@@ -58,12 +60,15 @@ The minimum externally defensible bundle for an active executable run now includ
 - `sweep_summary.json`
 - `comparison_summary.json`
 - `contamination_report.json`
+- `scirhc_diff_audit.json`
 - `benchmark_report.json`
 - `benchmark_report.md`
 - `manifest_lock.json`
 
 Claim-producing runs must fail if baseline results are missing, corpus hash mismatches are detected, a reproducibility block is missing, contamination is detected, or none of the approved claim-gate conditions hold for the declared `claim_class`.
 They must also emit separate explicit and compressed representation metrics plus failure attribution for lexical inflation sources.
+They must also bind the `SCIR-Hc` claim surface back to the canonical benchmark corpus through explicit `scir_h_lineage_references`, normalized canonical hashes, and complete per-claim `scir_h_evidence` coverage.
+They must classify every evaluated and claimed metric as `DESCRIPTIVE`, `EVALUATIVE`, or `CAUSAL`, and they must reject causal or authority-implying metrics outside the declared evidence surface.
 They must reject cross-class inference and any implicit generalization from `SCIR-Hc` evidence into semantic-preservation, reconstruction-fidelity, or cross-language claims.
 
 ## Interpretation discipline

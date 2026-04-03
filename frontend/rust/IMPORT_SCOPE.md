@@ -1,49 +1,57 @@
 # Rust Import Scope
 Status: Normative
 
-## Phase 6A executable slice
+## Active scope
 
-### Tier A executable constructs
+The Rust MVP scope is importer-only safe-subset evidence.
+
+## Active corpus
+
+### Importer-first evidence cases
+
+- `a_mut_local`
+- `a_struct_field_borrow_mut`
+- `a_async_await`
+- `c_unsafe_call`
+
+### Tier A importer-evidence cases
+
+- `a_mut_local`
+- `a_struct_field_borrow_mut`
+- `a_async_await`
+
+### Helper-free Wasm-emittable case
+
+- `a_mut_local`
+- `a_struct_field_borrow_mut`
+
+### Rejected cases
+
+- `d_proc_macro`
+- `d_self_ref_pin`
+
+## Supported shapes
+
+### Tier A active importer shapes
 
 - free functions
 - named record types
-- borrowed and borrowed-mutable parameters
+- `borrow_mut` parameters
 - mutable locals
 - record field places in read and write positions
-- direct calls
-- scalar comparison branches
 - simple async functions with explicit `await`
 
-### Tier B deferred constructs
+### Tier C active importer shape
 
-- methods and receiver sugar
-- trait and impl dispatch
-- closures
-- `Result` and `Option`
-- enums and pattern matching
-- iterator normalization and async normalization with idiomaticity loss
-- macro-expanded code imported post-expansion with provenance caveats
+- explicit unsafe call boundary imported as an opaque boundary
 
-### Tier C executable constructs
+### Tier D rejected shape classes
 
-- explicit `unsafe` call boundaries lowered as opaque
-
-### Tier D constructs
-
-- proc macro semantics as first-class source behavior
-- build-script semantics
+- proc macros
+- build scripts
 - self-referential pin patterns
-- unsafe alias tricks and raw-pointer choreography beyond an explicit opaque boundary
+- unsafe alias choreography beyond explicit boundary treatment
 
-## Preservation expectations
+## Claim boundary
 
-- Tier `A` Rust reconstruction claims in Phase 6A are fixed at profile `R`, preservation `P1`
-- explicit unsafe boundary handling is fixed at profile `N`, preservation `P3`
-- optimization claims are deferred to Phase 6B
-
-## Importer obligations
-
-- keep borrow modes explicit in parameter and type surfaces
-- keep field-place semantics explicit rather than hidden in projection sugar
-- keep Tier `C` unsafe handling explicit through opaque boundary contracts
-- do not widen support via hidden unsafe helpers
+Rust importer evidence must not be presented as an active round-trip, backend, or benchmark claim unless the root roadmap and benchmark strategy are updated together.

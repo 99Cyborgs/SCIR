@@ -1,0 +1,33 @@
+{
+  "module_id": "invalid.scir_l.lowering_rule",
+  "functions": [
+    {
+      "name": "bad_rule",
+      "returns": "int",
+      "params": [],
+      "blocks": [
+        {
+          "id": "entry",
+          "params": [],
+          "instructions": [
+            {
+              "id": "const0",
+              "op": "const",
+              "operands": [
+                1
+              ],
+              "origin": "invalid.scir_l.lowering_rule::const0",
+              "lowering_rule": "H_DIRECT_CALL"
+            }
+          ],
+          "terminator": {
+            "kind": "ret",
+            "value": "const0",
+            "origin": "invalid.scir_l.lowering_rule::ret",
+            "lowering_rule": "H_RETURN"
+          }
+        }
+      ]
+    }
+  ]
+}

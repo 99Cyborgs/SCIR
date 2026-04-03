@@ -3,99 +3,56 @@ Status: Normative
 
 ## Purpose
 
-This file defines the typing surface that validators and importers must agree on.
+This file defines the active typing and effect surface that importers, validators, and lowering rules must agree on for the MVP.
 
-## Core judgment
+## Active scope
 
-```text
-Γ ; W ; K ; R ⊢ e : τ ! ε
+The active MVP uses only the effect and type surface required by:
 
-Γ = term environment
-W = witness environment
-K = capability environment
-R = region / alias environment
-τ = type
-ε = finite effect row
-```
+- the Python proof loop,
+- the Rust safe-subset importer,
+- explicit opaque and unsafe boundaries.
 
-## Rules
+## Active type rules
 
-### Call
+- function parameters and returns are explicit
+- record field types are explicit
+- `borrow<T>` and `borrow_mut<T>` may appear in type positions for Rust import
+- `opaque<T>` may appear at explicit boundary points
 
-```text
-Γ ⊢ f : fn(τ1..τn) -> τ ! εf using Kf
-Γ ⊢ ai : τi   for all i
-Kf ⊆ K
-----------------------------------------
-Γ ; W ; K ; R ⊢ call f(a1..an) : τ ! εf
-```
+## Active effect rules
 
-### Witness-based invoke
+- public boundaries use explicit finite effect rows
+- `write` remains explicit
+- `await` remains explicit
+- `opaque` and `unsafe` remain explicit
+- the importer-only `try/catch` slice may carry an explicit `throw` effect marker without promoting standalone `throw` syntax
+- empty effect rows render as `!`
+- declared active effects must match observed behavior; missing or unused effect rows are invalid
 
-```text
-Γ ⊢ w : witness<I<T...>>
-method(I, m) = fn(self: σ, τ1..τn) -> τ ! εm
----------------------------------------------
-Γ ; W ; K ; R ⊢ invoke I.m w(args) : τ ! εm
-```
+## Deferred from active use
 
-### Throw
+- capability `using` clauses
+- witness dispatch
+- standalone `throw` expressions or statements and broader `throw` effect discharge
+- broader effect polymorphism
 
-```text
-Γ ⊢ e : E
-----------------------------------------
-Γ ; W ; K ; R ⊢ throw e : α ! { throw(E) }
-```
+These remain future design topics, not active canonical requirements.
 
-### Try catch
+## Exported-interface rule
 
-```text
-Gamma ; W ; K ; R |- b_try : tau ! eps_try
-Gamma, x:E ; W ; K ; R |- b_catch : tau ! eps_catch
-----------------------------------------------------------------
-Gamma ; W ; K ; R |- try b_try catch(x: E) b_catch : tau ! ((eps_try - {throw(E)}) U eps_catch)
-```
+Public declarations in the active subset carry explicit type and effect signatures in canonical storage.
 
-### Borrow mutable
+## Active capability accounting
 
-```text
-place p : own<T> in R
-no_live_aliases(p)
-----------------------------------------
-Γ ; W ; K ; R ⊢ borrow_mut p : borrow_mut<T> ! {}
-```
+Capabilities are not first-class canonical syntax in the MVP.
+When an importer emits an opaque or unsafe boundary that requires a capability, it must:
 
-### Spawn
+- record the requirement in the boundary contract `capabilities` field, and
+- mirror the requirement in `module_manifest.dependencies` using the `capability:<name>` form.
 
-```text
-Γ ; W ; K ; R ⊢ e : τ ! ε
-----------------------------------------
-Γ ; W ; K ; R ⊢ spawn e : task<τ> ! ({spawn} ∪ sched(ε))
-```
+Capability imports outside explicit boundary cases are invalid in the active subset.
 
-## Capability rules
+## Lowering rule
 
-- capabilities are explicit values or imports,
-- ambient power is not allowed in canonical `SCIR-H`,
-- a call is invalid if its declared capability requirement is not satisfied,
-- capabilities must cross opaque and foreign boundaries explicitly.
-
-## Effect rules
-
-- effect rows are finite and explicit at public boundaries,
-- hidden effects are invalid,
-- `unsafe` and `opaque` are effects as well as boundary categories,
-- a `catch(x: E)` boundary discharges only the exact `throw(E)` obligation from the guarded block,
-- all non-throw effects remain explicit and visible across `try/catch`,
-- other `throw(T)` obligations remain explicit unless a matching catch boundary is present,
-- canonical v0.1 `SCIR-H` allows only the single-catch form above; `finally`, multi-catch, and pattern-heavy handlers are out of scope,
-- effect elimination or specialization belongs to lowering or optimization, not canonical `SCIR-H`.
-
-## Exported interface rule
-
-Public or exported declarations must carry explicit type, effect, and capability signatures even when local tooling offers elided views.
-
-## Profile interaction
-
-- `R`, `D-PY`, and `D-JS` usually preserve more effect visibility.
-- `N` and `P` may lower or specialize effects only when legal under the active preservation claim.
+Effect elimination or specialization belongs to derivative lowering and backend contracts, never to canonical `SCIR-H`.

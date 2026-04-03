@@ -1,0 +1,45 @@
+{
+  "module_id": "invalid.scir_l.duplicate_ssa",
+  "functions": [
+    {
+      "name": "bad_ssa",
+      "returns": "int",
+      "params": [
+        "x"
+      ],
+      "blocks": [
+        {
+          "id": "entry",
+          "params": [],
+          "instructions": [
+            {
+              "id": "dup0",
+              "op": "const",
+              "operands": [
+                1
+              ],
+              "origin": "invalid.scir_l.duplicate_ssa::const0",
+              "lowering_rule": "H_CONST_RET"
+            },
+            {
+              "id": "dup0",
+              "op": "cmp",
+              "operands": [
+                "x",
+                0
+              ],
+              "origin": "invalid.scir_l.duplicate_ssa::cmp0",
+              "lowering_rule": "H_INTRINSIC_CMP"
+            }
+          ],
+          "terminator": {
+            "kind": "ret",
+            "value": "dup0",
+            "origin": "invalid.scir_l.duplicate_ssa::ret",
+            "lowering_rule": "H_RETURN"
+          }
+        }
+      ]
+    }
+  ]
+}

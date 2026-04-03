@@ -8,7 +8,8 @@
   ],
   "declared_tier": "C",
   "dependencies": [
-    "rust:std"
+    "rust:std",
+    "capability:unsafe_ping"
   ],
   "exports": [
     "call_unsafe_ping"

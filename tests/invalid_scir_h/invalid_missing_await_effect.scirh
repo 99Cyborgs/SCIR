@@ -1,0 +1,3 @@
+module invalid.missing_await_effect
+async fn load fetch Callable -> int !
+  return await fetch()

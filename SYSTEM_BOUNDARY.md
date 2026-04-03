@@ -3,93 +3,83 @@ Status: Normative
 
 ## Project boundary
 
-SCIR is a semantic substrate project.
+SCIR is an MVP semantic-substrate project.
 
-It is not, in the first credible product cycle, a source-language replacement project.
+It is not:
 
-## In scope now
+- a new authoring language,
+- a broad whole-language importer suite,
+- a proof-first research stack,
+- a universal backend program.
 
-### Mandatory first-product scope
+## Active scope now
 
-- `SCIR-H` canonical representation
-- `SCIR-L` lowered representation
-- parser / formatter contract for both
-- stable symbol identity and provenance
+- canonical `SCIR-H`
+- derivative `SCIR-L`
 - `SCIR-H` validator
 - `SCIR-L` validator
-- translation validation hooks
-- preservation reporting
-- reconstruction pipeline
-- benchmark harness and baseline adapters
-
-### First implementation scope
-
+- lowering provenance and derivative-only checks
 - Python subset importer
-- Rust subset importer after Python subset
-- Wasm or equivalent portable execution path first
-- reconstruction-first path before broad backend work
-- benchmark tracks A–D, starting with Track A and B pilots
+- Rust safe-subset importer
+- Python reconstruction from validated `SCIR-H`
+- Wasm reference-backend MVP contract
+- Track `A` and Track `B` benchmark harnesses
 
-### Near-term roadmap priority
+## Not active in this MVP
 
-- complete Python Milestone 02B as the active semantic expansion track
-- then land witness-bearing second-language evidence through a TypeScript interface-shaped slice
-- keep `D-JS` doctrine-only during that witness milestone unless a later plan widens downstream contracts
-- do not add new backend tracks as part of that roadmap step
+- TypeScript, C++, Go, and Haskell implementation work
+- repository-scale issue-repair benchmarks
+- native backend performance claims
+- dynamic-host `D-JS` execution claims
+- graph explorer, debugger, language server, proof bridge, and agent patch API work beyond no-burden placeholders
+- benchmark Track `D`
 
-## Explicitly out of scope for the first credible product
+## Language boundary
 
-- a mass-market user-facing language
-- whole-language fidelity for Python, C++, Haskell, or any other language
-- broad C++ support
-- advanced proof stack before validator value exists
-- backend sprawl
-- hidden runtime shims that erase semantic mismatch
-- unsupported semantics silently mapped to supported semantics
-- benchmarkless AI claims
-
-## Language support boundary
-
-The repository discusses these languages as overlapping semantic families, not full-fidelity commitments:
+Active implementation languages:
 
 - Python
 - Rust
+
+Deferred language surfaces:
+
 - TypeScript
+- C++
 - Go
 - Haskell
-- disciplined subsets of C++
 
-Initial implementation priority is Python then Rust.
+These may remain discussed as future stress targets only. They are not current implementation commitments.
 
-## Execution target boundary
+## Execution boundary
 
-Initial target priority:
+Active execution targets:
 
-1. reconstruction back to the source language subset,
-2. portable execution profile `P`,
-3. native profile `N` only after `H`, `L`, and reconstruction are credible,
-4. dynamic-host profiles `D-PY` and `D-JS` where host fidelity is a requirement.
+1. Python reconstruction from validated `SCIR-H`
+2. Wasm reference backend MVP under profile `P`
+
+Non-active execution targets:
+
+- native parity claims
+- broad host-runtime parity claims
+- `D-JS`
 
 ## Unsupported-case policy
 
-If a construct is not modeled, it must be one of:
+If a construct is outside the implemented bootstrap subset, it must be:
 
-- Tier `C` with an explicit opaque or unsafe boundary contract,
-- Tier `D` with importer rejection,
-- an open question recorded in `OPEN_QUESTIONS.md`.
+- explicitly Tier `C` with an opaque or unsafe boundary contract,
+- explicitly Tier `D` and rejected,
+- or explicitly deferred in `UNSUPPORTED_CASES.md` and `DEFERRED_COMPONENTS.md`.
 
 No silent fallback is permitted.
 
 ## Claim boundary
 
-No PR, report, plan, or benchmark may claim any of the following without explicit evidence:
+No document, report, benchmark, example, validator, or script may claim:
 
-- exact preservation without profile and `P0`,
-- support for a feature without a tier,
-- safety across an unsafe or opaque boundary,
-- repository-scale AI value without strong direct-source and typed-AST baselines,
-- profile-independent semantics.
-
-## Stop conditions
-
-The AI-facing thesis must narrow or terminate if any kill criterion in `benchmarks/success_failure_gates.md` is triggered.
+- whole-language support,
+- universal fidelity,
+- backend-independent semantics,
+- Wasm success as proof of native or host-runtime parity,
+- active TypeScript implementation work,
+- active Track `D` benchmark evidence.

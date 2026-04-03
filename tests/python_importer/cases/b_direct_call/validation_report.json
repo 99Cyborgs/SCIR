@@ -4,13 +4,6 @@
   "layer": "scir_h",
   "validator": "python-bootstrap-importer",
   "spec_version": "v0.1-draft",
-  "status": "warn",
-  "diagnostics": [
-    {
-      "code": "PY-B003",
-      "severity": "warn",
-      "message": "Direct local call imports as Tier B canonical SCIR-H only; no executable lowering, translation, or reconstruction path is claimed for this follow-on case.",
-      "location": "source.py:1"
-    }
-  ]
+  "status": "pass",
+  "diagnostics": []
 }

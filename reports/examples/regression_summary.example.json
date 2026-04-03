@@ -1,0 +1,35 @@
+{
+  "sweep_id": "example-proof-loop-sweep",
+  "run_id": "example-proof-loop-sweep-20260402T000000Z",
+  "baseline_run_id": "example-proof-loop-sweep-20260401T000000Z",
+  "baseline_commit_sha": "example-baseline-commit",
+  "generated_at": "2026-04-02T00:00:00+00:00",
+  "added_failures": [
+    {
+      "artifact_id": "fixture.python_importer.a_basic_function",
+      "stage": "h_to_python",
+      "from_status": "pass",
+      "to_status": "fail"
+    }
+  ],
+  "removed_failures": [],
+  "worsened_metrics": [
+    {
+      "metric": "validator_pass_rate",
+      "baseline": 1.0,
+      "current": 0.9,
+      "delta": -0.1
+    },
+    {
+      "metric": "diagnostic_frequency_by_code",
+      "key": "H003",
+      "baseline": 0,
+      "current": 1,
+      "delta": 1.0
+    }
+  ],
+  "improved_metrics": [],
+  "unexpected_diagnostic_codes": [
+    "H003"
+  ]
+}

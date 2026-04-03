@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+"""Executable benchmark doctrine checker and claim-bundle generator.
+
+This file treats benchmark output as an audit surface, not a presentation layer.
+It verifies that active tracks, baselines, contamination controls, claim gates,
+and SCIR-Hc lineage binding all stay within the repository's bounded benchmark
+contract.
+"""
 from __future__ import annotations
 
 import argparse
@@ -23,14 +30,26 @@ from benchmark_contract_metadata import (
     benchmark_track_baselines,
     benchmark_track_contract,
 )
+from _internal.scirhc_transform import (
+    build_scirhc_generation_context,
+    build_scirhc_lineage_root,
+    generate_scirhc_diff_audit,
+    internal_scirhc_transform_access,
+    scirhc_lineage_root_payload,
+    scirh_to_scirhc,
+)
+from scir_h_bootstrap_model import ScirHModelError, ScirhcContextError
 from scir_sweep import run_sweep
 from scir_bootstrap_pipeline import run_benchmark_suite, run_track_c_pilot
-from scir_python_bootstrap import SPEC_VERSION
+from scir_python_bootstrap import SCIRH_MODULES as PYTHON_SCIRH_MODULES, SPEC_VERSION
 from validate_repo_contracts import collect_instance_validation_errors
 from validators.scirhc_validator import (
     CLAIM_SCOPE_RULES,
     DEFAULT_BENCHMARK_CLAIM_CLASS,
+    SCIRHC_REPORT_REPRESENTATION,
     assert_claim_scope_compliance,
+    assert_lineage_integrity,
+    assert_semantic_idempotence,
 )
 
 
@@ -54,6 +73,7 @@ REQUIRED_FILES = [
     "reports/examples/benchmark_report.example.json",
     "reports/examples/comparison_summary.example.json",
     "reports/examples/contamination_report.example.json",
+    "reports/examples/scirhc_diff_audit.example.json",
     "reports/examples/benchmark_track_c_manifest.example.json",
     "reports/examples/benchmark_track_c_result.example.json",
 ]
@@ -192,6 +212,8 @@ def validate_track_c_result_lock_criteria(track_c_contract: dict, result: dict, 
 
 
 def validate_track_c_sample_posture(track_c_contract: dict, manifest: dict, result: dict, manifest_label: str, result_label: str):
+    """Keep the checked-in Track C samples diagnostic-only and aligned with the non-default pilot contract."""
+
     failures = []
     corpus = manifest.get("corpus", {})
     if manifest.get("task_family") != track_c_contract["task_family"]:
@@ -828,6 +850,8 @@ def validate_track_c_pilot_outputs(root: pathlib.Path, manifest: dict, result: d
 
 
 def run_checks(root: pathlib.Path):
+    """Validate benchmark doctrine files before trusting any executable result bundle."""
+
     failures = []
     failures.extend(check_required_files(root))
     failures.extend(check_track_markers(root))
@@ -964,22 +988,66 @@ def benchmark_report_representation_metrics(comparison_summary: dict) -> tuple[d
     return explicit_metrics, compressed_metrics
 
 
+def benchmark_report_canonical_registry() -> dict[str, object]:
+    return {
+        f"fixture.python_importer.{case_name}": PYTHON_SCIRH_MODULES[case_name]
+        for case_name in BENCHMARK_CONTRACT_METADATA["benchmark_cases"]
+    }
+
+
+def benchmark_report_lineage_references() -> dict[str, dict[str, str]]:
+    return {
+        module_id: scirhc_lineage_root_payload(build_scirhc_lineage_root(module))
+        for module_id, module in benchmark_report_canonical_registry().items()
+    }
+
+
+def benchmark_lineage_scope() -> list[str]:
+    return sorted(benchmark_report_canonical_registry())
+
+
+def metric_class_for_name(metric_name: str) -> str:
+    for rule in CLAIM_SCOPE_RULES.values():
+        metric_class = rule["metric_classes"].get(metric_name)
+        if metric_class is not None:
+            return metric_class
+    raise KeyError(metric_name)
+
+
+def build_scirhc_diff_audit_bundle() -> dict[str, object]:
+    modules = {}
+    with internal_scirhc_transform_access():
+        for module_id, module in benchmark_report_canonical_registry().items():
+            ctx = build_scirhc_generation_context(module)
+            scirhc = scirh_to_scirhc(module, ctx=ctx)
+            modules[module_id] = generate_scirhc_diff_audit(module, scirhc, ctx=ctx)
+    return {
+        "representation": SCIRHC_REPORT_REPRESENTATION,
+        "modules": modules,
+    }
+
+
 def build_claim_gate(
     comparison_summary: dict,
     benchmark_items: dict,
     *,
     claim_class: str = DEFAULT_BENCHMARK_CLAIM_CLASS,
 ) -> dict:
+    """Build the machine-readable boundary that determines whether a benchmark run may support an explicit claim."""
+
     aggregate = comparison_summary["aggregate"]
     scir_metrics = aggregate["scir_metrics"]
     delta_vs_ast = aggregate["delta_vs_ast"]
     patch_gain = benchmark_items["track_a_result"]["metrics"].get("patch_composability_gain_vs_typed_ast")
+    evidence_scope = benchmark_lineage_scope()
     conditions = [
         {
             "id": "scirhc_lcr_vs_ast",
             "statement": "SCIR-Hc beats typed-AST on LCR.",
             "baseline_name": "typed-AST",
             "metric": "LCR_scirhc",
+            "metric_class": metric_class_for_name("LCR_scirhc"),
+            "scir_h_evidence": evidence_scope,
             "observed_value": scir_metrics["LCR_scirhc"],
             "baseline_value": report_baseline_value(scir_metrics["LCR_scirhc"], delta_vs_ast["LCR_scirhc"]),
             "delta": delta_vs_ast["LCR_scirhc"],
@@ -992,6 +1060,8 @@ def build_claim_gate(
             "statement": "SCIR-H beats typed-AST on SCPR by at least 15pp.",
             "baseline_name": "typed-AST",
             "metric": "SCPR",
+            "metric_class": "EVALUATIVE",
+            "scir_h_evidence": evidence_scope,
             "observed_value": scir_metrics["SCPR"],
             "baseline_value": report_baseline_value(scir_metrics["SCPR"], delta_vs_ast["SCPR"]),
             "delta": delta_vs_ast["SCPR"],
@@ -1004,6 +1074,8 @@ def build_claim_gate(
             "statement": "SCIR-H improves typed-AST patch composability.",
             "baseline_name": "typed-AST",
             "metric": "patch_composability_gain_vs_typed_ast",
+            "metric_class": metric_class_for_name("patch_composability_gain_vs_typed_ast"),
+            "scir_h_evidence": evidence_scope,
             "observed_value": patch_gain,
             "baseline_value": 0.0,
             "delta": patch_gain,
@@ -1057,6 +1129,8 @@ def build_benchmark_report(
     benchmark_items: dict,
     reproducibility_block: dict,
 ) -> dict:
+    """Assemble a claim-bearing report whose SCIR-Hc evidence stays explicitly lineage-bound and class-scoped."""
+
     explicit_metrics, compressed_metrics = benchmark_report_representation_metrics(comparison_summary)
     claim_class = DEFAULT_BENCHMARK_CLAIM_CLASS
     claim_gate = build_claim_gate(comparison_summary, benchmark_items, claim_class=claim_class)
@@ -1068,6 +1142,8 @@ def build_benchmark_report(
             "corpus_manifest_hash": comparison_summary["corpus_manifest_hash"],
             "baseline_name": item["baseline_name"],
             "metric": item["metric"],
+            "metric_class": item["metric_class"],
+            "scir_h_evidence": list(item["scir_h_evidence"]),
             "observed_value": item["observed_value"],
             "baseline_value": item["baseline_value"],
             "delta": item["delta"],
@@ -1081,9 +1157,11 @@ def build_benchmark_report(
         "spec_version": SPEC_VERSION,
         "tool_version": BENCHMARK_TOOL_VERSION,
         "claim_mode": "claim" if claim_run else "smoke",
+        "representation": SCIRHC_REPORT_REPRESENTATION,
         "corpus_manifest": corpus_manifest_rel,
         "corpus_manifest_hash": comparison_summary["corpus_manifest_hash"],
         "generated_at": generated_at,
+        "scir_h_lineage_references": benchmark_report_lineage_references(),
         "tracks": {
             "A": benchmark_items["track_a_result"]["status"],
             "B": benchmark_items["track_b_result"]["status"],
@@ -1099,6 +1177,7 @@ def build_benchmark_report(
         "artifacts": {
             "comparison_summary": "comparison_summary.json",
             "contamination_report": "contamination_report.json",
+            "scirhc_diff_audit": "scirhc_diff_audit.json",
             "sweep_result": "sweep_result.json",
         },
         "reproducibility_block": reproducibility_block,
@@ -1114,6 +1193,7 @@ def build_benchmark_report_markdown(report: dict) -> str:
         f"- run_id: `{report['run_id']}`",
         f"- corpus_manifest_hash: `{report['corpus_manifest_hash']}`",
         f"- claim_mode: `{report['claim_mode']}`",
+        f"- representation: `{report['representation']}`",
         f"- claim_class: `{report['claim_class']}`",
         f"- evidence_class: `{report['evidence_class']}`",
         f"- claim_gate: `{report['claim_gate']['ai_thesis_status']}`",
@@ -1123,6 +1203,9 @@ def build_benchmark_report_markdown(report: dict) -> str:
     ]
     lines.append(f"- explicit: `{report['explicit_representation_metrics']}`")
     lines.append(f"- compressed: `{report['compressed_representation_metrics']}`")
+    lines.extend(["", "## Canonical Lineage", ""])
+    for artifact, lineage_id in sorted(report["scir_h_lineage_references"].items()):
+        lines.append(f"- {artifact} => `{lineage_id}`")
     lines.extend(["", "## Claim Gate", ""])
     for item in report["claim_gate"]["evaluated_conditions"]:
         lines.append(
@@ -1220,6 +1303,8 @@ def claim_audit_failures(
     benchmark_report: dict,
     manifest_lock: dict,
 ) -> list[str]:
+    """Return every condition that makes a claim-producing benchmark bundle non-defensible."""
+
     failures = []
     expected_hash = manifest_lock["corpus_manifest_hash"]
     if comparison_summary.get("corpus_manifest_hash") != expected_hash:
@@ -1247,8 +1332,23 @@ def claim_audit_failures(
         failures.append("benchmark report claim gate is missing")
     elif not benchmark_report["claim_gate"].get("passed"):
         failures.append("no claim gate condition satisfied; AI thesis invalidated")
+    if benchmark_report.get("representation") != SCIRHC_REPORT_REPRESENTATION:
+        failures.append(f"benchmark report representation must be {SCIRHC_REPORT_REPRESENTATION}")
+    expected_lineage_references = benchmark_report_lineage_references()
+    if benchmark_report.get("scir_h_lineage_references") != expected_lineage_references:
+        failures.append("benchmark report scir_h_lineage_references drifted from the canonical benchmark corpus")
+    artifacts = benchmark_report.get("artifacts", {})
+    if artifacts.get("scirhc_diff_audit") != "scirhc_diff_audit.json":
+        failures.append("benchmark report must reference scirhc_diff_audit.json")
     try:
-        assert_claim_scope_compliance(benchmark_report)
+        assert_claim_scope_compliance(
+            benchmark_report,
+            canonical_registry=benchmark_report_canonical_registry(),
+        )
+        assert_lineage_integrity(
+            benchmark_report,
+            canonical_registry=benchmark_report_canonical_registry(),
+        )
     except ValueError as exc:
         failures.append(f"benchmark report claim scope is invalid: {exc}")
 
@@ -1275,6 +1375,7 @@ def write_benchmark_outputs(
     regression_summary: dict | None,
     comparison_summary: dict,
     contamination_report: dict,
+    scirhc_diff_audit: dict,
     benchmark_report: dict,
     manifest_lock: dict,
     sweep_manifest_rel: str,
@@ -1288,6 +1389,7 @@ def write_benchmark_outputs(
         (output_dir / "regression_summary.json").write_text(json.dumps(regression_summary, indent=2) + "\n", encoding="utf-8")
     (output_dir / "comparison_summary.json").write_text(json.dumps(comparison_summary, indent=2) + "\n", encoding="utf-8")
     (output_dir / "contamination_report.json").write_text(json.dumps(contamination_report, indent=2) + "\n", encoding="utf-8")
+    (output_dir / "scirhc_diff_audit.json").write_text(json.dumps(scirhc_diff_audit, indent=2) + "\n", encoding="utf-8")
     (output_dir / "benchmark_report.json").write_text(json.dumps(benchmark_report, indent=2) + "\n", encoding="utf-8")
     (output_dir / "benchmark_report.md").write_text(build_benchmark_report_markdown(benchmark_report), encoding="utf-8")
     (output_dir / "manifest_lock.json").write_text(json.dumps(manifest_lock, indent=2) + "\n", encoding="utf-8")
@@ -1799,6 +1901,23 @@ def main():
             print(f" - {item}")
         sys.exit(1)
 
+    scirhc_containment_failures = []
+    for module_id, module in benchmark_report_canonical_registry().items():
+        try:
+            assert_semantic_idempotence(module)
+        except ValueError as exc:
+            scirhc_containment_failures.append(f"{module_id}: {exc}")
+    try:
+        scirhc_diff_audit = build_scirhc_diff_audit_bundle()
+    except (ScirHModelError, ScirhcContextError, ValueError) as exc:
+        scirhc_containment_failures.append(f"benchmark SCIR-Hc diff audit generation failed: {exc}")
+        scirhc_diff_audit = {}
+    if scirhc_containment_failures:
+        print("[benchmark] SCIR-Hc containment audit failed")
+        for item in scirhc_containment_failures:
+            print(f" - {item}")
+        sys.exit(1)
+
     reproducibility_block = build_reproducibility_block(
         "python scripts/benchmark_contract_dry_run.py"
         + (" --include-track-c-pilot" if args.include_track_c_pilot else "")
@@ -1836,6 +1955,17 @@ def main():
         reproducibility_block=reproducibility_block,
     )
     report_failures = []
+    try:
+        assert_claim_scope_compliance(
+            benchmark_report,
+            canonical_registry=benchmark_report_canonical_registry(),
+        )
+        assert_lineage_integrity(
+            benchmark_report,
+            canonical_registry=benchmark_report_canonical_registry(),
+        )
+    except ValueError as exc:
+        report_failures.append(f"benchmark report doctrine validation failed: {exc}")
     report_failures.extend(
         validate_instance(
             root,
@@ -1876,6 +2006,7 @@ def main():
         regression_summary=regression_summary,
         comparison_summary=comparison_summary,
         contamination_report=contamination_report,
+        scirhc_diff_audit=scirhc_diff_audit,
         benchmark_report=benchmark_report,
         manifest_lock=manifest_lock,
         sweep_manifest_rel=sweep_manifest_rel,

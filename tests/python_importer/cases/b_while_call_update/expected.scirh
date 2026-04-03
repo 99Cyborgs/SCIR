@@ -1,8 +1,9 @@
 module fixture.python_importer.b_while_call_update
 fn step_until_nonneg step Callable x int -> int !write
+  var current int x
   loop loop0
-    if lt x 0
-      set x step(x)
+    if lt current 0
+      set current step(current)
     else
       break loop0
-  return x
+  return current

@@ -14,7 +14,7 @@ Status: Normative
 ## Active blocking conditions
 
 - unsupported active grammar in canonical `SCIR-H`
-- `SCIR-Hc` parse-format instability, authority-boundary drift, hidden-semantics drift, deterministic-derivation drift, or semantic round-trip drift
+- `SCIR-Hc` parse-format instability, missing generation context, authority-boundary drift, hidden-semantics drift, deterministic-derivation drift, lineage-integrity drift, semantic-idempotence drift, or semantic round-trip drift
 - missing path, profile, or preservation level
 - missing opaque-boundary contract where required
 - missing or mismatched boundary capability metadata
@@ -23,7 +23,7 @@ Status: Normative
 - `origin` that no longer points back into the emitting `SCIR-H` module
 - `SCIR-L` op outside the active subset
 - `SCIR-Hc` entering lowering, reconstruction, or backend emission directly
-- `benchmark_report` claim scope leaking `SCIR-Hc` evidence across claim classes
+- `benchmark_report` claim scope leaking `SCIR-Hc` evidence across claim classes, lineage coverage, or metric-class authority boundaries
 - active TypeScript or `D-JS` claim
 - active Track `D` claim
 - importer-only `B`-tier cases producing active lowering or reconstruction artifacts
@@ -36,4 +36,6 @@ Status: Normative
 - reject preservation overclaims or unexplained downgrades against the active corpus expectations
 - reject `SCIR-Hc` nodes that omit canonical information without `compression_origin` provenance
 - reject `benchmark_report` claim/evidence mixes that generalize `SCIR-Hc` beyond the declared claim class
+- reject `SCIR-Hc` lineage references that do not match canonical module lineage or normalized canonical hash
+- reject `benchmark_report` metrics that imply semantic authority or causal semantics outside the declared evaluated evidence surface
 - reject any Wasm claim that implies native or host parity

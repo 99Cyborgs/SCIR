@@ -1,17 +1,96 @@
-name: benchmark-contracts
+name: evaluation
 
 on:
   workflow_dispatch:
+    inputs:
+      claim_run:
+        description: "Run the explicit claim-grade benchmark lane"
+        required: false
+        default: false
+        type: boolean
   pull_request:
     paths:
       - "BENCHMARK_STRATEGY.md"
       - "benchmarks/**"
+      - "tests/corpora/**"
+      - "tests/sweeps/**"
+      - "tests/invalid_scir_h/**"
+      - "tests/invalid_scir_l/**"
       - "schemas/benchmark_*.json"
+      - "schemas/comparison_summary.schema.json"
+      - "schemas/contamination_report.schema.json"
+      - "schemas/corpus_manifest.schema.json"
+      - "schemas/sweep_*.json"
       - "ci/benchmark_pipeline.md"
+      - "reports/examples/benchmark_*.json"
+      - "reports/examples/comparison_summary.example.json"
+      - "reports/examples/contamination_report.example.json"
       - "scripts/benchmark_contract_dry_run.py"
+      - "scripts/benchmark_audit_common.py"
+      - "scripts/benchmark_repro.py"
+      - "scripts/scir_bootstrap_pipeline.py"
+      - "scripts/scir_sweep.py"
+
+permissions:
+  contents: read
+  actions: read
 
 jobs:
-  benchmark-contracts:
+  roundtrip-lane:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run Python proof-loop self-tests
+        run: python scripts/scir_bootstrap_pipeline.py --mode test
+
+  sweep-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - id: baseline
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
+              owner,
+              repo,
+              workflow_id: 'benchmarks.yml',
+              branch: 'main',
+              status: 'completed',
+              per_page: 50,
+            });
+            const baseline = runs.find(run => run.conclusion === 'success' && String(run.id) !== String(context.runId));
+            core.setOutput('run_id', baseline ? String(baseline.id) : '');
+      - if: steps.baseline.outputs.run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: sweep-full
+          path: artifacts/baseline-sweep-full
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.baseline.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate full proof-loop sweep report
+        run: |
+          if [ -f artifacts/baseline-sweep-full/sweep_result.json ]; then
+            python scripts/scir_sweep.py --manifest tests/sweeps/python_proof_loop_full.json --output-dir artifacts/sweep-full --compare artifacts/baseline-sweep-full --enforce-regression-gates
+          else
+            python scripts/scir_sweep.py --manifest tests/sweeps/python_proof_loop_full.json --output-dir artifacts/sweep-full
+          fi
+      - name: Upload full sweep artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sweep-full
+          path: artifacts/sweep-full
+
+  benchmark-smoke:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,3 +99,26 @@ jobs:
           python-version: "3.11"
       - name: Run benchmark doctrine dry run
         run: make benchmark
+      - name: Upload benchmark smoke artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-smoke
+          path: artifacts/benchmark_runs
+
+  benchmark-claim:
+    if: github.event_name == 'workflow_dispatch' && inputs.claim_run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run explicit claim-grade benchmark lane
+        run: make benchmark-claim
+      - name: Upload benchmark claim artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-claim
+          path: artifacts/benchmark_runs

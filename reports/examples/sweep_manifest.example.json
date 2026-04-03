@@ -1,0 +1,19 @@
+{
+  "sweep_id": "example-proof-loop-sweep",
+  "corpus_manifest": "tests/corpora/python_tier_a_micro_corpus.json",
+  "slice_axes": [
+    "frontend",
+    "tier",
+    "profile",
+    "pipeline_stage",
+    "construct_family",
+    "fixture_set"
+  ],
+  "stages": [
+    "source_to_h",
+    "scir_h_validation",
+    "h_to_l",
+    "scir_l_validation",
+    "h_to_python"
+  ]
+}

@@ -1,0 +1,6 @@
+module invalid.nondeterministic_storage
+import sym z python:z
+import sym a python:a
+
+fn ping -> int !write,await,write
+  return 0

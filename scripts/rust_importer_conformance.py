@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""Conformance checker for checked-in Rust importer bundles.
+
+The checker keeps Rust importer evidence subset-bound by validating canonical
+`SCIR-H` output, Cargo fixture contracts, boundary metadata, and schema-backed
+reports for the fixed corpus only.
+"""
 import argparse
 import json
 import pathlib
@@ -10,6 +16,7 @@ from scir_h_bootstrap_model import ScirHModelError, format_module, parse_module
 from scir_rust_bootstrap import (
     CASE_CONFIG,
     CARGO_TOML,
+    RUST_IMPORTER_METADATA,
     SOURCE_TEXTS,
     TEST_TEXTS,
     ImporterError,
@@ -17,122 +24,76 @@ from scir_rust_bootstrap import (
     VALIDATOR_NAME,
     build_bundle,
 )
-from validate_repo_contracts import collect_instance_validation_errors
+from validate_repo_contracts import (
+    collect_instance_validation_errors,
+    validate_boundary_capability_contract,
+)
 
 
 FIXTURE_ROOT = pathlib.Path("tests") / "rust_importer" / "cases"
 
-CASE_EXPECTATIONS = {
-    "a_mut_local": {
-        "tier": "A",
-        "status": "pass",
-        "validator": VALIDATOR_NAME,
-        "profiles": ["R"],
-        "dependencies": ["rust:std"],
-        "exports": ["clamp_nonneg"],
-        "opaque_boundary_count": 0,
-        "summary": {"A": 3, "B": 0, "C": 0, "D": 0},
-        "require_scirh": True,
-        "require_opaque_boundary": False,
-        "require_smoke_test": True,
-        "diagnostic_severities": [],
-        "scirh_markers": [
-            "module fixture.rust_importer.a_mut_local",
-            "fn clamp_nonneg x int -> int !write",
-            "var y int x",
-            "if lt y 0",
-        ],
-    },
-    "a_struct_field_borrow_mut": {
-        "tier": "A",
-        "status": "pass",
-        "validator": VALIDATOR_NAME,
-        "profiles": ["R"],
-        "dependencies": ["rust:std"],
-        "exports": ["Counter", "clamp_counter"],
-        "opaque_boundary_count": 0,
-        "summary": {"A": 3, "B": 0, "C": 0, "D": 0},
-        "require_scirh": True,
-        "require_opaque_boundary": False,
-        "require_smoke_test": True,
-        "diagnostic_severities": [],
-        "scirh_markers": [
-            "module fixture.rust_importer.a_struct_field_borrow_mut",
-            "type Counter record { value int }",
-            "fn clamp_counter counter borrow_mut<Counter> -> int !write",
-            "set counter.value 0",
-        ],
-    },
-    "a_async_await": {
-        "tier": "A",
-        "status": "pass",
-        "validator": VALIDATOR_NAME,
-        "profiles": ["R"],
-        "dependencies": ["rust:std"],
-        "exports": ["load_once"],
-        "opaque_boundary_count": 0,
-        "summary": {"A": 2, "B": 0, "C": 0, "D": 0},
-        "require_scirh": True,
-        "require_opaque_boundary": False,
-        "require_smoke_test": True,
-        "diagnostic_severities": [],
-        "scirh_markers": [
-            "module fixture.rust_importer.a_async_await",
-            "async fn fetch_value -> int !",
-            "async fn load_once -> int !await",
-            "return await fetch_value()",
-        ],
-    },
-    "c_unsafe_call": {
-        "tier": "C",
-        "status": "warn",
-        "validator": VALIDATOR_NAME,
-        "profiles": ["N"],
-        "dependencies": ["rust:std"],
-        "exports": ["call_unsafe_ping"],
-        "opaque_boundary_count": 1,
-        "summary": {"A": 1, "B": 0, "C": 1, "D": 0},
-        "require_scirh": True,
-        "require_opaque_boundary": True,
-        "require_smoke_test": False,
-        "diagnostic_severities": ["warn"],
-        "scirh_markers": [
-            "module fixture.rust_importer.c_unsafe_call",
-            "import sym unsafe_ping rust:unsafe_ping",
-            "!opaque,unsafe",
-        ],
-    },
-    "d_proc_macro": {
-        "tier": "D",
-        "status": "fail",
-        "validator": VALIDATOR_NAME,
-        "profiles": ["R", "N"],
-        "dependencies": ["rust:std"],
-        "exports": ["MacroDriven"],
-        "opaque_boundary_count": 0,
-        "summary": {"A": 0, "B": 0, "C": 0, "D": 1},
-        "require_scirh": False,
-        "require_opaque_boundary": False,
-        "require_smoke_test": False,
-        "diagnostic_severities": ["error"],
-        "scirh_markers": [],
-    },
-    "d_self_ref_pin": {
-        "tier": "D",
-        "status": "fail",
-        "validator": VALIDATOR_NAME,
-        "profiles": ["R", "N"],
-        "dependencies": ["rust:std"],
-        "exports": ["SelfRef", "make_self_ref"],
-        "opaque_boundary_count": 0,
-        "summary": {"A": 0, "B": 0, "C": 0, "D": 1},
-        "require_scirh": False,
-        "require_opaque_boundary": False,
-        "require_smoke_test": False,
-        "diagnostic_severities": ["error"],
-        "scirh_markers": [],
-    },
+RUST_SCIRH_MARKERS = {
+    "a_mut_local": [
+        "module fixture.rust_importer.a_mut_local",
+        "fn clamp_nonneg x int -> int !write",
+        "var y int x",
+        "if lt y 0",
+    ],
+    "a_struct_field_borrow_mut": [
+        "module fixture.rust_importer.a_struct_field_borrow_mut",
+        "type Counter record { value int }",
+        "fn clamp_counter counter borrow_mut<Counter> -> int !write",
+        "set counter.value 0",
+    ],
+    "a_async_await": [
+        "module fixture.rust_importer.a_async_await",
+        "async fn fetch_value -> int !",
+        "async fn load_once -> int !await",
+        "return await fetch_value()",
+    ],
+    "c_unsafe_call": [
+        "module fixture.rust_importer.c_unsafe_call",
+        "import sym unsafe_ping rust:unsafe_ping",
+        "!opaque,unsafe",
+    ],
 }
+
+
+def summarize_item_tiers(items):
+    summary = {"A": 0, "B": 0, "C": 0, "D": 0}
+    for item in items:
+        tier = item.get("tier")
+        if tier in summary:
+            summary[tier] += 1
+    return summary
+
+
+def build_case_expectations():
+    expectations = {}
+    case_contracts = RUST_IMPORTER_METADATA["case_contracts"]
+    for case_name in RUST_IMPORTER_METADATA["case_order"]:
+        config = CASE_CONFIG[case_name]
+        expectations[case_name] = {
+            "tier": config["tier"],
+            "status": config["status"],
+            "validator": VALIDATOR_NAME,
+            "profiles": config["profiles"],
+            "dependencies": config["dependencies"],
+            "exports": config["exports"],
+            "opaque_boundary_count": 1 if config["opaque_boundary_contract"] else 0,
+            "summary": summarize_item_tiers(config["feature_items"]),
+            "require_scirh": case_name in SCIRH_MODULES,
+            "require_opaque_boundary": bool(config["opaque_boundary_contract"]),
+            "require_smoke_test": case_contracts.get(case_name, {}).get("require_smoke_test", False),
+            "diagnostic_severities": [
+                diagnostic.get("severity") for diagnostic in config["diagnostics"]
+            ],
+            "scirh_markers": RUST_SCIRH_MARKERS.get(case_name, []),
+        }
+    return expectations
+
+
+CASE_EXPECTATIONS = build_case_expectations()
 
 COMMON_JSON_ARTIFACTS = {
     "module_manifest.json": "schemas/module_manifest.schema.json",
@@ -161,20 +122,13 @@ def validate_json_against_schema(root: pathlib.Path, json_path: pathlib.Path, sc
     return instance, failures
 
 
-def summarize_item_tiers(items):
-    summary = {"A": 0, "B": 0, "C": 0, "D": 0}
-    for item in items:
-        tier = item.get("tier")
-        if tier in summary:
-            summary[tier] += 1
-    return summary
-
-
 def expected_cargo_text(case_name: str) -> str:
     return CARGO_TOML.format(crate_name=case_name)
 
 
 def check_case(root: pathlib.Path, case_name: str, expectation: dict):
+    """Validate one Rust fixture bundle against the supported-case contract and boundary rules."""
+
     failures = []
     case_dir = root / FIXTURE_ROOT / case_name
     if not case_dir.exists():
@@ -305,16 +259,28 @@ def check_case(root: pathlib.Path, case_name: str, expectation: dict):
                 failures.append(f"{scirh_path.relative_to(root)}: missing canonical marker {marker!r}")
 
     opaque_path = case_dir / OPAQUE_BOUNDARY_REL
+    opaque_instance = None
     if expectation["require_opaque_boundary"] and opaque_path.exists():
-        _, opaque_failures = validate_json_against_schema(root, opaque_path, "schemas/opaque_boundary_contract.schema.json")
+        opaque_instance, opaque_failures = validate_json_against_schema(root, opaque_path, "schemas/opaque_boundary_contract.schema.json")
         failures.extend(opaque_failures)
     if not expectation["require_opaque_boundary"] and opaque_path.exists():
         failures.append(f"{opaque_path.relative_to(root)}: unexpected opaque boundary contract")
+
+    failures.extend(
+        validate_boundary_capability_contract(
+            manifest_instance,
+            opaque_instance,
+            label=case_name,
+            allow_capabilities=expectation["require_opaque_boundary"],
+        )
+    )
 
     return failures
 
 
 def validate_fixtures(root: pathlib.Path):
+    """Check every checked-in Rust fixture without widening the importer claim surface."""
+
     failures = []
     expected_cases = set(CASE_EXPECTATIONS)
     actual_cases = {
@@ -332,6 +298,8 @@ def validate_fixtures(root: pathlib.Path):
 
 
 def compare_generated_to_goldens(root: pathlib.Path):
+    """Regenerate Rust bundles and require exact agreement with the checked-in authority artifacts."""
+
     failures = []
     for case_name in sorted(CASE_EXPECTATIONS):
         source_path = root / FIXTURE_ROOT / case_name / "input" / "src" / "lib.rs"
@@ -378,6 +346,17 @@ def run_self_tests(root: pathlib.Path):
         failures.append("self-test bogus scirh: expected parse failure")
     except ScirHModelError:
         pass
+
+    with tempfile.TemporaryDirectory(prefix="rust-importer-capability-") as tmp:
+        fixture_root = pathlib.Path(tmp) / "repo"
+        shutil.copytree(root, fixture_root, ignore=shutil.ignore_patterns("__pycache__"))
+        manifest_path = fixture_root / FIXTURE_ROOT / "c_unsafe_call" / "module_manifest.json"
+        manifest = load_json(manifest_path)
+        manifest["dependencies"] = ["rust:std"]
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+        capability_failures = validate_fixtures(fixture_root)
+        if not any("missing capability imports for boundary requirements" in item for item in capability_failures):
+            failures.append("self-test missing Rust boundary capability import: expected failure")
     return failures
 
 

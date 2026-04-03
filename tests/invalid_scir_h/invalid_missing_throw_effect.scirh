@@ -1,0 +1,9 @@
+module invalid.missing_throw
+fn may_fail -> int !throw
+  try
+    return 1
+  catch err Error
+    return 0
+
+fn caller -> int !
+  return may_fail()

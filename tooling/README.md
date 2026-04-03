@@ -1,17 +1,21 @@
 # Tooling Contracts
 Status: Normative
 
-SCIR tooling must consume canonical artifacts and shared schemas. Tooling must not invent parallel semantics.
+## Active tooling
 
-Planned core tools:
+- compiler driver surface through `scripts/run_repo_validation.py`
+- formatter contract
+- checker contract
 
-- compiler driver
-- formatter
-- checker
-- explorer
+## Optional low-burden tooling
+
+- explorer only if it stays derivative of canonical artifacts and adds no semantic burden
+
+## Deferred tooling
+
 - graph tool
 - debugger
 - language-server bridge
 - agent patch API
 
-See the local contract files.
+Deferred tooling notes that remain on disk are marked through `tooling/NOT_ACTIVE.md`.

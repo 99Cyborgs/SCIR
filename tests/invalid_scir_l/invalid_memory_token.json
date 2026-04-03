@@ -1,0 +1,45 @@
+{
+  "module_id": "invalid.scir_l.memory_token",
+  "functions": [
+    {
+      "name": "bad_memory",
+      "returns": "int",
+      "params": [],
+      "blocks": [
+        {
+          "id": "entry",
+          "params": [
+            "mem0"
+          ],
+          "instructions": [
+            {
+              "id": "cell0",
+              "op": "alloc",
+              "operands": [
+                "mem0"
+              ],
+              "origin": "invalid.scir_l.memory_token::alloc0",
+              "lowering_rule": "H_VAR_ALLOC"
+            },
+            {
+              "id": "load0",
+              "op": "load",
+              "operands": [
+                "cell0",
+                "eff0"
+              ],
+              "origin": "invalid.scir_l.memory_token::load0",
+              "lowering_rule": "H_PLACE_LOAD"
+            }
+          ],
+          "terminator": {
+            "kind": "ret",
+            "value": "load0",
+            "origin": "invalid.scir_l.memory_token::ret",
+            "lowering_rule": "H_RETURN"
+          }
+        }
+      ]
+    }
+  ]
+}

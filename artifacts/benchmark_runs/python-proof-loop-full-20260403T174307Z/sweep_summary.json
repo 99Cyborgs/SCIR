@@ -1,0 +1,700 @@
+{
+  "sweep_id": "python-proof-loop-full",
+  "run_id": "python-proof-loop-full-20260403T174307Z",
+  "commit_sha": "427ecb865ab4184fbcb0014cd512d476fc4f124f",
+  "spec_version": "v0.1-draft",
+  "tool_version": "scir-benchmark-audit-v1",
+  "corpus_id": "python-proof-loop-corpus",
+  "corpus_manifest_hash": "sha256:0c3b78d3b092277d89bb79a7df485b3f794b3ae30668acbed4fba318b48e4398",
+  "generated_at": "2026-04-03T17:43:07.558394+00:00",
+  "row_count": 22,
+  "stage_summary": [
+    {
+      "stage": "h_to_l",
+      "row_count": 4,
+      "status_counts": {
+        "pass": 4,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.125,
+      "avg_unsupported_fraction": 0.25,
+      "avg_duration_ms": 0.0,
+      "slice_score": 94.37
+    },
+    {
+      "stage": "h_to_python",
+      "row_count": 4,
+      "status_counts": {
+        "pass": 4,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.125,
+      "avg_unsupported_fraction": 0.25,
+      "avg_duration_ms": 0.0,
+      "slice_score": 94.37
+    },
+    {
+      "stage": "l_to_wasm",
+      "row_count": 2,
+      "status_counts": {
+        "pass": 2,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "stage": "scir_h_validation",
+      "row_count": 4,
+      "status_counts": {
+        "pass": 4,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.125,
+      "avg_unsupported_fraction": 0.25,
+      "avg_duration_ms": 0.0,
+      "slice_score": 94.37
+    },
+    {
+      "stage": "scir_l_validation",
+      "row_count": 4,
+      "status_counts": {
+        "pass": 4,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.125,
+      "avg_unsupported_fraction": 0.25,
+      "avg_duration_ms": 0.0,
+      "slice_score": 94.37
+    },
+    {
+      "stage": "source_to_h",
+      "row_count": 4,
+      "status_counts": {
+        "pass": 3,
+        "warn": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 0.75,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.125,
+      "avg_unsupported_fraction": 0.25,
+      "avg_duration_ms": 0.0,
+      "slice_score": 84.38
+    }
+  ],
+  "construct_family_summary": [
+    {
+      "construct_family": "async-await",
+      "row_count": 5,
+      "status_counts": {
+        "pass": 5,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "construct_family": "branch-local-mutation",
+      "row_count": 6,
+      "status_counts": {
+        "pass": 6,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "construct_family": "direct-call",
+      "row_count": 6,
+      "status_counts": {
+        "pass": 6,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "construct_family": "opaque-boundary",
+      "row_count": 5,
+      "status_counts": {
+        "pass": 4,
+        "warn": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 0.8,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.5,
+      "avg_unsupported_fraction": 1.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 69.5
+    }
+  ],
+  "diagnostic_code_summary": [
+    {
+      "code": "PY-C001",
+      "count": 1
+    }
+  ],
+  "slice_summary": [
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=P|pipeline_stage=l_to_wasm|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=P|pipeline_stage=l_to_wasm|construct_family=direct-call|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_l|construct_family=async-await|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_l|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_l|construct_family=direct-call|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_python|construct_family=async-await|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_python|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_python|construct_family=direct-call|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_h_validation|construct_family=async-await|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_h_validation|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_h_validation|construct_family=direct-call|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_l_validation|construct_family=async-await|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_l_validation|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_l_validation|construct_family=direct-call|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=async-await|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=direct-call|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=h_to_l|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.5,
+      "avg_unsupported_fraction": 1.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 77.5
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=h_to_python|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.5,
+      "avg_unsupported_fraction": 1.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 77.5
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=scir_h_validation|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.5,
+      "avg_unsupported_fraction": 1.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 77.5
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=scir_l_validation|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.5,
+      "avg_unsupported_fraction": 1.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 77.5
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=source_to_h|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 0,
+        "warn": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 0.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.5,
+      "avg_unsupported_fraction": 1.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 37.5
+    }
+  ],
+  "slice_rankings": {
+    "most_stable_slice": {
+      "slice_id": "frontend=python|tier=A|split=test|profile=P|pipeline_stage=l_to_wasm|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "slice_score": 100.0
+    },
+    "most_failure_dense_slice": {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=source_to_h|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "failure_density": 1.0
+    },
+    "fastest_improving_slice": null
+  },
+  "preservation_stage_breakdown": [
+    {
+      "artifact_id": "fixture.python_importer.a_async_await",
+      "stages": {
+        "source_to_h": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "scir_h_validation": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "h_to_l": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "scir_l_validation": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "h_to_python": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        }
+      }
+    },
+    {
+      "artifact_id": "fixture.python_importer.a_basic_function",
+      "stages": {
+        "source_to_h": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "scir_h_validation": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "h_to_l": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "scir_l_validation": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "h_to_python": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "l_to_wasm": {
+          "status": "pass",
+          "preservation_level": "P2",
+          "expected_preservation_level": "P2",
+          "expectation_status": "match"
+        }
+      }
+    },
+    {
+      "artifact_id": "fixture.python_importer.b_direct_call",
+      "stages": {
+        "source_to_h": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "scir_h_validation": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "h_to_l": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "scir_l_validation": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "h_to_python": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "l_to_wasm": {
+          "status": "pass",
+          "preservation_level": "P2",
+          "expected_preservation_level": "P2",
+          "expectation_status": "match"
+        }
+      }
+    },
+    {
+      "artifact_id": "fixture.python_importer.c_opaque_call",
+      "stages": {
+        "source_to_h": {
+          "status": "warn",
+          "preservation_level": "P3",
+          "expected_preservation_level": "P3",
+          "expectation_status": "match"
+        },
+        "scir_h_validation": {
+          "status": "pass",
+          "preservation_level": "P3",
+          "expected_preservation_level": "P3",
+          "expectation_status": "match"
+        },
+        "h_to_l": {
+          "status": "pass",
+          "preservation_level": "P3",
+          "expected_preservation_level": "P3",
+          "expectation_status": "match"
+        },
+        "scir_l_validation": {
+          "status": "pass",
+          "preservation_level": "P3",
+          "expected_preservation_level": "P3",
+          "expectation_status": "match"
+        },
+        "h_to_python": {
+          "status": "pass",
+          "preservation_level": "P3",
+          "expected_preservation_level": "P3",
+          "expectation_status": "match"
+        }
+      }
+    }
+  ]
+}

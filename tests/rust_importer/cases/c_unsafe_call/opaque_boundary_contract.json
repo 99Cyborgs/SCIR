@@ -12,7 +12,9 @@
       "int"
     ]
   },
-  "capabilities": [],
+  "capabilities": [
+    "capability:unsafe_ping"
+  ],
   "determinism": "unknown",
   "audit_note": "unsafe_ping is treated as a Tier C unsafe boundary rather than modeled Rust semantics in Phase 6A."
 }

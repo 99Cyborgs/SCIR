@@ -1,29 +1,35 @@
 {
-  "benchmark_id": "example-benchmark-track-b-001",
-  "track": "B",
-  "task_family": "python-subset-roundtrip",
+  "benchmark_id": "example-benchmark-track-a-001",
+  "track": "A",
+  "task_family": "scir-h-regularity-and-compression",
   "corpus": {
-    "name": "python-subset-functions",
-    "scope": "Tier A and B illustrative subset",
-    "hash": "sha256:example-python-subset"
+    "name": "example-python-proof-loop",
+    "scope": "Fixed executable Python bootstrap cases",
+    "hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
   },
+  "corpus_manifest": "reports/examples/corpus_manifest.example.json",
+  "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
   "baselines": [
     "direct source",
-    "typed-AST"
+    "typed-AST",
+    "lightweight regularized core or s-expression"
   ],
   "profiles": [
     "R",
     "D-PY"
   ],
   "success_gates": [
-    "S1"
+    "S3",
+    "S4"
   ],
   "kill_gates": [
-    "K3",
+    "K2",
     "K4"
   ],
   "contamination_controls": [
-    "held-out evaluation split recorded",
-    "baseline adapters recorded"
+    "hash every published corpus manifest",
+    "separate development, tuning, and held-out evaluation slices",
+    "record prompt templates and baseline adapters",
+    "do not claim generalization from a contaminated or untracked dataset"
   ]
 }

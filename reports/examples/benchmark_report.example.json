@@ -4,9 +4,28 @@
   "spec_version": "v0.1-draft",
   "tool_version": "scir-benchmark-audit-v1",
   "claim_mode": "claim",
+  "representation": "SCIR-Hc",
   "corpus_manifest": "reports/examples/corpus_manifest.example.json",
   "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
   "generated_at": "2026-04-03T17:00:00+00:00",
+  "scir_h_lineage_references": {
+    "fixture.python_importer.a_basic_function": {
+      "semantic_lineage_id": "3c587f53a4b9d222de6d7d030596f12f8a39099043b9ac1a71676944527aeeb4",
+      "normalized_canonical_hash": "f7c16683b3d22b81971418a219d4c8086bbf42f4d6dc02bc3ec6cd9a69b0d35e"
+    },
+    "fixture.python_importer.a_async_await": {
+      "semantic_lineage_id": "a98fe0c337795cf2ba3402bfbfa922b148e80c5523cb607e04b24d6ebc8c3621",
+      "normalized_canonical_hash": "3d7c0ad673d1a7c0f1dfe0970e95afc65d8fa9bc0ad1213fd7f02f7957336990"
+    },
+    "fixture.python_importer.b_direct_call": {
+      "semantic_lineage_id": "32009e343204bc239d85132dc1f12a65d5ea6a26142aea581aae370f373a1aa8",
+      "normalized_canonical_hash": "51e8a0939caea3ef7f393f0e5ec05cf0761384ef019b77f5f6233eff6d8c7f41"
+    },
+    "fixture.python_importer.c_opaque_call": {
+      "semantic_lineage_id": "5c5cd930bece6767ffe7f7c773154b77e4c2f1a95d3c577a5dae9f7d5855e9f3",
+      "normalized_canonical_hash": "7f5f1bf1a8f8901d80d6de8bd38b307f84d8bb9757f1320f4d2968cc6f66f3f2"
+    }
+  },
   "tracks": {
     "A": "pass",
     "B": "pass"
@@ -39,6 +58,13 @@
         "statement": "SCIR-Hc beats typed-AST on LCR.",
         "baseline_name": "typed-AST",
         "metric": "LCR_scirhc",
+        "metric_class": "DESCRIPTIVE",
+        "scir_h_evidence": [
+          "fixture.python_importer.a_async_await",
+          "fixture.python_importer.a_basic_function",
+          "fixture.python_importer.b_direct_call",
+          "fixture.python_importer.c_opaque_call"
+        ],
         "observed_value": 1.5061,
         "baseline_value": 6.7672,
         "delta": -5.2611,
@@ -55,16 +81,23 @@
     "unavoidable_explicitness": 0.1611
   },
   "claims": [
-    {
-      "statement": "SCIR-Hc beats typed-AST on LCR.",
-      "corpus_manifest": "reports/examples/corpus_manifest.example.json",
-      "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
-      "baseline_name": "typed-AST",
-      "metric": "LCR_scirhc",
-      "observed_value": 1.5061,
-      "baseline_value": 6.7672,
-      "delta": -5.2611,
-      "confidence_range": null
+      {
+        "statement": "SCIR-Hc beats typed-AST on LCR.",
+        "corpus_manifest": "reports/examples/corpus_manifest.example.json",
+        "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "baseline_name": "typed-AST",
+        "metric": "LCR_scirhc",
+        "metric_class": "DESCRIPTIVE",
+        "scir_h_evidence": [
+          "fixture.python_importer.a_async_await",
+          "fixture.python_importer.a_basic_function",
+          "fixture.python_importer.b_direct_call",
+          "fixture.python_importer.c_opaque_call"
+        ],
+        "observed_value": 1.5061,
+        "baseline_value": 6.7672,
+        "delta": -5.2611,
+        "confidence_range": null
     }
   ],
   "disclaimers": [
@@ -76,6 +109,7 @@
   "artifacts": {
     "comparison_summary": "comparison_summary.example.json",
     "contamination_report": "contamination_report.example.json",
+    "scirhc_diff_audit": "scirhc_diff_audit.example.json",
     "sweep_result": "sweep_result.example.json"
   },
   "reproducibility_block": {

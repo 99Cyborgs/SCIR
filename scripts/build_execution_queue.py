@@ -12,8 +12,7 @@ QUEUE_DOC_REL = "EXECUTION_QUEUE.md"
 OUTPUT_REL = "reports/exports/execution_queue.export.json"
 SCHEMA_REL = "schemas/execution_queue.schema.json"
 IMPLEMENTATION_PLAN_REL = "IMPLEMENTATION_PLAN.md"
-ACTIVE_QUEUE_SOURCE_REL = "plans/milestone_07_typescript_witness_slice.md"
-COMPLETED_PREVIOUS_MILESTONE_REL = "plans/milestone_02b_python_expansion.md"
+ACTIVE_QUEUE_SOURCE_REL = "plans/2026-04-01-mvp-narrowing-and-contract-hardening.md"
 STATUS_REL = "STATUS.md"
 OPEN_QUESTIONS_REL = "OPEN_QUESTIONS.md"
 
@@ -101,10 +100,6 @@ def parse_queue_markdown(root: pathlib.Path) -> dict:
                 f"{QUEUE_DOC_REL}: invalid status {status!r} in item {fields['Queue ID']!r}"
             )
 
-        blocking_open_questions = sorted(
-            set(re.findall(r"OQ-[0-9]{3}", fields["Escalate only if"]))
-        )
-
         items.append(
             {
                 "queue_id": fields["Queue ID"].strip("`"),
@@ -118,7 +113,9 @@ def parse_queue_markdown(root: pathlib.Path) -> dict:
                 "validation": split_inline_list(fields["Validation"]),
                 "escalate_only_if": fields["Escalate only if"].strip("`"),
                 "done_evidence": split_inline_list(fields["Done evidence"]),
-                "blocking_open_questions": blocking_open_questions,
+                "blocking_open_questions": sorted(
+                    set(re.findall(r"OQ-[0-9]{3}", fields["Escalate only if"]))
+                ),
             }
         )
 
@@ -149,37 +146,33 @@ def parse_queue_markdown(root: pathlib.Path) -> dict:
 def validate_queue_against_repo(root: pathlib.Path, payload: dict) -> None:
     implementation_plan = (root / IMPLEMENTATION_PLAN_REL).read_text(encoding="utf-8")
     active_queue_source = (root / ACTIVE_QUEUE_SOURCE_REL).read_text(encoding="utf-8")
-    completed_previous_milestone = (
-        root / COMPLETED_PREVIOUS_MILESTONE_REL
-    ).read_text(encoding="utf-8")
     status_text = (root / STATUS_REL).read_text(encoding="utf-8")
     open_questions = (root / OPEN_QUESTIONS_REL).read_text(encoding="utf-8")
 
-    if "Phase 7 is now the active new architecture phase" not in implementation_plan:
+    if "mvp kernel hardening" not in implementation_plan.lower():
         raise ValueError(
-            f"{IMPLEMENTATION_PLAN_REL}: missing Phase 7 active-roadmap note"
+            f"{IMPLEMENTATION_PLAN_REL}: missing MVP kernel hardening phase"
         )
     if "Status: in-progress" not in active_queue_source:
         raise ValueError(
             f"{ACTIVE_QUEUE_SOURCE_REL}: expected active queue source to be in-progress"
         )
-    if "Status: complete" not in completed_previous_milestone:
-        raise ValueError(
-            f"{COMPLETED_PREVIOUS_MILESTONE_REL}: expected Milestone 02B to be complete"
-        )
     if "- activity: `active`" not in status_text:
         raise ValueError(f"{STATUS_REL}: expected active portfolio posture")
-    if payload["active_milestone"] != "Phase 7 - TypeScript Witness Slice":
+    if payload["active_milestone"] != "MVP Kernel Hardening":
         raise ValueError(
-            f"{QUEUE_DOC_REL}: active milestone must remain 'Phase 7 - TypeScript Witness Slice'"
+            f"{QUEUE_DOC_REL}: active milestone must remain 'MVP Kernel Hardening'"
         )
 
     queue_items = payload["queue_items"]
-    if queue_items[0]["source_milestone_or_phase"] != "Phase 7 - TypeScript Witness Slice":
+    if queue_items[0]["source_milestone_or_phase"] != "MVP Kernel Hardening":
         raise ValueError(
-            f"{QUEUE_DOC_REL}: first queue item must come from Phase 7 while Phase 7 is active"
+            f"{QUEUE_DOC_REL}: first queue item must come from MVP Kernel Hardening"
         )
-    if payload["next_action"]["queue_id"] != queue_items[0]["queue_id"]:
+    ready_items = [item for item in queue_items if item["status"] == "ready"]
+    if not ready_items:
+        raise ValueError(f"{QUEUE_DOC_REL}: expected at least one ready queue item")
+    if payload["next_action"]["queue_id"] != ready_items[0]["queue_id"]:
         raise ValueError(f"{QUEUE_DOC_REL}: next_action must point to the first ready queue item")
 
     queue_ids = {item["queue_id"] for item in queue_items}
@@ -190,49 +183,17 @@ def validate_queue_against_repo(root: pathlib.Path, payload: dict) -> None:
                     f"{QUEUE_DOC_REL}: {item['queue_id']} references unknown prerequisite {prerequisite}"
                 )
 
-    for item in queue_items:
-        if item["source_milestone_or_phase"] == "Milestone 02B - Python Expansion":
-            if item["status"] == "ready":
-                raise ValueError(
-                    f"{QUEUE_DOC_REL}: Milestone 02B items cannot remain ready after the Phase 7 handoff"
-                )
-        if item["source_milestone_or_phase"] == "Phase 7 - TypeScript Witness Slice":
-            lowered = item["work_instructions"].lower()
-            if "executable d-js" in lowered and "do not" not in lowered:
-                raise ValueError(
-                    f"{QUEUE_DOC_REL}: {item['queue_id']} cannot widen executable D-JS scope"
-                )
+    for forbidden in ["TypeScript", "D-JS"]:
+        if forbidden in (root / QUEUE_DOC_REL).read_text(encoding="utf-8"):
+            raise ValueError(
+                f"{QUEUE_DOC_REL}: queue must not reactivate deferred scope marker {forbidden!r}"
+            )
 
     for open_question in payload["blocking_open_questions"]:
         if open_question not in open_questions:
             raise ValueError(
                 f"{QUEUE_DOC_REL}: blocking open question {open_question} not found in {OPEN_QUESTIONS_REL}"
             )
-
-
-def validate_against_schema(root: pathlib.Path, payload: dict) -> None:
-    schema = json.loads((root / SCHEMA_REL).read_text(encoding="utf-8"))
-
-    try:
-        from jsonschema import Draft202012Validator
-    except ImportError:  # pragma: no cover - optional dependency
-        errors = collect_fallback_validation_errors(payload, schema)
-        if errors:
-            raise ValueError("; ".join(f"{path}: {message}" for path, message in errors))
-        return
-
-    errors = sorted(
-        Draft202012Validator(schema).iter_errors(payload),
-        key=lambda error: ([str(part) for part in error.absolute_path], error.message),
-    )
-    if errors:
-        messages = []
-        for error in errors:
-            path = "$"
-            for part in error.absolute_path:
-                path += f"[{part}]" if isinstance(part, int) else f".{part}"
-            messages.append(f"{path}: {error.message}")
-        raise ValueError("; ".join(messages))
 
 
 def is_number(value):
@@ -315,9 +276,34 @@ def collect_fallback_validation_errors(instance, schema, path="$"):
     return failures
 
 
+def validate_against_schema(root: pathlib.Path, payload: dict) -> None:
+    schema = json.loads((root / SCHEMA_REL).read_text(encoding="utf-8"))
+
+    try:
+        from jsonschema import Draft202012Validator
+    except ImportError:  # pragma: no cover - optional dependency
+        errors = collect_fallback_validation_errors(payload, schema)
+        if errors:
+            raise ValueError("; ".join(f"{path}: {message}" for path, message in errors))
+        return
+
+    errors = sorted(
+        Draft202012Validator(schema).iter_errors(payload),
+        key=lambda error: ([str(part) for part in error.absolute_path], error.message),
+    )
+    if errors:
+        messages = []
+        for error in errors:
+            path = "$"
+            for part in error.absolute_path:
+                path += f"[{part}]" if isinstance(part, int) else f".{part}"
+            messages.append(f"{path}: {error.message}")
+        raise ValueError("; ".join(messages))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Build and validate the SCIR autonomous execution queue export."
+        description="Build and validate the SCIR execution queue export."
     )
     parser.add_argument(
         "--mode",

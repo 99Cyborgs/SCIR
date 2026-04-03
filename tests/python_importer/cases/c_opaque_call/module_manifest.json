@@ -8,7 +8,8 @@
   ],
   "declared_tier": "C",
   "dependencies": [
-    "python:foreign_api"
+    "python:foreign_api",
+    "capability:foreign_api_ping"
   ],
   "exports": [
     "ping"

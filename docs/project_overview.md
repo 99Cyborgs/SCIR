@@ -1,39 +1,54 @@
 # Project Overview
 Status: Informative
 
-SCIR is a semantic compression program with two explicit layers.
+SCIR is a semantic compression MVP with two explicit layers:
 
-- `SCIR-H` is the canonical high-level form.
-- `SCIR-L` is the lowered control and analysis form.
+- `SCIR-H`: canonical semantics
+- `SCIR-L`: derivative lowering
 
-The first product question is not “can SCIR replace mainstream languages?”
-The first product question is “can SCIR import a useful subset, validate it, lower it, reconstruct it, and benchmark it against strong baselines?”
+The active product question is not "can SCIR replace mainstream languages?"
+It is "can SCIR keep a narrow proof loop honest enough to justify continuing?"
 
-## What is being built first
+## Built first
 
-1. `SCIR-H` core
-2. parser / formatter contract
-3. `SCIR-H` validator
-4. stable IDs and provenance
-5. benchmark harness skeleton
-6. Python subset importer
-7. `SCIR-L` core and `H -> L`
-8. reconstruction pipeline
-9. Rust subset importer
-10. initial optimization work
+1. compact canonical `SCIR-H`
+2. compact derivative `SCIR-L`
+3. validators
+4. Python subset importer
+5. Python reconstruction
+6. Rust safe-subset importer
+7. Wasm reference-backend contract
+8. Track `A` and `B` benchmark harness
 
-## What is not being built first
+## Current status
 
-- new end-user syntax,
-- broad C++ fidelity,
-- backend sprawl,
-- proof-heavy infrastructure before operational value,
-- benchmark-free AI claims.
+Implemented now:
 
-## Repository reading path
+- canonical `SCIR-H` parser/formatter, invariant-coded negative validation, and stable proof-loop fixtures
+- bounded `SCIR-H -> SCIR-L` lowering plus structural validation for the active Python proof loop
+- fixed Tier `A` corpus manifests and a slice-based sweep smoke lane
 
-Read `AGENTS.md`, `SYSTEM_BOUNDARY.md`, `ARCHITECTURE.md`, then `specs/`.
+Partially implemented:
 
-## Project success test
+- importer-only Tier `B` `SCIR-H` evidence cases
+- Rust importer-first evidence and bounded optional Rust validation
+- helper-free Wasm emission only for the admitted fixed cases
 
-SCIR survives as an AI-facing substrate only if it beats strong baselines on explicit tasks. Otherwise it may survive only as compiler and transformation infrastructure.
+Unsupported or deferred:
+
+- standalone `throw` syntax
+- whole-language frontend claims
+- active TypeScript execution work
+- broad native/backend parity claims
+
+## Not built first
+
+- a new end-user syntax
+- active TypeScript work
+- broad native backend work
+- broad runtime/tooling work
+- benchmark Track `D`
+
+## Success test
+
+SCIR continues only if the narrow proof loop remains useful against strong baselines.

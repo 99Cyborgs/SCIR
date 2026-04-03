@@ -1,0 +1,93 @@
+{
+  "run_id": "python-proof-loop-full-20260403T183504Z",
+  "commit_sha": "f75f04ff6227af008395613d9fee9a8ad8e97cb7",
+  "spec_version": "v0.1-draft",
+  "tool_version": "scir-benchmark-audit-v1",
+  "claim_mode": "smoke",
+  "corpus_manifest": "tests/corpora/python_proof_loop_corpus.json",
+  "corpus_manifest_hash": "sha256:0c3b78d3b092277d89bb79a7df485b3f794b3ae30668acbed4fba318b48e4398",
+  "generated_at": "2026-04-03T18:35:04.827875+00:00",
+  "tracks": {
+    "A": "pass",
+    "B": "pass"
+  },
+  "explicit_representation_metrics": {
+    "LCR": 1.6569,
+    "GR": 0.9545,
+    "SE": 0.213,
+    "SCPR": 1.0,
+    "round_trip": 1.0
+  },
+  "compressed_representation_metrics": {
+    "LCR_scirhc": 1.8198,
+    "GR_scirhc": 0.9545,
+    "SCPR_scirhc": 1.0
+  },
+  "claim_class": "LEXICAL_COMPRESSION_ONLY",
+  "evidence_class": [
+    "scirhc_lcr_vs_ast"
+  ],
+  "claim_gate": {
+    "passed": true,
+    "ai_thesis_status": "supported",
+    "satisfied_conditions": [
+      "scirhc_lcr_vs_ast"
+    ],
+    "evaluated_conditions": [
+      {
+        "id": "scirhc_lcr_vs_ast",
+        "statement": "SCIR-Hc beats typed-AST on LCR.",
+        "baseline_name": "typed-AST",
+        "metric": "LCR_scirhc",
+        "observed_value": 1.8198,
+        "baseline_value": 6.7672,
+        "delta": -4.9474,
+        "threshold": 0.0,
+        "comparison": "lt",
+        "passed": true
+      }
+    ]
+  },
+  "failure_attribution": {
+    "primary_cause": "unavoidable_explicitness",
+    "token_inflation": 0.0,
+    "structural_redundancy": 0.0,
+    "unavoidable_explicitness": 0.1611
+  },
+  "claims": [
+    {
+      "statement": "SCIR-Hc beats typed-AST on LCR.",
+      "corpus_manifest": "tests/corpora/python_proof_loop_corpus.json",
+      "corpus_manifest_hash": "sha256:0c3b78d3b092277d89bb79a7df485b3f794b3ae30668acbed4fba318b48e4398",
+      "baseline_name": "typed-AST",
+      "metric": "LCR_scirhc",
+      "observed_value": 1.8198,
+      "baseline_value": 6.7672,
+      "delta": -4.9474,
+      "confidence_range": null
+    }
+  ],
+  "disclaimers": [
+    "Results are limited to the fixed Python proof-loop corpus and do not imply whole-language support.",
+    "Wasm and reconstruction evidence remain profile-qualified and do not imply native or host parity.",
+    "SCIR-Hc is a derived AI-facing form and must round-trip through canonical SCIR-H before downstream claims.",
+    "Opaque or boundary-only cases remain present: fixture.python_importer.c_opaque_call",
+    "Dataset split mode: simulated_no_training."
+  ],
+  "artifacts": {
+    "comparison_summary": "comparison_summary.json",
+    "contamination_report": "contamination_report.json",
+    "sweep_result": "sweep_result.json"
+  },
+  "reproducibility_block": {
+    "command": "python scripts/benchmark_contract_dry_run.py",
+    "environment": {
+      "python_executable": "C:\\Users\\Forre\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "python_version": "3.14.2",
+      "platform": "Windows-10-10.0.19045-SP0",
+      "cwd": "G:\\GitHub\\incubate\\SCIR"
+    },
+    "seed": 0,
+    "timestamp": "2026-04-03T18:35:04.827875+00:00"
+  }
+}

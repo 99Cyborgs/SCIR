@@ -1,0 +1,141 @@
+{
+  "corpus_id": "invalid-scir-l-invariants",
+  "kind": "negative_validation",
+  "fixtures": [
+    {
+      "id": "invalid_scir_l.cfg.unknown_target",
+      "language": "scir_l",
+      "path": "tests/invalid_scir_l/invalid_cfg_unknown_target.json",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "malformed cfg"
+      ],
+      "hash": "sha256:89c3a6fcdc2ffc443aa72259f9d3701ea753b410519105ebc3261cb9e694d8a2",
+      "expected_diagnostic_codes": [
+        "L001"
+      ]
+    },
+    {
+      "id": "invalid_scir_l.ssa.duplicate_id",
+      "language": "scir_l",
+      "path": "tests/invalid_scir_l/invalid_ssa_duplicate.json",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "duplicate ssa"
+      ],
+      "hash": "sha256:d584dbf710732f441aac4921013ded14b20ef8e1ca29582f0218a70ee4c9d65d",
+      "expected_diagnostic_codes": [
+        "L002"
+      ]
+    },
+    {
+      "id": "invalid_scir_l.effect.missing_token",
+      "language": "scir_l",
+      "path": "tests/invalid_scir_l/invalid_effect_token.json",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "effect token discipline"
+      ],
+      "hash": "sha256:b55fe249f5b879949dee5a0992770e4dc8f33762a033850e814716016095de9c",
+      "expected_diagnostic_codes": [
+        "L003"
+      ]
+    },
+    {
+      "id": "invalid_scir_l.memory.bad_token",
+      "language": "scir_l",
+      "path": "tests/invalid_scir_l/invalid_memory_token.json",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "memory token discipline"
+      ],
+      "hash": "sha256:260d61af37191915ce2bbbfbefc838ec0a36224073e4c762431549b499f1daa2",
+      "expected_diagnostic_codes": [
+        "L004"
+      ]
+    },
+    {
+      "id": "invalid_scir_l.provenance.missing_origin",
+      "language": "scir_l",
+      "path": "tests/invalid_scir_l/invalid_missing_origin.json",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "missing provenance"
+      ],
+      "hash": "sha256:2f0ea53a968762238175a30043927028126aa81468198f495825696322a84ab2",
+      "expected_diagnostic_codes": [
+        "L005"
+      ]
+    },
+    {
+      "id": "invalid_scir_l.provenance.invalid_mapping",
+      "language": "scir_l",
+      "path": "tests/invalid_scir_l/invalid_origin_mapping.json",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "provenance root mismatch"
+      ],
+      "hash": "sha256:e954fff5a69e9d009e7a9e747ca57cc12ea3cc3986a978ac3991c7a0c7d43351",
+      "expected_diagnostic_codes": [
+        "L005"
+      ]
+    },
+    {
+      "id": "invalid_scir_l.lowering.invalid_rule",
+      "language": "scir_l",
+      "path": "tests/invalid_scir_l/invalid_lowering_rule.json",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "invalid lowering rule"
+      ],
+      "hash": "sha256:8cc7470ad4aebdf1e10e4b74eaddd145f95fa3e6ec4d676a9a4ac9607c2b8091",
+      "expected_diagnostic_codes": [
+        "L006"
+      ]
+    },
+    {
+      "id": "invalid_scir_l.unsupported.op",
+      "language": "scir_l",
+      "path": "tests/invalid_scir_l/invalid_unsupported_op.json",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "unsupported op"
+      ],
+      "hash": "sha256:3f9301fd6866b4d1875c268be9c4204bf605bfcae1c34a654a3f0098bd6db1af",
+      "expected_diagnostic_codes": [
+        "L007"
+      ]
+    },
+    {
+      "id": "invalid_scir_l.boundary.opaque_structure",
+      "language": "scir_l",
+      "path": "tests/invalid_scir_l/invalid_opaque_structure.json",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "illegal opaque call structure"
+      ],
+      "hash": "sha256:02484e6b0529e8fc6025ab4fa9f25b07ddf59ae53838d5279b37a024f2e2f405",
+      "expected_diagnostic_codes": [
+        "L008"
+      ]
+    }
+  ]
+}

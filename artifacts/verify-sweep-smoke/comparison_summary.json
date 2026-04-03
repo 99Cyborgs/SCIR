@@ -1,0 +1,559 @@
+{
+  "sweep_id": "python-proof-loop-smoke",
+  "run_id": "python-proof-loop-smoke-20260403T165102Z",
+  "commit_sha": "427ecb865ab4184fbcb0014cd512d476fc4f124f",
+  "spec_version": "v0.1-draft",
+  "tool_version": "scir-benchmark-audit-v1",
+  "corpus_id": "python-tier-a-micro-corpus",
+  "corpus_manifest_hash": "sha256:71b2ed0546551abf292b4ad1ee5912546386936f547c4925a856f6488dbd22a4",
+  "generated_at": "2026-04-03T16:51:02.848345+00:00",
+  "comparison_metrics": [
+    "LCR",
+    "GR",
+    "SE",
+    "SCPR",
+    "round_trip"
+  ],
+  "aggregate": {
+    "scir_metrics": {
+      "LCR": 1.4912,
+      "GR": 1.0,
+      "SE": 0.2007,
+      "SCPR": 1.0,
+      "round_trip": 1.0
+    },
+    "delta_vs_source": {
+      "LCR": 0.4912,
+      "GR": 0.0,
+      "SE": 0.0779,
+      "SCPR": 0.0,
+      "round_trip": 0.0
+    },
+    "delta_vs_ast": {
+      "LCR": -5.4035,
+      "GR": 0.0,
+      "SE": 0.1475,
+      "SCPR": 0.0,
+      "round_trip": 0.0
+    },
+    "delta_vs_normalized": {
+      "LCR": 0.4912,
+      "GR": 0.0,
+      "SE": 0.0428,
+      "SCPR": 0.0,
+      "round_trip": 0.0
+    }
+  },
+  "slices": [
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_l|construct_family=async-await|fixture_set=python-tier-a",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_l|construct_family=branch-local-mutation|fixture_set=python-tier-a",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_l|construct_family=direct-call|fixture_set=python-tier-a",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_python|construct_family=async-await|fixture_set=python-tier-a",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": 1.0,
+        "round_trip": 1.0
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_python|construct_family=branch-local-mutation|fixture_set=python-tier-a",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": 1.0,
+        "round_trip": 1.0
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_python|construct_family=direct-call|fixture_set=python-tier-a",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": 1.0,
+        "round_trip": 1.0
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_h_validation|construct_family=async-await|fixture_set=python-tier-a",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_h_validation|construct_family=branch-local-mutation|fixture_set=python-tier-a",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_h_validation|construct_family=direct-call|fixture_set=python-tier-a",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_l_validation|construct_family=async-await|fixture_set=python-tier-a",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_l_validation|construct_family=branch-local-mutation|fixture_set=python-tier-a",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_l_validation|construct_family=direct-call|fixture_set=python-tier-a",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=async-await|fixture_set=python-tier-a",
+      "scir_metrics": {
+        "LCR": 1.4737,
+        "GR": 1.0,
+        "SE": 0.25,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_source": {
+        "LCR": 0.4737,
+        "GR": 0.0,
+        "SE": 0.0921,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_ast": {
+        "LCR": -3.0526,
+        "GR": 0.0,
+        "SE": 0.157,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_normalized": {
+        "LCR": 0.4737,
+        "GR": 0.0,
+        "SE": 0.0921,
+        "SCPR": null,
+        "round_trip": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=python-tier-a",
+      "scir_metrics": {
+        "LCR": 1.4737,
+        "GR": 1.0,
+        "SE": 0.2143,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_source": {
+        "LCR": 0.4737,
+        "GR": 0.0,
+        "SE": 0.109,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_ast": {
+        "LCR": -7.7368,
+        "GR": 0.0,
+        "SE": 0.1857,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_normalized": {
+        "LCR": 0.4737,
+        "GR": 0.0,
+        "SE": 0.0038,
+        "SCPR": null,
+        "round_trip": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=direct-call|fixture_set=python-tier-a",
+      "scir_metrics": {
+        "LCR": 1.5263,
+        "GR": 1.0,
+        "SE": 0.1379,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_source": {
+        "LCR": 0.5263,
+        "GR": 0.0,
+        "SE": 0.0326,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_ast": {
+        "LCR": -5.4211,
+        "GR": 0.0,
+        "SE": 0.1,
+        "SCPR": null,
+        "round_trip": null
+      },
+      "delta_vs_normalized": {
+        "LCR": 0.5263,
+        "GR": 0.0,
+        "SE": 0.0326,
+        "SCPR": null,
+        "round_trip": null
+      }
+    }
+  ],
+  "tolerance_failures": [
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=async-await|fixture_set=python-tier-a",
+      "baseline_name": "direct source",
+      "metric": "LCR",
+      "delta": 0.4737,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=async-await|fixture_set=python-tier-a",
+      "baseline_name": "lightweight regularized core or s-expression",
+      "metric": "LCR",
+      "delta": 0.4737,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=python-tier-a",
+      "baseline_name": "direct source",
+      "metric": "LCR",
+      "delta": 0.4737,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=python-tier-a",
+      "baseline_name": "lightweight regularized core or s-expression",
+      "metric": "LCR",
+      "delta": 0.4737,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=direct-call|fixture_set=python-tier-a",
+      "baseline_name": "direct source",
+      "metric": "LCR",
+      "delta": 0.5263,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=direct-call|fixture_set=python-tier-a",
+      "baseline_name": "lightweight regularized core or s-expression",
+      "metric": "LCR",
+      "delta": 0.5263,
+      "tolerance": 0.1
+    }
+  ],
+  "contamination_flags": []
+}

@@ -1,0 +1,33 @@
+{
+  "module_id": "invalid.scir_l.origin_mapping",
+  "functions": [
+    {
+      "name": "bad_origin",
+      "returns": "int",
+      "params": [],
+      "blocks": [
+        {
+          "id": "entry",
+          "params": [],
+          "instructions": [
+            {
+              "id": "const0",
+              "op": "const",
+              "operands": [
+                1
+              ],
+              "origin": "other.module::const0",
+              "lowering_rule": "H_CONST_RET"
+            }
+          ],
+          "terminator": {
+            "kind": "ret",
+            "value": "const0",
+            "origin": "other.module::ret",
+            "lowering_rule": "H_RETURN"
+          }
+        }
+      ]
+    }
+  ]
+}

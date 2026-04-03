@@ -1,0 +1,38 @@
+{
+  "representation": "SCIR-Hc",
+  "modules": {
+    "fixture.python_importer.a_basic_function": {
+      "module_id": "fixture.python_importer.a_basic_function",
+      "lineage_references": {
+        "fixture.python_importer.a_basic_function": {
+          "semantic_lineage_id": "3c587f53a4b9d222de6d7d030596f12f8a39099043b9ac1a71676944527aeeb4",
+          "normalized_canonical_hash": "f7c16683b3d22b81971418a219d4c8086bbf42f4d6dc02bc3ec6cd9a69b0d35e"
+        }
+      },
+      "structural_diff": {
+        "function_return_type_omissions": [
+          "functions.clamp_nonneg.return_type"
+        ],
+        "function_effect_row_omissions": [
+          "functions.clamp_nonneg.effects"
+        ],
+        "local_type_omissions": [
+          "functions.clamp_nonneg.body[0].type_name"
+        ]
+      },
+      "dropped_fields": [
+        "functions.clamp_nonneg.return_type",
+        "functions.clamp_nonneg.effects",
+        "functions.clamp_nonneg.body[0].type_name"
+      ],
+      "normalized_fields": [],
+      "compression_statistics": {
+        "effect_rows_deduplicated": 1,
+        "return_types_inferred": 1,
+        "ownership_markers_elided": 0,
+        "single_use_witnesses_inlined": 0,
+        "capabilities_hoisted": 0
+      }
+    }
+  }
+}

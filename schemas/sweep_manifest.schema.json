@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SCIR Sweep Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sweep_id",
+    "corpus_manifest",
+    "slice_axes",
+    "stages"
+  ],
+  "properties": {
+    "sweep_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "corpus_manifest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "slice_axes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "frontend",
+          "tier",
+          "split",
+          "profile",
+          "pipeline_stage",
+          "construct_family",
+          "fixture_set"
+        ]
+      }
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "source_to_h",
+          "scir_h_validation",
+          "h_to_l",
+          "scir_l_validation",
+          "h_to_python",
+          "l_to_wasm"
+        ]
+      }
+    }
+  }
+}

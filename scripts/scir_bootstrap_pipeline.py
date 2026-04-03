@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+"""Executable SCIR bootstrap proof loop and report generation surface.
+
+This file stitches import, validation, derived compression, lowering,
+reconstruction, Wasm emission, and benchmark reporting into the active MVP
+pipeline. It must preserve the authority order `SCIR-H` -> derived views and
+must reject any path that would let `SCIR-Hc` or `SCIR-L` become a semantic
+source of truth.
+"""
 from __future__ import annotations
 
 import argparse
@@ -25,6 +33,14 @@ from benchmark_contract_metadata import (
     benchmark_track_baselines,
     benchmark_track_compile_cases,
     benchmark_track_contract,
+)
+from _internal.scirhc_transform import (
+    build_scirhc_generation_context,
+    generate_scirhc_diff_audit,
+    internal_scirhc_transform_access,
+    scirhc_lineage_root_payload,
+    scirh_to_scirhc,
+    scirhc_normalization_stats,
 )
 from rust_toolchain import resolve_rust_toolchain, rust_toolchain_env
 from scir_h_bootstrap_model import (
@@ -53,9 +69,7 @@ from scir_h_bootstrap_model import (
     format_scirhc_module,
     parse_module,
     ScirHModelError,
-    scirh_to_scirhc,
-    scirhc_normalization_stats,
-    validate_scirhc_roundtrip,
+    ScirhcContextError,
 )
 from scir_python_bootstrap import (
     PYTHON_PROOF_LOOP_METADATA,
@@ -77,9 +91,11 @@ from validate_repo_contracts import (
 from validators.scirhc_validator import (
     ScirHcDoctrineError,
     assert_deterministic_derivation,
+    assert_lineage_integrity,
     assert_no_hidden_semantics,
     assert_not_semantic_authority,
     assert_round_trip_integrity,
+    assert_semantic_idempotence,
 )
 from wasm_backend_metadata import WASM_BACKEND_METADATA
 
@@ -139,11 +155,46 @@ class ForbiddenPathError(PipelineError):
     pass
 
 
+class PipelineViolationError(ForbiddenPathError):
+    pass
+
+
+SCIRHC_ALLOWED_REPORT_CONTEXTS = {"validation_report", "benchmark_output"}
+
+
 def assert_canonical_pipeline_input(input_representation: str, stage: str) -> None:
+    """Block derived representations from entering stages that require canonical semantics."""
+
     if input_representation == "SCIR-Hc":
-        raise ForbiddenPathError(f"{stage}: SCIR-Hc must not be consumed directly; canonical SCIR-H is required")
+        raise PipelineViolationError(f"{stage}: SCIR-Hc cannot be used as pipeline input")
     if input_representation != "SCIR-H":
-        raise ForbiddenPathError(f"{stage}: unsupported semantic input representation {input_representation!r}")
+        raise PipelineViolationError(f"{stage}: unsupported semantic input representation {input_representation!r}")
+
+
+def assert_scirhc_report_context(report_context: str) -> None:
+    if report_context not in SCIRHC_ALLOWED_REPORT_CONTEXTS:
+        raise PipelineViolationError(
+            f"SCIR-Hc generation is limited to report surfaces; got {report_context!r}"
+        )
+
+
+def make_scirhc_generation_context(module: Module, *, report_context: str):
+    assert_scirhc_report_context(report_context)
+    return build_scirhc_generation_context(module)
+
+
+def generate_scirhc_report_artifact(module: Module, *, ctx, boundary_contracts=None):
+    """Generate report-scoped `SCIR-Hc` evidence plus the lineage data needed to contain its claims."""
+
+    with internal_scirhc_transform_access():
+        hc_module = scirh_to_scirhc(module, ctx=ctx, boundary_contracts=boundary_contracts)
+        hc_text = format_scirhc_module(hc_module)
+        stats = scirhc_normalization_stats(module, ctx=ctx, boundary_contracts=boundary_contracts)
+        diff_audit = generate_scirhc_diff_audit(module, hc_module, ctx=ctx, boundary_contracts=boundary_contracts)
+    lineage_references = {
+        ctx.lineage_root.module_id: scirhc_lineage_root_payload(ctx.lineage_root),
+    }
+    return hc_module, hc_text, stats, lineage_references, diff_audit
 
 
 SCIRH_VALID_EFFECTS = {"write", "await", "opaque", "unsafe", "throw"}
@@ -323,6 +374,8 @@ def validate_scirh_module_semantics(
     boundary_contracts=None,
     canonical_text: str | None = None,
 ):
+    """Enforce the active `SCIR-H` doctrine instead of inferring convenience semantics."""
+
     diagnostics = []
     contract_map = normalize_boundary_contracts(boundary_contracts)
     type_fields = record_type_map(module)
@@ -914,14 +967,19 @@ def validate_scirhc_case(
     boundary_contracts=None,
 ):
     try:
-        hc_module = scirh_to_scirhc(module, boundary_contracts=boundary_contracts)
-        hc_text = format_scirhc_module(hc_module)
-        stats = scirhc_normalization_stats(module, boundary_contracts=boundary_contracts)
+        ctx = make_scirhc_generation_context(module, report_context="validation_report")
+        hc_module, hc_text, stats, lineage_references, diff_audit = generate_scirhc_report_artifact(
+            module,
+            ctx=ctx,
+            boundary_contracts=boundary_contracts,
+        )
         diagnostics = []
         checks = [
             ("HC004", lambda: assert_not_semantic_authority(hc_module)),
             ("HC006", lambda: assert_no_hidden_semantics(hc_module)),
             ("HC005", lambda: assert_deterministic_derivation(module, hc_module)),
+            ("HC008", lambda: assert_lineage_integrity({"lineage_references": lineage_references}, {module.module_id: module})),
+            ("HC002", lambda: assert_semantic_idempotence(module)),
             ("HC002", lambda: assert_round_trip_integrity(module)),
         ]
         for default_code, check in checks:
@@ -934,10 +992,18 @@ def validate_scirhc_case(
                     code = "HC001"
                 elif "deterministic derivation output" in message:
                     code = "HC005"
+                elif message.startswith("Lineage "):
+                    code = "HC008"
+                elif message == "Incomplete lineage coverage":
+                    code = "HC008"
+                elif message == "Non-idempotent SCIR-Hc projection":
+                    code = "HC002"
                 diagnostics.append(make_diagnostic(code, f"{case_name}: {message}"))
-    except (ScirHModelError, ScirHcDoctrineError) as exc:
+    except (ScirHModelError, ScirHcDoctrineError, ScirhcContextError) as exc:
         hc_module = None
         hc_text = None
+        lineage_references = {}
+        diff_audit = None
         stats = {
             "effect_rows_deduplicated": 0,
             "return_types_inferred": 0,
@@ -957,7 +1023,7 @@ def validate_scirhc_case(
         "diagnostics": diagnostics,
     }
     failures = [item["message"] for item in diagnostics]
-    return failures, hc_module, hc_text, stats, report
+    return failures, hc_module, hc_text, stats, lineage_references, diff_audit, report
 
 
 def is_local_place(value, expected: str) -> bool:
@@ -1266,6 +1332,8 @@ def lower_opaque_module(module: Module):
 
 
 def lower_supported_module(module: Module, *, input_representation: str = "SCIR-H"):
+    """Lower only the admitted proof-loop cases and only from canonical `SCIR-H`."""
+
     assert_canonical_pipeline_input(input_representation, "lowering")
     case_name = case_name_from_module(module)
     if case_name == "a_basic_function":
@@ -1325,6 +1393,8 @@ def is_token_with_prefix(value, prefix: str) -> bool:
 
 
 def validate_scirl_module(module: dict):
+    """Reject any lowered artifact that exceeds the frozen derivative `SCIR-L` subset."""
+
     failures = []
     allowed_ops = {
         "alloc",
@@ -1652,6 +1722,8 @@ def validate_lowering_alignment(case_name: str, lowered: dict):
 
 
 def validate_translation_report(case_name: str, report: dict):
+    """Check that `H -> L` reports do not silently strengthen profile or preservation claims."""
+
     failures = []
     expected = RECONSTRUCTION_EXPECTATIONS[case_name]
     profile = expected["profile"]
@@ -1733,6 +1805,8 @@ def translation_report(case_name: str):
 
 
 def build_source_to_h_preservation_report(case_name: str, artifacts: dict):
+    """Summarize importer preservation without claiming more than the fixture contract allows."""
+
     module_manifest = artifacts["module_manifest.json"]
     validation_report = artifacts["validation_report.json"]
     profile = module_manifest["declared_profiles"][0]
@@ -3096,6 +3170,8 @@ def evaluate_track_c_seeded_repair(case_name: str):
 
 
 def run_track_c_pilot(root: pathlib.Path):
+    """Execute the non-default bounded Track C pilot without promoting it into the default gate."""
+
     failures, outputs = run_pipeline(root)
     if failures:
         return failures, None, None
@@ -4130,7 +4206,7 @@ def run_pipeline(root: pathlib.Path):
         if parsed_module is None:
             continue
 
-        scirhc_failures, hc_module, hc_text, hc_stats, scir_hc_report = validate_scirhc_case(
+        scirhc_failures, hc_module, hc_text, hc_stats, lineage_references, diff_audit, scir_hc_report = validate_scirhc_case(
             case_name,
             parsed_module,
             boundary_contracts=artifacts.get("opaque_boundary_contract.json"),
@@ -4148,6 +4224,8 @@ def run_pipeline(root: pathlib.Path):
             "module": hc_module,
             "text": hc_text,
             "stats": hc_stats,
+            "lineage_references": lineage_references,
+            "diff_audit": diff_audit,
             "validation_report": scir_hc_report,
         }
         if case_name in SCIRH_ONLY_CASES:
@@ -4247,6 +4325,8 @@ def run_pipeline(root: pathlib.Path):
 
 
 def run_benchmark_suite(root: pathlib.Path):
+    """Run only the active Track A and Track B benchmark bundle over the fixed proof-loop corpus."""
+
     failures, outputs = run_pipeline(root)
     if failures:
         return failures, None
@@ -5026,7 +5106,7 @@ def run_rust_pipeline(root: pathlib.Path):
         outputs["scir_h_reports"][case_name] = scir_h_report
         if parsed_module is None:
             continue
-        scirhc_failures, hc_module, hc_text, hc_stats, scir_hc_report = validate_scirhc_case(
+        scirhc_failures, hc_module, hc_text, hc_stats, lineage_references, diff_audit, scir_hc_report = validate_scirhc_case(
             case_name,
             parsed_module,
             artifact_prefix="fixture.rust_importer",
@@ -5038,6 +5118,8 @@ def run_rust_pipeline(root: pathlib.Path):
             "module": hc_module,
             "text": hc_text,
             "stats": hc_stats,
+            "lineage_references": lineage_references,
+            "diff_audit": diff_audit,
             "validation_report": scir_hc_report,
         }
         lowered = lower_rust_supported_module(parsed_module)

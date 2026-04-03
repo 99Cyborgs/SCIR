@@ -1,26 +1,35 @@
 # Baselines
 Status: Normative
 
-## Mandatory baselines
+### Mandatory active baselines
 
-| Baseline | Why it is mandatory |
-| --- | --- |
-| direct source | tests whether SCIR is unnecessary because source workflows already suffice |
-| canonical typed AST | strongest structured non-SCIR baseline |
-| SSA-like internal IR | tests whether `SCIR-H` is unnecessary |
-| MLIR-style dialect-only lowering | tests whether existing multi-level infrastructure already suffices |
-| lightweight regularized core or s-expression | tests whether syntax regularity alone explains any gains |
+- `direct source`
+- `typed-AST`
 
-## Strongest-baseline rule
+### Track A additional executable baselines
 
-Every benchmark manifest must identify the strongest expected baseline for its task family. Results must be interpreted against that baseline first, not against a weak comparator.
+- `lightweight regularized core or s-expression`
 
-`typed-AST` is the canonical shorthand for the typed AST baseline used throughout this repository.
+### Track C pilot baselines
 
-For the current executable Track `A` and Track `B` harness, direct source and `typed-AST` are mandatory in every manifest. Additional baselines remain track-specific.
+- `direct source`
+- `typed-AST`
+- `lightweight regularized core or s-expression`
 
-For executable Phase 6B Track `D` manifests:
+## Executable manifest labels
 
-- Rust `N` must include `direct source`, `typed-AST`, and `SSA-like internal IR`,
-- Python `D-PY` must include `direct source` and `typed-AST`,
-- `D-JS` remains doctrine-only and therefore has no executable baseline bundle in this phase.
+- `direct source`
+- `typed-AST`
+- `lightweight regularized core or s-expression`
+
+## Adapter contract
+
+- baseline adapters live under `benchmarks/baselines/source/`, `benchmarks/baselines/typed_ast/`, and `benchmarks/baselines/normalized/`
+- the pluggable runner contract is `run_baseline(baseline_name, corpus_manifest)`
+- every adapter must emit the same audit-row schema as SCIR sweep rows
+- every adapter must run on the same corpus manifest and slice axes as SCIR
+- every adapter must serialize deterministically
+
+## Rule
+
+Always interpret results against the strongest relevant baseline first. The active MVP must not compare SCIR only to weak baselines.

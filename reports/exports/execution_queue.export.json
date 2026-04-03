@@ -1,512 +1,889 @@
 {
-  "generation_timestamp": "2026-03-31T00:00:00-05:00",
-  "active_milestone": "Phase 7 - TypeScript Witness Slice",
+  "generation_timestamp": "2026-04-02T12:10:00-05:00",
+  "active_milestone": "MVP Kernel Hardening",
   "autonomy_mode": "high",
   "source_documents": [
     "IMPLEMENTATION_PLAN.md",
-    "plans/milestone_07_typescript_witness_slice.md",
+    "plans/2026-04-01-mvp-narrowing-and-contract-hardening.md",
     "OPEN_QUESTIONS.md",
     "STATUS.md"
   ],
   "queue_items": [
     {
-      "queue_id": "Q-07-012",
-      "title": "Define the promotion contract from dormant TypeScript placeholders to live generated-vs-golden fixtures",
-      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
-      "status": "ready",
-      "why_now": "TypeScript validate-fixtures now enforces the dormant placeholder corpus under the top-level validation baseline, so the next bounded task is to define exactly what must change before test mode can stop being reserved and live generated-vs-golden conformance can begin.",
+      "queue_id": "Q-00-003",
+      "title": "Land a minimal emitter-backed Wasm slice over the frozen SCIR-L subset",
+      "source_milestone_or_phase": "MVP Kernel Hardening",
+      "status": "done",
+      "why_now": "The backend boundary is now explicit, but Wasm remains contract-first rather than emitter-backed, which leaves the MVP backend surface weaker than the narrowed roadmap intends.",
       "prerequisites": [
-        "Q-07-011"
+        "Q-00-002"
       ],
-      "work_instructions": "Document the promotion contract that turns the first-slice TypeScript placeholder corpus into future live generated-vs-golden fixtures, including admitted source.ts promotion to live inputs, admitted expected.scirh promotion from non-canonical sentinel text to canonical goldens, rejected-case expected.scirh absence, and do not activate live importer behavior or executable D-JS, lowering, reconstruction, or benchmark scope.",
+      "work_instructions": "Implement the smallest credible emitter-backed Wasm surface for the already-frozen SCIR-L subset, keep runtime helper assumptions explicit, and do not widen source-language or parity claims.",
       "touched_surfaces": [
-        "plans/milestone_07_typescript_witness_slice.md",
-        "VALIDATION_STRATEGY.md",
-        "tests/README.md",
-        "tests/typescript_importer/README.md"
+        "backends/wasm/README.md",
+        "LOWERING_CONTRACT.md",
+        "scripts/",
+        "reports/examples/"
       ],
       "validation": [
         "python scripts/build_execution_queue.py --mode check",
         "python scripts/validate_repo_contracts.py --mode validate",
         "python scripts/run_repo_validation.py"
       ],
-      "escalate_only_if": "defining the promotion contract would require live importer execution, schema changes, executable D-JS claims, or broader TypeScript semantic admission than the bounded interface-witness slice allows",
+      "escalate_only_if": "helper-free local-slot emission would require hidden runtime semantics or broader derivative op coverage",
       "done_evidence": [
-        "the placeholder-to-live promotion rules for first-slice TypeScript fixtures are explicit",
-        "test-mode preconditions are explicit",
-        "the importer-only boundary remains explicit"
+        "the Wasm backend is no longer contract-only for the admitted subset",
+        "helper assumptions are explicit",
+        "preservation reporting stays path-qualified"
       ],
       "blocking_open_questions": []
     },
     {
-      "queue_id": "Q-07-011",
-      "title": "Activate TypeScript validate-fixtures mode for the dormant placeholder corpus",
-      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "queue_id": "Q-01-001",
+      "title": "Lock the Phase 1 SCIR-H kernel around canonical subset and identity",
+      "source_milestone_or_phase": "SCIR-H kernel",
       "status": "done",
-      "why_now": "Repository validation now enforces the dormant TypeScript placeholder corpus contract, so the next bounded task is to move fixed-corpus integrity checks into the reserved TypeScript conformance entrypoint without activating live importer execution or widening executable scope.",
+      "why_now": "Phase 0 boundary hardening and the first helper-free Wasm slice are landed, so the next credible step is to keep the canonical SCIR-H subset and identity rules fail-fast coherent before widening importer or backend work.",
       "prerequisites": [
-        "Q-07-010"
+        "Q-00-003"
       ],
-      "work_instructions": "Implement real validate-fixtures corpus-integrity checks in scripts/typescript_importer_conformance.py for the dormant TypeScript placeholder corpus, keep test mode reserved, and do not activate live importer behavior or executable D-JS, lowering, reconstruction, or benchmark scope.",
+      "work_instructions": "Keep the canonical SCIR-H subset, canonical/view split, and persistent identity rules aligned between the spec, bootstrap model, and completeness checklist without widening the executable subset.",
       "touched_surfaces": [
-        "scripts/typescript_importer_conformance.py",
-        "scripts/run_repo_validation.py",
-        "Makefile",
-        "README.md",
-        "ci/validation_pipeline.md",
-        "VALIDATION_STRATEGY.md",
-        "tests/README.md",
-        "tests/typescript_importer/README.md",
-        "plans/milestone_07_typescript_witness_slice.md"
+        "specs/scir_h_spec.md",
+        "scripts/scir_h_bootstrap_model.py",
+        "IDENTITY_MODEL.md",
+        "SPEC_COMPLETENESS_CHECKLIST.md"
       ],
       "validation": [
-        "python scripts/typescript_importer_conformance.py --mode validate-fixtures",
-        "python scripts/typescript_importer_conformance.py --mode test",
-        "python scripts/build_execution_queue.py --mode write",
         "python scripts/build_execution_queue.py --mode check",
         "python scripts/validate_repo_contracts.py --mode validate",
-        "python scripts/run_repo_validation.py",
-        "make validate"
+        "python scripts/run_repo_validation.py"
       ],
-      "escalate_only_if": "validate-fixtures integrity checks would require live importer output, schema changes, executable D-JS claims, or broader TypeScript semantic admission than the bounded interface-witness slice allows",
+      "escalate_only_if": "identity or canonical storage changes would require new SCIR-L semantics or phase-order changes",
       "done_evidence": [
-        "the TypeScript conformance entrypoint validates the dormant placeholder corpus shape in validate-fixtures mode",
-        "test mode remains reserved with an explicit non-live message",
-        "top-level validation commands now include the TypeScript validate-fixtures gate",
-        "the importer-only boundary remains explicit"
+        "canonical subset and executable parser stay aligned",
+        "canonical/view noninterference stays checked",
+        "persistent lineage and content hash rules remain coherent"
       ],
       "blocking_open_questions": []
     },
     {
-      "queue_id": "Q-07-010",
-      "title": "Enforce the dormant TypeScript placeholder corpus contract in repository validation",
-      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "queue_id": "Q-02-001",
+      "title": "Keep the Python proof loop locked to the canonical SCIR-H kernel",
+      "source_milestone_or_phase": "Python proof loop",
       "status": "done",
-      "why_now": "The full dormant TypeScript placeholder corpus is now materialized on disk, so the next bounded task is to make repository-contract validation reject drift in the admitted-vs-rejected placeholder bundle shape without activating live TypeScript conformance or widening executable scope.",
+      "why_now": "The Phase 1 SCIR-H kernel is now explicit and fail-fast, so the next credible step is to keep the Python importer, derivative lowering, and SCIR-H-driven reconstruction aligned to that fixed kernel before widening any other frontend or backend surface.",
       "prerequisites": [
-        "Q-07-009"
+        "Q-01-001"
       ],
-      "work_instructions": "Add explicit repository-contract checks for the fully materialized dormant TypeScript placeholder corpus, including admitted/rejected file-presence rules and rejected-case expected.scirh absence; do not activate the TypeScript conformance checker or widen executable D-JS, lowering, reconstruction, or benchmark scope.",
+      "work_instructions": "Keep the Python importer as the decisive proof loop, keep SCIR-L derivative to the fixed canonical SCIR-H kernel, and keep Python reconstruction driven by validated SCIR-H rather than widening importer-only follow-on cases.",
       "touched_surfaces": [
-        "scripts/validate_repo_contracts.py",
-        "VALIDATION_STRATEGY.md",
-        "tests/README.md",
-        "plans/milestone_07_typescript_witness_slice.md"
+        "frontend/python/IMPORT_SCOPE.md",
+        "scripts/scir_python_bootstrap.py",
+        "scripts/scir_bootstrap_pipeline.py",
+        "docs/reconstruction_policy.md"
       ],
       "validation": [
-        "python scripts/build_execution_queue.py --mode write",
         "python scripts/build_execution_queue.py --mode check",
+        "python scripts/python_importer_conformance.py --mode validate-fixtures",
+        "python scripts/scir_bootstrap_pipeline.py --mode validate",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "keeping the Python proof loop credible would require widening the locked SCIR-H kernel, activating deferred second-language execution claims, or adding new runtime semantics",
+      "done_evidence": [
+        "the Python importer remains aligned to the canonical SCIR-H kernel",
+        "SCIR-L lowering stays derivative and subset-bound",
+        "Python reconstruction remains SCIR-H-driven and preservation reporting stays coherent"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-02-002",
+      "title": "Promote the bounded b_direct_call case into the active Python proof loop",
+      "source_milestone_or_phase": "Python proof loop",
+      "status": "done",
+      "why_now": "The Python proof loop is locked to the canonical SCIR-H kernel, but the bounded direct local call shape still sits in importer-only evidence even though it is the next smallest credible end-to-end executable widening.",
+      "prerequisites": [
+        "Q-02-001"
+      ],
+      "work_instructions": "Promote only the fixed b_direct_call shape into the active Python proof loop, keep lowering and reconstruction subset-bound, widen benchmark doctrine only as required by the executable case contract, and do not imply helper-free Wasm support.",
+      "touched_surfaces": [
+        "frontend/python/IMPORT_SCOPE.md",
+        "docs/reconstruction_policy.md",
+        "scripts/scir_python_bootstrap.py",
+        "scripts/scir_bootstrap_pipeline.py",
+        "scripts/python_importer_conformance.py",
+        "BENCHMARK_STRATEGY.md",
+        "benchmarks/",
+        "reports/examples/"
+      ],
+      "validation": [
+        "python scripts/python_importer_conformance.py --mode validate-fixtures",
+        "python scripts/scir_bootstrap_pipeline.py --mode validate",
+        "python scripts/scir_bootstrap_pipeline.py --mode test",
+        "python scripts/benchmark_contract_dry_run.py",
+        "python scripts/run_repo_validation.py --include-track-c-pilot"
+      ],
+      "escalate_only_if": "promoting b_direct_call would require widening loops, class-field shapes, try/catch, Rust execution claims, or helper-free Wasm emission",
+      "done_evidence": [
+        "b_direct_call is now part of the executable Python proof loop",
+        "reconstruction and benchmark doctrine stay aligned to the widened bounded case set",
+        "non-emittable Wasm boundaries remain explicit"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-02-003",
+      "title": "Tighten validator and completeness coverage around the widened Python proof loop",
+      "source_milestone_or_phase": "Python proof loop",
+      "status": "done",
+      "why_now": "The bounded direct-call widening is landed, so the next credible step is to harden the validator, completeness checklist, and active-path doctrine against future drift before returning to backend widening.",
+      "prerequisites": [
+        "Q-02-002"
+      ],
+      "work_instructions": "Strengthen proof-loop drift checks, completeness markers, and negative validation around the widened Python executable set, keep importer-only follow-on cases explicit, and do not widen Wasm or Rust execution scope.",
+      "touched_surfaces": [
+        "SPEC_COMPLETENESS_CHECKLIST.md",
+        "scripts/validate_repo_contracts.py",
+        "scripts/scir_h_bootstrap_model.py",
+        "frontend/python/IMPORT_SCOPE.md",
+        "docs/reconstruction_policy.md"
+      ],
+      "validation": [
         "python scripts/validate_repo_contracts.py --mode validate",
         "python scripts/validate_repo_contracts.py --mode test",
         "python scripts/run_repo_validation.py"
       ],
-      "escalate_only_if": "repository-contract enforcement would require live importer behavior, schema changes, or broader semantic admission than the bounded interface-witness slice allows",
+      "escalate_only_if": "hardening validator or completeness coverage would require new SCIR-H semantics, broader executable Python support, or backend-scope widening",
       "done_evidence": [
-        "repository validation rejects drift in the dormant TypeScript placeholder corpus shape, including exact case IDs, admitted-vs-rejected file sets, placeholder report posture, and rejected-case expected.scirh absence",
-        "the importer-only boundary remains explicit"
+        "validator and completeness drift checks cover the widened Python proof loop",
+        "importer-only boundaries remain explicit",
+        "the next backend-facing slice can proceed from a fail-fast proof-loop contract"
       ],
       "blocking_open_questions": []
     },
     {
-      "queue_id": "Q-07-009",
-      "title": "Add placeholder bundle files for the rejected TypeScript boundary cases",
-      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "queue_id": "Q-03-001",
+      "title": "Keep Rust importer evidence aligned to the canonical SCIR-H kernel",
+      "source_milestone_or_phase": "Rust safe-subset importer",
       "status": "done",
-      "why_now": "The admitted placeholder bundle shape is now visible on disk, so the next bounded task is to add rejected-case placeholder files that preserve the published rejection bundle contract without introducing live importer outputs or canonical SCIR-H on rejected cases.",
+      "why_now": "The Python proof loop is now locked to the canonical SCIR-H kernel, so the next credible step is to keep the Rust importer evidence aligned to that same kernel without widening Rust into an active reconstruction, backend, or benchmark claim.",
       "prerequisites": [
-        "Q-07-008"
+        "Q-02-001"
       ],
-      "work_instructions": "Add placeholder-only rejected-case bundle files for the fixed TypeScript D-case directories and keep them clearly non-live; do not add executable D-JS, importer logic, lowering, reconstruction, or benchmark work.",
+      "work_instructions": "Keep the Rust importer subset-bound, keep ownership and unsafe boundaries explicit, and keep Rust outputs aligned to the canonical SCIR-H contract without promoting Rust into an active proof loop beyond the importer-first evidence path.",
       "touched_surfaces": [
-        "tests/typescript_importer/cases/",
-        "tests/README.md",
-        "plans/milestone_07_typescript_witness_slice.md"
+        "frontend/rust/IMPORT_SCOPE.md",
+        "scripts/scir_rust_bootstrap.py",
+        "scripts/rust_importer_conformance.py",
+        "scripts/scir_bootstrap_pipeline.py"
       ],
       "validation": [
-        "python scripts/validate_repo_contracts.py --mode validate",
         "python scripts/build_execution_queue.py --mode check",
-        "python scripts/run_repo_validation.py"
+        "python scripts/rust_importer_conformance.py --mode validate-fixtures",
+        "python scripts/scir_bootstrap_pipeline.py --language rust --mode validate",
+        "python scripts/run_repo_validation.py --require-rust"
       ],
-      "escalate_only_if": "placeholder rejected-case files would force live fixture contents, schema changes, canonical SCIR-H on rejected cases, or broader semantic admission than the bounded interface-witness slice allows",
+      "escalate_only_if": "keeping Rust importer evidence aligned would require widening the locked SCIR-H kernel, activating Rust reconstruction or benchmark claims, or weakening explicit unsafe boundary handling",
       "done_evidence": [
-        "the rejected TypeScript case directories contain placeholder bundle files only",
-        "rejected cases still omit expected.scirh",
-        "the importer-only boundary remains explicit"
+        "the Rust importer remains aligned to the canonical SCIR-H kernel",
+        "ownership and unsafe boundary handling stay explicit",
+        "Rust evidence does not widen into active reconstruction or benchmark claims"
       ],
       "blocking_open_questions": []
     },
     {
-      "queue_id": "Q-07-008",
-      "title": "Add placeholder bundle files for the admitted TypeScript cases",
-      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
+      "queue_id": "Q-04-001",
+      "title": "Keep the Wasm reference backend MVP aligned to the bounded derivative subset",
+      "source_milestone_or_phase": "Wasm reference backend MVP",
       "status": "done",
-      "why_now": "The placeholder case directories now exist, so the next bounded task is to add admitted-case placeholder files that preserve the published bundle shape without introducing live importer outputs.",
+      "why_now": "The Python proof loop and Rust importer evidence are now locked to the canonical SCIR-H kernel, so the next credible step is to keep the helper-free Wasm backend, preservation reporting, and non-emittable boundaries aligned to the same bounded derivative subset without widening backend claims.",
       "prerequisites": [
-        "Q-07-007"
+        "Q-03-001"
       ],
-      "work_instructions": "Add placeholder-only admitted-case bundle files for the fixed TypeScript A-case directories and keep them clearly non-live; do not add executable D-JS, importer logic, lowering, reconstruction, or benchmark work.",
+      "work_instructions": "Keep the helper-free Wasm backend explicit, keep l_to_wasm preservation reporting path-qualified, and keep field, call, async, and opaque lowering non-emittable unless the root backend contract is widened deliberately.",
       "touched_surfaces": [
-        "tests/typescript_importer/cases/",
-        "tests/README.md",
-        "plans/milestone_07_typescript_witness_slice.md"
-      ],
-      "validation": [
-        "python scripts/validate_repo_contracts.py --mode validate",
-        "python scripts/build_execution_queue.py --mode check",
-        "python scripts/run_repo_validation.py"
-      ],
-      "escalate_only_if": "placeholder admitted-case files would force live fixture contents, schema changes, or broader semantic admission than the bounded interface-witness slice allows",
-      "done_evidence": [
-        "the admitted TypeScript case directories contain placeholder bundle files only",
-        "the published bundle shape is visible on disk",
-        "the importer-only boundary remains explicit"
-      ],
-      "blocking_open_questions": []
-    },
-    {
-      "queue_id": "Q-07-007",
-      "title": "Create the dormant TypeScript fixture directories for the fixed case matrix",
-      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
-      "status": "done",
-      "why_now": "The reserved corpus root and dormant conformance scaffold now existed, so the next bounded task was to create the empty first-slice fixture directories for the fixed TypeScript case matrix without adding real fixture content or importer execution.",
-      "prerequisites": [
-        "Q-07-006"
-      ],
-      "work_instructions": "Create the dormant case directories for the fixed first-slice TypeScript matrix and keep them placeholder-only; do not add live fixture contents, importer logic, executable D-JS, lowering, reconstruction, or benchmark work.",
-      "touched_surfaces": [
-        "tests/typescript_importer/cases/",
-        "tests/README.md",
-        "plans/milestone_07_typescript_witness_slice.md"
-      ],
-      "validation": [
-        "python scripts/validate_repo_contracts.py --mode validate",
-        "python scripts/build_execution_queue.py --mode check",
-        "python scripts/run_repo_validation.py"
-      ],
-      "escalate_only_if": "creating the dormant case directories would force live fixtures, schema changes, or broader semantic admission than the bounded interface-witness slice allows",
-      "done_evidence": [
-        "the fixed TypeScript case directories exist on disk",
-        "they remain placeholder-only",
-        "the importer-only boundary remains explicit"
-      ],
-      "blocking_open_questions": []
-    },
-    {
-      "queue_id": "Q-07-006",
-      "title": "Reserve the dormant TypeScript conformance scaffold and corpus root",
-      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
-      "status": "done",
-      "why_now": "The future conformance contract was explicit, so the next bounded task was to reserve the non-executable filesystem and script scaffold that future TypeScript importer work will fill in.",
-      "prerequisites": [
-        "Q-07-005"
-      ],
-      "work_instructions": "Add the dormant TypeScript corpus root and non-executable conformance-checker scaffold surfaces needed by the published contract; do not add importer logic, executable D-JS, lowering, reconstruction, or benchmark work.",
-      "touched_surfaces": [
-        "tests/README.md",
-        "frontend/README.md",
-        "scripts/"
-      ],
-      "validation": [
-        "python scripts/validate_repo_contracts.py --mode validate",
-        "python scripts/build_execution_queue.py --mode check",
-        "python scripts/run_repo_validation.py"
-      ],
-      "escalate_only_if": "reserving the dormant TypeScript scaffold would require live importer behavior, schema changes, or broader semantic admission than the bounded interface-witness slice allows",
-      "done_evidence": [
-        "the dormant TypeScript corpus root is reserved",
-        "the non-executable conformance scaffold is explicit",
-        "the importer-only boundary remains explicit"
-      ],
-      "blocking_open_questions": []
-    },
-    {
-      "queue_id": "Q-07-005",
-      "title": "Define the TypeScript conformance checker contract and validation entrypoint",
-      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
-      "status": "done",
-      "why_now": "The initial TypeScript corpus layout and case matrix were explicit, so the next bounded task was to define how future conformance checking would consume that corpus and integrate with repository validation without implying importer implementation was already present.",
-      "prerequisites": [
-        "Q-07-004"
-      ],
-      "work_instructions": "Define the future TypeScript conformance checker contract, expected command entrypoint, and repository-validation integration for the importer-only interface witness corpus; do not add executable D-JS, lowering, reconstruction, or benchmark work.",
-      "touched_surfaces": [
-        "VALIDATION_STRATEGY.md",
-        "tests/README.md",
-        "frontend/README.md"
-      ],
-      "validation": [
-        "python scripts/validate_repo_contracts.py --mode validate",
-        "python scripts/build_execution_queue.py --mode check",
-        "python scripts/run_repo_validation.py"
-      ],
-      "escalate_only_if": "the conformance contract cannot be stated without implementing importer code, adding schemas, or broadening the first Phase 7 slice beyond importer-only witness evidence",
-      "done_evidence": [
-        "the future TypeScript conformance checker contract is explicit",
-        "repository validation expectations are explicit",
-        "executable D-JS scope remains deferred"
-      ],
-      "blocking_open_questions": []
-    },
-    {
-      "queue_id": "Q-07-004",
-      "title": "Define the initial TypeScript fixture corpus layout and case matrix",
-      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
-      "status": "done",
-      "why_now": "The fixture/report contract was explicit, so the next bounded task was to define the first concrete TypeScript fixture corpus layout and case matrix that an importer implementation will be required to satisfy.",
-      "prerequisites": [
-        "Q-07-003"
-      ],
-      "work_instructions": "Define the initial TypeScript importer corpus layout, enumerate the first admitted and rejected interface-witness cases, and keep the corpus importer-only; do not add executable D-JS, lowering, reconstruction, or benchmark work.",
-      "touched_surfaces": [
-        "plans/milestone_07_typescript_witness_slice.md",
-        "frontend/typescript/IMPORT_SCOPE.md",
-        "tests/README.md"
-      ],
-      "validation": [
-        "python scripts/validate_repo_contracts.py --mode validate",
-        "python scripts/build_execution_queue.py --mode check",
-        "python scripts/run_repo_validation.py"
-      ],
-      "escalate_only_if": "the case matrix cannot be defined without adding new schemas, executable artifacts, or broadening the first Phase 7 slice beyond interface-shaped witness doctrine",
-      "done_evidence": [
-        "the initial TypeScript corpus layout is explicit",
-        "admitted and rejected first-slice cases are enumerated",
-        "the importer-only boundary remains explicit"
-      ],
-      "blocking_open_questions": []
-    },
-    {
-      "queue_id": "Q-07-003",
-      "title": "Define the fixture and report contract for the first interface witness slice",
-      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
-      "status": "done",
-      "why_now": "The planning handoff and implementation-facing doctrine were explicit, so the next bounded Phase 7 task was to define the minimal fixture and report expectations for the importer-only interface witness slice before any importer implementation began.",
-      "prerequisites": [
-        "Q-07-002"
-      ],
-      "work_instructions": "Define the minimal checked-in fixture shape, report obligations, and rejection boundaries for the first importer-only TypeScript interface witness slice; do not add executable D-JS, lowering, reconstruction, or benchmark work.",
-      "touched_surfaces": [
-        "plans/milestone_07_typescript_witness_slice.md",
-        "VALIDATION_STRATEGY.md",
-        "frontend/typescript/IMPORT_SCOPE.md"
-      ],
-      "validation": [
-        "python scripts/validate_repo_contracts.py --mode validate",
-        "python scripts/build_execution_queue.py --mode check",
-        "python scripts/run_repo_validation.py"
-      ],
-      "escalate_only_if": "the fixture and report contract cannot be stated without adding schemas, executable artifacts, or broader TypeScript semantic admission than the bounded interface slice allows",
-      "done_evidence": [
-        "fixture expectations are explicit for the first interface slice",
-        "report-visible witness semantics and rejection boundaries are explicit",
-        "executable D-JS scope remains deferred"
-      ],
-      "blocking_open_questions": []
-    },
-    {
-      "queue_id": "Q-07-002",
-      "title": "Record the bounded interface-witness doctrine in the implementation surfaces",
-      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
-      "status": "done",
-      "why_now": "The planning handoff contract was explicit, so the next bounded task was to mirror that contract into the implementation-facing surfaces that would govern future TypeScript importer work without admitting execution scope.",
-      "prerequisites": [
-        "Q-07-001"
-      ],
-      "work_instructions": "Update the TypeScript-facing implementation surfaces so the first Phase 7 slice is expressed as importer-only interface witness doctrine, keep host assumptions and report obligations explicit, and do not admit executable D-JS, lowering, reconstruction, or benchmark work.",
-      "touched_surfaces": [
-        "frontend/typescript/IMPORT_SCOPE.md",
-        "VALIDATION_STRATEGY.md",
-        "validators/validator_contracts.md"
-      ],
-      "validation": [
-        "python scripts/validate_repo_contracts.py --mode validate",
-        "python scripts/build_execution_queue.py --mode check",
-        "python scripts/run_repo_validation.py"
-      ],
-      "escalate_only_if": "implementation-facing doctrine cannot express the bounded interface slice without changing schemas, adding executable artifacts, or silently broadening classes, async behavior, or prototype semantics",
-      "done_evidence": [
-        "implementation-facing doctrine agrees on the bounded interface slice",
-        "report-visible witness and host assumptions remain explicit",
-        "executable D-JS scope remains deferred"
-      ],
-      "blocking_open_questions": []
-    },
-    {
-      "queue_id": "Q-07-001",
-      "title": "Prepare the TypeScript witness-slice planning handoff",
-      "source_milestone_or_phase": "Phase 7 - TypeScript Witness Slice",
-      "status": "done",
-      "why_now": "Milestone 02B was explicitly complete, so the next bounded step was to make the TypeScript witness slice the active planning surface while keeping it doctrine-only and non-executable.",
-      "prerequisites": [
-        "Milestone 02B complete"
-      ],
-      "work_instructions": "Keep the first witness-bearing second-language item limited to a planning handoff for TypeScript interface-shaped witnesses; do not admit executable D-JS lowering, reconstruction, or benchmark work under the current roadmap.",
-      "touched_surfaces": [
-        "plans/milestone_07_typescript_witness_slice.md",
-        "frontend/typescript/IMPORT_SCOPE.md",
+        "backends/wasm/README.md",
+        "LOWERING_CONTRACT.md",
+        "scripts/scir_bootstrap_pipeline.py",
         "VALIDATION_STRATEGY.md"
       ],
       "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/scir_bootstrap_pipeline.py --mode validate",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "strengthening the Wasm MVP would require helper imports, runtime shims, new SCIR-L semantics, or wording that implies native or host parity",
+      "done_evidence": [
+        "the helper-free Wasm subset remains explicit and bounded",
+        "l_to_wasm reporting stays path-qualified",
+        "non-emittable derivative shapes remain explicit"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-04-002",
+      "title": "Land bounded helper-free Wasm emission for the fixed direct local call shape",
+      "source_milestone_or_phase": "Wasm reference backend MVP",
+      "status": "done",
+      "why_now": "The widened Python proof loop and its generated-artifact sync path are now fail-fast coherent, so the next substantive backend step is the smallest useful Wasm widening: the fixed direct local call shape that still remains non-emittable.",
+      "prerequisites": [
+        "Q-02-003",
+        "Q-04-001"
+      ],
+      "work_instructions": "Implement the smallest helper-free Wasm emission slice for the bounded direct local call case, keep lowering-rule and preservation reporting explicit, and do not imply support for broader call graphs, async, opaque calls, or runtime shims.",
+      "touched_surfaces": [
+        "backends/wasm/README.md",
+        "LOWERING_CONTRACT.md",
+        "scripts/wasm_backend_metadata.py",
+        "scripts/scir_bootstrap_pipeline.py",
+        "reports/examples/"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/scir_bootstrap_pipeline.py --mode validate",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "bounded direct-call Wasm emission would require helper imports, hidden runtime semantics, broader call support, or any wording that implies native or host parity",
+      "done_evidence": [
+        "the fixed direct local call shape becomes explicitly Wasm-emittable or explicitly blocked with executable evidence",
+        "helper-free Wasm boundaries remain subset-bound",
+        "preservation reporting stays path-qualified"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-04-003",
+      "title": "Assess whether field-place Wasm emission can stay helper-free without hidden layout semantics",
+      "source_milestone_or_phase": "Wasm reference backend MVP",
+      "status": "done",
+      "why_now": "The helper-free Wasm backend now admits the bounded direct local call shape, so the next substantive backend question is whether any field-place lowering can be emitted without introducing hidden record layout semantics or runtime helpers.",
+      "prerequisites": [
+        "Q-04-002"
+      ],
+      "work_instructions": "Evaluate whether the smallest field-place lowering slice can be admitted helper-free, keep record layout and provenance explicit, and do not widen into implicit object layout, imports, or host-runtime assumptions.",
+      "touched_surfaces": [
+        "backends/wasm/README.md",
+        "LOWERING_CONTRACT.md",
+        "scripts/wasm_backend_metadata.py",
+        "scripts/scir_bootstrap_pipeline.py",
+        "VALIDATION_STRATEGY.md"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/scir_bootstrap_pipeline.py --mode validate",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "field-place Wasm emission would require hidden record layout semantics, helper imports, broader memory models, or wording that implies native or host parity",
+      "done_evidence": [
+        "field-place Wasm emission is either explicitly admitted for a bounded helper-free slice or remains concretely blocked",
+        "record-layout assumptions remain explicit",
+        "helper-free Wasm boundaries remain subset-bound"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-04-004",
+      "title": "Decide whether any broader Wasm backend work requires an explicit post-scalar ABI contract",
+      "source_milestone_or_phase": "Wasm reference backend MVP",
+      "status": "done",
+      "why_now": "The field-place assessment now shows that helper-free Wasm cannot preserve caller-visible borrowed record mutation without an explicit record ABI/layout contract, so the next credible backend question is whether Phase 4 should freeze at the scalar helper-free subset or deliberately open a broader backend ABI decision.",
+      "prerequisites": [
+        "Q-04-003"
+      ],
+      "work_instructions": "Assess whether any next Wasm widening beyond the current scalar helper-free subset would require a declared record or host ABI contract, keep the current backend subset unchanged unless that contract is adopted explicitly, and do not imply native or host parity.",
+      "touched_surfaces": [
+        "backends/wasm/README.md",
+        "LOWERING_CONTRACT.md",
+        "ARCHITECTURE.md",
+        "IMPLEMENTATION_PLAN.md",
+        "DECISION_REGISTER.md"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
         "python scripts/validate_repo_contracts.py --mode validate",
         "python scripts/run_repo_validation.py"
       ],
-      "escalate_only_if": "OQ-018 or OQ-019 force a broader witness contract than the interface-shaped doctrine-only slice, or a proposed task widens executable D-JS scope before the published downstream gates exist",
+      "escalate_only_if": "answering the next Wasm-widening question would require phase-order changes, a new backend memory/ABI contract, or wording that implies native or host parity",
       "done_evidence": [
-        "Phase 7 is the explicit active queue source",
-        "the witness slice remains doctrine-only until a later plan widens downstream contracts explicitly"
+        "the scalar-only helper-free Wasm boundary is either frozen explicitly or a deliberate broader ABI decision is recorded",
+        "field-place and other non-scalar backend shapes remain non-emittable until that decision exists",
+        "Phase 4 sequencing remains explicit"
       ],
-      "blocking_open_questions": [
-        "OQ-018",
-        "OQ-019"
-      ]
+      "blocking_open_questions": []
     },
     {
-      "queue_id": "Q-02B-005",
-      "title": "Record Milestone 02B closeout and phase-handoff readiness",
-      "source_milestone_or_phase": "Milestone 02B - Python Expansion",
+      "queue_id": "Q-04-005",
+      "title": "Decide whether SCIR should adopt any explicit post-scalar Wasm ABI/storage contract",
+      "source_milestone_or_phase": "Wasm reference backend MVP",
       "status": "done",
-      "why_now": "The Rust-inclusive validation gate was green, so the remaining 02B work was explicit milestone closeout and a bounded handoff toward the next architecture phase without silently changing the queue regime.",
+      "why_now": "The scalar helper-free Wasm subset is now explicitly frozen, and any further backend widening would require a deliberate decision about record storage, caller-visible mutation, or host-facing ABI semantics rather than another incremental emitter slice.",
       "prerequisites": [
-        "Q-02B-004"
+        "Q-04-004"
       ],
-      "work_instructions": "Record Milestone 02B completion evidence, decide the minimal queue and milestone-source updates needed for a clean Phase 7 handoff, and keep the witness slice doctrine-only until a later task widens downstream contracts explicitly.",
+      "work_instructions": "Resolve whether SCIR should adopt a broader Wasm ABI/storage contract for non-scalar shapes, keep the current helper-free scalar subset unchanged until that decision is made, and do not imply native or host parity.",
       "touched_surfaces": [
-        "plans/milestone_02b_python_expansion.md",
-        "EXECUTION_QUEUE.md",
-        "plans/milestone_07_typescript_witness_slice.md"
+        "ARCHITECTURE.md",
+        "backends/wasm/README.md",
+        "LOWERING_CONTRACT.md",
+        "VALIDATION_STRATEGY.md",
+        "OPEN_QUESTIONS.md"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "answering the Wasm ABI question would require changing phase order, broadening backend semantics beyond the MVP boundary, or introducing host-runtime parity claims",
+      "done_evidence": [
+        "the repository either records an explicit post-scalar Wasm ABI/storage contract or freezes Phase 4 at the helper-free scalar subset with the blocker preserved",
+        "field-place and other non-scalar shapes stay explicit during the decision",
+        "the queue no longer implies silent backend widening"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-04-006",
+      "title": "Define the minimal post-scalar Wasm ABI/storage contract for record field mutation",
+      "source_milestone_or_phase": "Wasm reference backend MVP",
+      "status": "done",
+      "why_now": "The repository has now chosen to open explicit post-scalar Wasm design work, so the next credible slice is to specify the narrowest contract that can preserve caller-visible record field mutation without broadening into general host/runtime or object-layout claims.",
+      "prerequisites": [
+        "Q-04-005"
+      ],
+      "work_instructions": "Specify the smallest explicit Wasm ABI/storage contract that could carry the existing record field mutation semantics, keep it narrower than general object layout or host ABI support, and do not claim executable support until the contract, validator implications, and backend doctrine agree.",
+      "touched_surfaces": [
+        "ARCHITECTURE.md",
+        "backends/wasm/README.md",
+        "LOWERING_CONTRACT.md",
+        "VALIDATION_STRATEGY.md",
+        "OPEN_QUESTIONS.md",
+        "DECISION_REGISTER.md"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "the minimal ABI contract cannot be defined without broad host/runtime commitments, new SCIR-L semantics, or phase-order changes",
+      "done_evidence": [
+        "the repository names one minimal candidate post-scalar Wasm ABI/storage contract",
+        "the current scalar helper-free subset remains unchanged until later implementation work",
+        "the next backend slice can evaluate that contract instead of reopening whether-design work"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-04-007",
+      "title": "Define validator and preservation obligations for the candidate Wasm record-cell ABI",
+      "source_milestone_or_phase": "Wasm reference backend MVP",
+      "status": "done",
+      "why_now": "The repository now names one candidate post-scalar Wasm contract, so the next credible slice is to define exactly what validation, downgrade, and preservation obligations would be required before that candidate could become executable.",
+      "prerequisites": [
+        "Q-04-006"
+      ],
+      "work_instructions": "Specify the validator invariants, lowering constraints, and preservation-report obligations for the candidate record-cell ABI, keep the current scalar helper-free subset unchanged, and do not claim executable support until those obligations are agreed explicitly.",
+      "touched_surfaces": [
+        "VALIDATION_STRATEGY.md",
+        "LOWERING_CONTRACT.md",
+        "docs/preservation_contract.md",
+        "DECISION_REGISTER.md",
+        "OPEN_QUESTIONS.md"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "the candidate contract cannot be bounded without new SCIR-L semantics, broader host/runtime commitments, or a higher-level scope change",
+      "done_evidence": [
+        "the candidate Wasm record-cell ABI has explicit validator and preservation obligations",
+        "the current helper-free scalar subset remains the only executable backend surface",
+        "the following slice can decide whether bounded implementation is credible"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-04-008",
+      "title": "Assess whether bounded implementation of the candidate Wasm record-cell ABI is credible",
+      "source_milestone_or_phase": "Wasm reference backend MVP",
+      "status": "done",
+      "why_now": "The repository now names both a candidate record-cell ABI and the validator/preservation obligations it would carry, so the next credible slice is to decide whether a bounded implementation path exists without new SCIR-L semantics or broader host/runtime commitments.",
+      "prerequisites": [
+        "Q-04-007"
+      ],
+      "work_instructions": "Assess whether the existing lowering and backend surfaces can implement the candidate record-cell ABI in one bounded slice, keep the current scalar helper-free subset unchanged unless that path is credible, and do not imply broader host/runtime or parity claims.",
+      "touched_surfaces": [
+        "scripts/scir_bootstrap_pipeline.py",
+        "scripts/wasm_backend_metadata.py",
+        "backends/wasm/README.md",
+        "VALIDATION_STRATEGY.md",
+        "DECISION_REGISTER.md"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/scir_bootstrap_pipeline.py --mode validate",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "bounded implementation would require new SCIR-L semantics, imported memory or host/runtime commitments, or a broader phase-order change",
+      "done_evidence": [
+        "the repository now shows a bounded implementation path for the record-cell ABI without new SCIR-L semantics",
+        "the current scalar helper-free subset remains explicit alongside the bounded record-cell path",
+        "the next Wasm step is driven by implementation evidence rather than design ambiguity"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-04-009",
+      "title": "Implement the bounded record-cell Wasm slice for a_struct_field_borrow_mut",
+      "source_milestone_or_phase": "Wasm reference backend MVP",
+      "status": "done",
+      "why_now": "The repository now has both a credible bounded implementation path and explicit validator plus preservation obligations for the record-cell ABI, so the next credible backend step is to land the smallest executable post-scalar Wasm slice instead of leaving it design-only.",
+      "prerequisites": [
+        "Q-04-008"
+      ],
+      "work_instructions": "Implement the exact helper-free record-cell ABI slice for fixture.rust_importer.a_struct_field_borrow_mut, keep preservation downgrades and shared-handle evidence explicit, and do not widen into Python field places, broader record layouts, imported memory, or host-runtime claims.",
+      "touched_surfaces": [
+        "frontend/rust/IMPORT_SCOPE.md",
+        "backends/wasm/README.md",
+        "LOWERING_CONTRACT.md",
+        "VALIDATION_STRATEGY.md",
+        "docs/preservation_contract.md",
+        "scripts/scir_rust_bootstrap.py",
+        "scripts/wasm_backend_metadata.py",
+        "scripts/scir_bootstrap_pipeline.py",
+        "scripts/validate_repo_contracts.py"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/scir_bootstrap_pipeline.py --mode validate",
+        "python scripts/scir_bootstrap_pipeline.py --language rust --mode validate",
+        "python scripts/run_repo_validation.py --require-rust"
+      ],
+      "escalate_only_if": "the bounded record-cell slice would require new SCIR-L semantics, imported memory conventions beyond the declared ABI, or wording that implies broader Wasm parity",
+      "done_evidence": [
+        "fixture.rust_importer.a_struct_field_borrow_mut now emits stable bounded Wasm",
+        "the l_to_wasm preservation report records record-cell-specific downgrades and evidence",
+        "the active Wasm-emittable Rust subset and backend doctrine stay aligned"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-04-010",
+      "title": "Decide whether the active Wasm record-cell ABI should widen beyond the fixed Rust slice",
+      "source_milestone_or_phase": "Wasm reference backend MVP",
+      "status": "done",
+      "why_now": "The smallest executable post-scalar Wasm slice is now active, so the next credible backend question is whether that ABI should remain frozen at the fixed Rust one-field shape or widen toward broader record or Python field-place support.",
+      "prerequisites": [
+        "Q-04-009"
+      ],
+      "work_instructions": "Decide whether the current record-cell ABI should stay frozen to the fixed Rust Counter slice or widen to any additional record-mutation shapes, keep any broader layout or host commitments explicit, and do not imply general post-scalar Wasm parity.",
+      "touched_surfaces": [
+        "ARCHITECTURE.md",
+        "backends/wasm/README.md",
+        "LOWERING_CONTRACT.md",
+        "VALIDATION_STRATEGY.md",
+        "OPEN_QUESTIONS.md",
+        "DECISION_REGISTER.md"
       ],
       "validation": [
         "python scripts/build_execution_queue.py --mode check",
         "python scripts/validate_repo_contracts.py --mode validate",
         "python scripts/run_repo_validation.py --require-rust"
       ],
-      "escalate_only_if": "closing Milestone 02B requires changing phase ordering, changing the queue generator contract, or widening executable D-JS or witness-bearing scope before the published downstream gates exist",
+      "escalate_only_if": "widening the record-cell ABI would require new SCIR-L semantics, broader imported-memory or host-runtime commitments, or a phase-order change",
       "done_evidence": [
-        "Milestone 02B completion is explicit",
-        "the next queue source is explicit",
-        "Phase 7 remains doctrine-only until a later task widens downstream contracts explicitly"
+        "the fixed Rust record-cell slice is now explicitly frozen",
+        "the backend no longer implies incremental widening of the record-cell ABI",
+        "future post-scalar widening requires a new recorded contract decision"
       ],
       "blocking_open_questions": []
     },
     {
-      "queue_id": "Q-02B-004",
-      "title": "Run the milestone validation gate for the admitted slice",
-      "source_milestone_or_phase": "Milestone 02B - Python Expansion",
-      "status": "done",
-      "why_now": "Admission, fixture coverage, and doctrine sync were already in place for the bounded class field-update slice, and the remaining near-term work was to record the validation-gate outcome without widening executable scope.",
+      "queue_id": "Q-04-011",
+      "title": "Decide whether to reopen Wasm widening beyond the frozen Rust record-cell slice",
+      "source_milestone_or_phase": "Wasm reference backend MVP",
+      "status": "blocked",
+      "why_now": "The active post-scalar Wasm boundary is now explicit and frozen, so any further backend widening should happen only if a later review chooses to reopen that decision deliberately rather than through queue drift.",
       "prerequisites": [
-        "Q-02B-003"
+        "Q-04-010"
       ],
-      "work_instructions": "Run the canonical importer and repository validation commands for the admitted slice, record the Python-side validation outcome, keep the slice importer-only, and note any unrelated broader validation blockers without widening executable claims.",
+      "work_instructions": "Reassess whether any new evidence justifies reopening Wasm widening beyond the fixed Rust record-cell slice, keep broader layout and host commitments explicit, and do not imply general post-scalar Wasm parity unless a new contract decision is recorded first.",
       "touched_surfaces": [
-        "scripts/run_repo_validation.py",
-        "VALIDATION.md",
-        "reports/"
+        "ARCHITECTURE.md",
+        "backends/wasm/README.md",
+        "LOWERING_CONTRACT.md",
+        "VALIDATION_STRATEGY.md",
+        "DECISION_REGISTER.md",
+        "OPEN_QUESTIONS.md"
       ],
       "validation": [
-        "python scripts/python_importer_conformance.py --mode validate-fixtures",
-        "python scripts/python_importer_conformance.py --mode test",
-        "python scripts/run_repo_validation.py --require-rust",
-        "python scripts/benchmark_contract_dry_run.py"
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/run_repo_validation.py --require-rust"
       ],
-      "escalate_only_if": "validation passes only by widening executable claims, by skipping required fixture coverage, by contradicting milestone scope language, or if broader repo validation fails outside the admitted Python slice and must be recorded as a separate blocker",
+      "escalate_only_if": "reopening Wasm widening would require new SCIR-L semantics, broader imported-memory or host-runtime commitments, or a phase-order change",
       "done_evidence": [
-        "Python-side validation commands pass",
-        "Rust-inclusive validation and benchmark commands pass in the validated environment",
-        "importer-only status remains explicit",
-        "no lowering, reconstruction, or benchmark claim was widened implicitly"
+        "the repository either records a new widening decision explicitly or keeps the frozen record-cell ABI unchanged",
+        "no incremental backend drift occurs",
+        "the Wasm scope boundary remains deliberate"
       ],
       "blocking_open_questions": []
     },
     {
-      "queue_id": "Q-02B-001",
-      "title": "Admit the bounded Python class field-update shape",
-      "source_milestone_or_phase": "Milestone 02B - Python Expansion",
+      "queue_id": "Q-05-001",
+      "title": "Keep the benchmark falsification loop aligned to the fixed Python proof loop",
+      "source_milestone_or_phase": "Benchmark falsification loop",
       "status": "done",
-      "why_now": "The bounded importer-only class field-update slice is already admitted in the checked-in 02B corpus and must remain explicit as a completed prerequisite for the remaining milestone gate work.",
+      "why_now": "The Wasm reference backend MVP is now locked to the bounded derivative subset, so the next credible step is to keep Track A and Track B benchmark doctrine executable against the fixed Python proof loop without silently widening benchmark surfaces.",
       "prerequisites": [
-        "Milestone 02B remains the active roadmap priority",
-        "the completed Milestone 02 five-case corpus remains the acceptance floor."
+        "Q-04-001"
       ],
-      "work_instructions": "Admit exactly the importer-only b_class_field_update case, normalize it into a canonical record-like type declaration plus plain functions over explicit field places and direct local call syntax, and keep lowering, reconstruction, and benchmark scope unchanged.",
+      "work_instructions": "Keep benchmark manifests, baselines, gates, and dry-run validation tied to the fixed Python proof loop, keep Track C conditional, and do not reactivate Track D or second-language benchmark claims.",
       "touched_surfaces": [
-        "frontend/python/IMPORT_SCOPE.md",
-        "plans/milestone_02b_python_expansion.md",
-        "tests/python_importer/cases/*"
+        "BENCHMARK_STRATEGY.md",
+        "benchmarks/",
+        "scripts/benchmark_contract_dry_run.py"
       ],
       "validation": [
-        "python scripts/python_importer_conformance.py --mode validate-fixtures",
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/benchmark_contract_dry_run.py",
         "python scripts/run_repo_validation.py"
       ],
-      "escalate_only_if": "the bounded class update slice requires inheritance, decorators, dynamic attributes, descriptor behavior, or cannot stay importer-only under current downstream contracts",
+      "escalate_only_if": "keeping Track A and Track B executable would require reactivating Track D, repository-scale issue repair, or second-language execution evidence before the Python proof loop doctrine widens",
       "done_evidence": [
-        "accepted construct scope is explicit",
-        "fixture-backed acceptance criteria exist",
-        "importer-only boundaries remain explicit"
+        "Track A and Track B remain executable and bounded",
+        "benchmark baselines and kill gates remain explicit",
+        "Track C remains conditional and Track D remains deferred"
       ],
       "blocking_open_questions": []
     },
     {
-      "queue_id": "Q-02B-002",
-      "title": "Add fixture and conformance evidence for the admitted slice",
-      "source_milestone_or_phase": "Milestone 02B - Python Expansion",
+      "queue_id": "Q-06-001",
+      "title": "Prepare a minimal conditional Track C pilot without widening the default gate",
+      "source_milestone_or_phase": "Optional Track C pilot",
       "status": "done",
-      "why_now": "The admitted class field-update slice already has a checked-in fixture bundle and conformance coverage, so this prerequisite is complete and serves as evidence for the remaining milestone gate work.",
+      "why_now": "Track A and Track B are now locked to the fixed Python proof loop, so the next benchmark-facing step is a minimal Track C pilot only if it can stay conditional, baseline-heavy, and outside the default blocking gate.",
       "prerequisites": [
-        "Q-02B-001"
+        "Q-05-001"
       ],
-      "work_instructions": "Add or update the minimal checked-in Python importer fixtures and conformance expectations required to prove the newly admitted slice, keeping unsupported and opaque cases explicit.",
+      "work_instructions": "Design the smallest credible Track C pilot over controlled repair or editing tasks, keep baselines and contamination controls explicit, and do not activate Track C in the default benchmark gate unless earlier proof-loop stability remains intact.",
       "touched_surfaces": [
-        "tests/python_importer/cases/*",
-        "scripts/python_importer_conformance.py"
+        "BENCHMARK_STRATEGY.md",
+        "benchmarks/",
+        "plans/"
       ],
       "validation": [
-        "python scripts/python_importer_conformance.py --mode validate-fixtures",
-        "python scripts/python_importer_conformance.py --mode test"
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/benchmark_contract_dry_run.py",
+        "python scripts/run_repo_validation.py"
       ],
-      "escalate_only_if": "the admitted slice cannot be represented with fixture-backed expectations or requires relaxing the fixed bootstrap acceptance floor",
+      "escalate_only_if": "a credible Track C pilot would require broader corpus claims, relaxed baselines, or default-gate activation before the fixed Python proof loop remains stable",
       "done_evidence": [
-        "new or updated fixtures exist",
-        "conformance expectations are explicit",
-        "unsupported behavior remains explicit rather than silently accepted"
+        "Track C remains explicitly conditional",
+        "pilot baselines and contamination controls remain strong",
+        "the default benchmark gate remains limited to Track A and Track B"
       ],
       "blocking_open_questions": []
     },
     {
-      "queue_id": "Q-02B-003",
-      "title": "Sync importer-scope, tier, and unsupported-case doctrine",
-      "source_milestone_or_phase": "Milestone 02B - Python Expansion",
+      "queue_id": "Q-06-002",
+      "title": "Assess whether a non-default executable Track C pilot is justified without widening the default gate",
+      "source_milestone_or_phase": "Optional Track C pilot",
       "status": "done",
-      "why_now": "The Python importer scope and downstream validation doctrine already name the bounded class field-update slice as Tier B and importer-only, so doctrine sync is complete for this admitted construct.",
+      "why_now": "The first Track C pilot doctrine is now fixed as a conditional Python repair sample, so the next credible question is whether that same bounded task family merits any non-default executable pilot at all without weakening the active Track A and Track B gate.",
       "prerequisites": [
-        "Q-02B-002"
+        "Q-06-001"
       ],
-      "work_instructions": "Update the Python importer scope and the relevant tier or unsupported-case doctrine so the accepted slice, rejection boundaries, and any opaque treatment are explicit and profile-qualified where needed.",
+      "work_instructions": "Evaluate whether a non-default executable Track C pilot can be justified over the same fixed Python single-function repair cases, keep strong baselines and contamination controls explicit, and do not widen the default benchmark bundle or claim broader repair coverage.",
       "touched_surfaces": [
-        "frontend/python/IMPORT_SCOPE.md",
-        "docs/feature_tiering.md",
-        "docs/unsupported_cases.md"
+        "BENCHMARK_STRATEGY.md",
+        "benchmarks/",
+        "plans/"
       ],
       "validation": [
-        "python scripts/validate_repo_contracts.py --mode validate",
-        "make validate"
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/benchmark_contract_dry_run.py",
+        "python scripts/run_repo_validation.py"
       ],
-      "escalate_only_if": "the slice requires new tier semantics, changes unsupported-case handling outside the current doctrine, or creates unresolved semantic ambiguity that belongs in OPEN_QUESTIONS.md",
+      "escalate_only_if": "a non-default Track C pilot would require a broader corpus, weaker baselines, or any change that promotes Track C into the default executable benchmark gate",
       "done_evidence": [
-        "scope and doctrine agree",
-        "unsupported and opaque boundaries are explicit",
-        "any required plan update is recorded before implementation"
+        "any Track C executable pilot remains explicitly non-default",
+        "the fixed Python proof-loop repair family stays bounded",
+        "Track A and Track B remain the only active executable benchmark tracks"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-06-003",
+      "title": "Decide whether to keep, harden, or retire the non-default Track C pilot without promoting it into the default gate",
+      "source_milestone_or_phase": "Optional Track C pilot",
+      "status": "done",
+      "why_now": "The first executable Track C pilot is now available as an explicit opt-in slice, so the next credible question is whether that bounded pilot should stay as-is, gain stronger evidence collection, or be retired before any broader benchmark claim is considered.",
+      "prerequisites": [
+        "Q-06-002"
+      ],
+      "work_instructions": "Assess the bounded opt-in Track C pilot using the fixed Python repair cases, keep strong baselines and contamination controls explicit, and decide whether the pilot should be retained, tightened, or retired without promoting it into the default executable gate.",
+      "touched_surfaces": [
+        "BENCHMARK_STRATEGY.md",
+        "benchmarks/",
+        "reports/examples/",
+        "plans/"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/benchmark_contract_dry_run.py --include-track-c-pilot",
+        "python scripts/run_repo_validation.py --include-track-c-pilot"
+      ],
+      "escalate_only_if": "keeping the opt-in pilot would require a broader corpus, weaker baselines, or any change that turns Track C into a default executable benchmark gate",
+      "done_evidence": [
+        "the Track C pilot disposition is explicit",
+        "the fixed Python repair family remains bounded",
+        "Track A and Track B remain the only default executable benchmark tracks"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-06-004",
+      "title": "Lock explicit retention and retirement criteria for the retained non-default Track C pilot",
+      "source_milestone_or_phase": "Optional Track C pilot",
+      "status": "done",
+      "why_now": "The current Track C pilot has now been retained as a bounded diagnostic slice, so the next credible step is to lock the exact retention and retirement criteria around that pilot before any later review reopens the choice.",
+      "prerequisites": [
+        "Q-06-003"
+      ],
+      "work_instructions": "Codify the exact evidence thresholds and retirement triggers for the retained opt-in Track C pilot, keep the fixed Python repair corpus and strong baselines explicit, and do not promote Track C into the default executable gate.",
+      "touched_surfaces": [
+        "BENCHMARK_STRATEGY.md",
+        "benchmarks/",
+        "scripts/benchmark_contract_metadata.py",
+        "plans/"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/benchmark_contract_dry_run.py --include-track-c-pilot",
+        "python scripts/run_repo_validation.py --include-track-c-pilot"
+      ],
+      "escalate_only_if": "retaining the pilot would require a broader corpus, weaker baselines, or any change that turns Track C into a default executable benchmark gate",
+      "done_evidence": [
+        "retention and retirement criteria are explicit",
+        "the retained Track C pilot stays bounded",
+        "Track A and Track B remain the only default executable benchmark tracks"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-06-005",
+      "title": "Keep the retained non-default Track C pilot's sample evidence and lock criteria synchronized",
+      "source_milestone_or_phase": "Optional Track C pilot",
+      "status": "done",
+      "why_now": "The retained Track C pilot now has explicit keep and retire conditions, so the next credible step is to keep the checked-in sample evidence and those lock criteria synchronized as the optional pilot evolves.",
+      "prerequisites": [
+        "Q-06-004"
+      ],
+      "work_instructions": "Keep the retained Track C sample artifacts, lock criteria, and opt-in runner outputs synchronized, and do not weaken any retirement trigger or promote Track C into the default executable gate.",
+      "touched_surfaces": [
+        "reports/examples/",
+        "BENCHMARK_STRATEGY.md",
+        "benchmarks/",
+        "scripts/benchmark_contract_dry_run.py",
+        "plans/"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/benchmark_contract_dry_run.py --include-track-c-pilot",
+        "python scripts/run_repo_validation.py --include-track-c-pilot"
+      ],
+      "escalate_only_if": "keeping the sample evidence synchronized would require a broader corpus, weaker criteria, or any change that turns Track C into a default executable benchmark gate",
+      "done_evidence": [
+        "sample evidence stays synchronized with retained-pilot criteria",
+        "retirement triggers remain explicit",
+        "Track A and Track B remain the only default executable benchmark tracks"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-06-006",
+      "title": "Require an explicit re-decision before the retained non-default Track C sample bundle changes posture",
+      "source_milestone_or_phase": "Optional Track C pilot",
+      "status": "done",
+      "why_now": "The retained Track C sample bundle is now synchronized to the current opt-in pilot and its keep/retire criteria, so the next credible step is to require explicit governance before any later sample refresh changes that retained posture.",
+      "prerequisites": [
+        "Q-06-005"
+      ],
+      "work_instructions": "Codify which Track C sample-bundle changes require a new decision or queue update, keep the non-default pilot surface bounded, and do not promote Track C into the default executable benchmark gate.",
+      "touched_surfaces": [
+        "BENCHMARK_STRATEGY.md",
+        "benchmarks/",
+        "DECISION_REGISTER.md",
+        "plans/"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/benchmark_contract_dry_run.py --include-track-c-pilot",
+        "python scripts/run_repo_validation.py --include-track-c-pilot"
+      ],
+      "escalate_only_if": "requiring explicit sample-refresh re-decision would need broader corpus, weaker criteria, or any change that turns Track C into a default executable benchmark gate",
+      "done_evidence": [
+        "sample-refresh governance boundaries are explicit",
+        "retained Track C sample evidence remains bounded and synchronized",
+        "Track A and Track B remain the only default executable benchmark tracks"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-06-007",
+      "title": "Distinguish editorial Track C sample refreshes from governance-triggering posture changes",
+      "source_milestone_or_phase": "Optional Track C pilot",
+      "status": "done",
+      "why_now": "The retained Track C sample bundle now requires explicit governance before posture changes, so the next credible step is to distinguish which future sample refreshes are editorial-only and which ones must reopen Track C governance.",
+      "prerequisites": [
+        "Q-06-006"
+      ],
+      "work_instructions": "Codify the narrow set of Track C sample refreshes that remain editorial-only, keep posture-changing refreshes governance-gated, and do not promote Track C into the default executable benchmark gate.",
+      "touched_surfaces": [
+        "BENCHMARK_STRATEGY.md",
+        "benchmarks/",
+        "plans/"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/benchmark_contract_dry_run.py --include-track-c-pilot",
+        "python scripts/run_repo_validation.py --include-track-c-pilot"
+      ],
+      "escalate_only_if": "distinguishing editorial sample refreshes would need broader corpus, weaker criteria, or any change that turns Track C into a default executable benchmark gate",
+      "done_evidence": [
+        "editorial-only versus governance-triggering Track C sample refresh boundaries are explicit",
+        "retained Track C sample evidence remains bounded and synchronized",
+        "Track A and Track B remain the only default executable benchmark tracks"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-06-008",
+      "title": "Require explicit regeneration provenance for any non-editorial Track C sample refresh",
+      "source_milestone_or_phase": "Optional Track C pilot",
+      "status": "done",
+      "why_now": "The editorial-only Track C sample refresh boundary is now explicit, so the next credible step is to require a narrow provenance path for any later non-editorial refresh that still remains within the retained non-default pilot.",
+      "prerequisites": [
+        "Q-06-007"
+      ],
+      "work_instructions": "Codify how any non-editorial Track C sample refresh must cite regeneration provenance from the opt-in runner, keep posture-changing refreshes governance-gated, and do not promote Track C into the default executable benchmark gate.",
+      "touched_surfaces": [
+        "BENCHMARK_STRATEGY.md",
+        "benchmarks/",
+        "reports/README.md",
+        "plans/"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/benchmark_contract_dry_run.py --include-track-c-pilot",
+        "python scripts/run_repo_validation.py --include-track-c-pilot"
+      ],
+      "escalate_only_if": "requiring sample-refresh provenance would need broader corpus, weaker criteria, or any change that turns Track C into a default executable benchmark gate",
+      "done_evidence": [
+        "non-editorial Track C sample refresh provenance requirements are explicit",
+        "editorial-only refreshes remain narrow",
+        "Track A and Track B remain the only default executable benchmark tracks"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-06-009",
+      "title": "Lock a minimal provenance-note format for non-editorial Track C sample refreshes",
+      "source_milestone_or_phase": "Optional Track C pilot",
+      "status": "ready",
+      "why_now": "The required Track C regeneration provenance fields are now explicit, so the next credible step is to lock the minimal note format for any future non-editorial refresh that still remains within the retained non-default pilot.",
+      "prerequisites": [
+        "Q-06-008"
+      ],
+      "work_instructions": "Codify the minimal provenance-note shape for any non-editorial Track C sample refresh, keep exact opt-in commands and regenerated hash/run identifiers explicit, and do not promote Track C into the default executable benchmark gate.",
+      "touched_surfaces": [
+        "BENCHMARK_STRATEGY.md",
+        "benchmarks/",
+        "reports/README.md",
+        "plans/"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/benchmark_contract_dry_run.py --include-track-c-pilot",
+        "python scripts/run_repo_validation.py --include-track-c-pilot"
+      ],
+      "escalate_only_if": "locking a provenance-note format would need broader corpus, weaker criteria, or any change that turns Track C into a default executable benchmark gate",
+      "done_evidence": [
+        "non-editorial Track C provenance-note format is explicit",
+        "runner-derived provenance remains mandatory",
+        "Track A and Track B remain the only default executable benchmark tracks"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-00-002",
+      "title": "Keep Track A and Track B locked to the fixed Python proof loop",
+      "source_milestone_or_phase": "MVP Kernel Hardening",
+      "status": "done",
+      "why_now": "The benchmark harness is part of the MVP gate, so it has to remain tied to the fixed Python proof loop instead of drifting back toward deferred runtime or second-language claims.",
+      "prerequisites": [
+        "Q-00-001"
+      ],
+      "work_instructions": "Keep benchmark manifests, gates, and baselines limited to the fixed Python proof loop, maintain direct-source and typed-AST baselines, and do not reactivate Track D or broad Track C claims.",
+      "touched_surfaces": [
+        "BENCHMARK_STRATEGY.md",
+        "benchmarks/",
+        "scripts/benchmark_contract_dry_run.py"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/benchmark_contract_dry_run.py",
+        "make benchmark"
+      ],
+      "escalate_only_if": "a requested benchmark change requires Track D, repository-scale issue repair, or second-language execution evidence before the Python proof loop is stable",
+      "done_evidence": [
+        "Track A and Track B remain reproducible and bounded",
+        "Track C remains conditional",
+        "Track D remains deferred"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-00-001",
+      "title": "Maintain spec completeness and identity-hardening gates",
+      "source_milestone_or_phase": "MVP Kernel Hardening",
+      "status": "done",
+      "why_now": "The narrowed MVP only stays coherent if construct coverage, canonical formatting, and identity behavior keep failing fast when they drift.",
+      "prerequisites": [
+        "none"
+      ],
+      "work_instructions": "Keep the spec-completeness checklist, invalid canonical SCIR-H fixtures, and identity-stability checks aligned with the executable parser, validator, lowering, and reconstruction path.",
+      "touched_surfaces": [
+        "SPEC_COMPLETENESS_CHECKLIST.md",
+        "IDENTITY_MODEL.md",
+        "scripts/validate_repo_contracts.py",
+        "tests/invalid_scir_h/"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/validate_repo_contracts.py --mode test",
+        "make test"
+      ],
+      "escalate_only_if": "a construct cannot be categorized as supported, importer-only, deferred, or removed without changing normative semantics",
+      "done_evidence": [
+        "construct-by-construct status stays explicit",
+        "invalid canonical examples fail",
+        "lineage and canonical/view separation stay checked"
       ],
       "blocking_open_questions": []
     }
   ],
-  "blocking_open_questions": [
-    "OQ-018",
-    "OQ-019"
-  ],
+  "blocking_open_questions": [],
   "next_action": {
-    "queue_id": "Q-07-012",
-    "title": "Define the promotion contract from dormant TypeScript placeholders to live generated-vs-golden fixtures"
+    "queue_id": "Q-06-009",
+    "title": "Lock a minimal provenance-note format for non-editorial Track C sample refreshes"
   },
   "escalation_threshold": "doctrine conflict; missing source authority; sequencing violation"
 }

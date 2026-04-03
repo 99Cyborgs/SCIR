@@ -9,9 +9,11 @@
     "spec_version",
     "tool_version",
     "claim_mode",
+    "representation",
     "corpus_manifest",
     "corpus_manifest_hash",
     "generated_at",
+    "scir_h_lineage_references",
     "tracks",
     "explicit_representation_metrics",
     "compressed_representation_metrics",
@@ -48,6 +50,10 @@
         "claim"
       ]
     },
+    "representation": {
+      "type": "string",
+      "const": "SCIR-Hc"
+    },
     "corpus_manifest": {
       "type": "string",
       "minLength": 1
@@ -59,6 +65,9 @@
     "generated_at": {
       "type": "string",
       "minLength": 1
+    },
+    "scir_h_lineage_references": {
+      "$ref": "#/$defs/scirHcLineageReferences"
     },
     "tracks": {
       "type": "object",
@@ -133,17 +142,274 @@
       }
     },
     "artifacts": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string",
-        "minLength": 1
-      }
+      "$ref": "#/$defs/reportArtifacts"
     },
     "reproducibility_block": {
       "$ref": "#/$defs/reproducibilityBlock"
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "representation": {
+            "const": "SCIR-Hc"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "scir_h_lineage_references",
+          "evidence_class"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "semantic_claims"
+              ]
+            },
+            {
+              "required": [
+                "authoritative_metrics"
+              ]
+            },
+            {
+              "required": [
+                "lowering_artifacts"
+              ]
+            },
+            {
+              "required": [
+                "backend_outputs"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "claim_class": {
+            "const": "LEXICAL_COMPRESSION_ONLY"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "evidence_class": {
+            "items": {
+              "const": "scirhc_lcr_vs_ast"
+            }
+          },
+          "claim_gate": {
+            "properties": {
+              "satisfied_conditions": {
+                "items": {
+                  "const": "scirhc_lcr_vs_ast"
+                }
+              },
+              "evaluated_conditions": {
+                "items": {
+                  "properties": {
+                    "id": {
+                      "const": "scirhc_lcr_vs_ast"
+                    },
+                    "metric": {
+                      "const": "LCR_scirhc"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "claims": {
+            "items": {
+              "properties": {
+                "metric": {
+                  "const": "LCR_scirhc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "claim_class": {
+            "const": "GRAMMAR_REGULARITY_ONLY"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "evidence_class": {
+            "items": {
+              "const": "scirhc_gr_vs_ast"
+            }
+          },
+          "claim_gate": {
+            "properties": {
+              "satisfied_conditions": {
+                "items": {
+                  "const": "scirhc_gr_vs_ast"
+                }
+              },
+              "evaluated_conditions": {
+                "items": {
+                  "properties": {
+                    "id": {
+                      "const": "scirhc_gr_vs_ast"
+                    },
+                    "metric": {
+                      "const": "GR_scirhc"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "claims": {
+            "items": {
+              "properties": {
+                "metric": {
+                  "const": "GR_scirhc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "claim_class": {
+            "const": "PATCH_COMPOSABILITY_ONLY"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "evidence_class": {
+            "items": {
+              "const": "patch_composability_vs_ast"
+            }
+          },
+          "claim_gate": {
+            "properties": {
+              "satisfied_conditions": {
+                "items": {
+                  "const": "patch_composability_vs_ast"
+                }
+              },
+              "evaluated_conditions": {
+                "items": {
+                  "properties": {
+                    "id": {
+                      "const": "patch_composability_vs_ast"
+                    },
+                    "metric": {
+                      "enum": [
+                        "patch_composability_gain_vs_typed_ast",
+                        "SCPR_scirhc"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "claims": {
+            "items": {
+              "properties": {
+                "metric": {
+                  "enum": [
+                    "patch_composability_gain_vs_typed_ast",
+                    "SCPR_scirhc"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "$defs": {
+    "scirHcLineageReferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixture.python_importer.a_basic_function",
+        "fixture.python_importer.a_async_await",
+        "fixture.python_importer.b_direct_call",
+        "fixture.python_importer.c_opaque_call"
+      ],
+      "properties": {
+        "fixture.python_importer.a_basic_function": {
+          "$ref": "#/$defs/lineageReference"
+        },
+        "fixture.python_importer.a_async_await": {
+          "$ref": "#/$defs/lineageReference"
+        },
+        "fixture.python_importer.b_direct_call": {
+          "$ref": "#/$defs/lineageReference"
+        },
+        "fixture.python_importer.c_opaque_call": {
+          "$ref": "#/$defs/lineageReference"
+        }
+      }
+    },
+    "lineageReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "semantic_lineage_id",
+        "normalized_canonical_hash"
+      ],
+      "properties": {
+        "semantic_lineage_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "normalized_canonical_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "reportArtifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "comparison_summary",
+        "contamination_report",
+        "scirhc_diff_audit",
+        "sweep_result"
+      ],
+      "properties": {
+        "comparison_summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contamination_report": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scirhc_diff_audit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sweep_result": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "explicitMetrics": {
       "type": "object",
       "additionalProperties": false,
@@ -225,6 +491,8 @@
         "corpus_manifest_hash",
         "baseline_name",
         "metric",
+        "metric_class",
+        "scir_h_evidence",
         "observed_value",
         "baseline_value",
         "delta",
@@ -250,6 +518,27 @@
         "metric": {
           "type": "string",
           "minLength": 1
+        },
+        "metric_class": {
+          "type": "string",
+          "enum": [
+            "DESCRIPTIVE",
+            "EVALUATIVE",
+            "CAUSAL"
+          ]
+        },
+        "scir_h_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "fixture.python_importer.a_basic_function",
+              "fixture.python_importer.a_async_await",
+              "fixture.python_importer.b_direct_call",
+              "fixture.python_importer.c_opaque_call"
+            ]
+          }
         },
         "observed_value": {
           "type": [
@@ -294,6 +583,8 @@
         "statement",
         "baseline_name",
         "metric",
+        "metric_class",
+        "scir_h_evidence",
         "observed_value",
         "baseline_value",
         "delta",
@@ -317,6 +608,27 @@
         "metric": {
           "type": "string",
           "minLength": 1
+        },
+        "metric_class": {
+          "type": "string",
+          "enum": [
+            "DESCRIPTIVE",
+            "EVALUATIVE",
+            "CAUSAL"
+          ]
+        },
+        "scir_h_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "fixture.python_importer.a_basic_function",
+              "fixture.python_importer.a_async_await",
+              "fixture.python_importer.b_direct_call",
+              "fixture.python_importer.c_opaque_call"
+            ]
+          }
         },
         "observed_value": {
           "type": [

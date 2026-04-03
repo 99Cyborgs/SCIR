@@ -1,0 +1,504 @@
+{
+  "sweep_id": "python-proof-loop-smoke",
+  "run_id": "python-proof-loop-smoke-20260403T165326Z",
+  "commit_sha": "427ecb865ab4184fbcb0014cd512d476fc4f124f",
+  "spec_version": "v0.1-draft",
+  "tool_version": "scir-benchmark-audit-v1",
+  "corpus_id": "python-tier-a-micro-corpus",
+  "corpus_manifest_hash": "sha256:71b2ed0546551abf292b4ad1ee5912546386936f547c4925a856f6488dbd22a4",
+  "generated_at": "2026-04-03T16:53:26.992017+00:00",
+  "row_count": 15,
+  "stage_summary": [
+    {
+      "stage": "h_to_l",
+      "row_count": 3,
+      "status_counts": {
+        "pass": 3,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "stage": "h_to_python",
+      "row_count": 3,
+      "status_counts": {
+        "pass": 3,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "stage": "scir_h_validation",
+      "row_count": 3,
+      "status_counts": {
+        "pass": 3,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "stage": "scir_l_validation",
+      "row_count": 3,
+      "status_counts": {
+        "pass": 3,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "stage": "source_to_h",
+      "row_count": 3,
+      "status_counts": {
+        "pass": 3,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    }
+  ],
+  "construct_family_summary": [
+    {
+      "construct_family": "async-await",
+      "row_count": 5,
+      "status_counts": {
+        "pass": 5,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "construct_family": "branch-local-mutation",
+      "row_count": 5,
+      "status_counts": {
+        "pass": 5,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "construct_family": "direct-call",
+      "row_count": 5,
+      "status_counts": {
+        "pass": 5,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    }
+  ],
+  "diagnostic_code_summary": [],
+  "slice_summary": [
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_l|construct_family=async-await|fixture_set=python-tier-a",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_l|construct_family=branch-local-mutation|fixture_set=python-tier-a",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_l|construct_family=direct-call|fixture_set=python-tier-a",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_python|construct_family=async-await|fixture_set=python-tier-a",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_python|construct_family=branch-local-mutation|fixture_set=python-tier-a",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_python|construct_family=direct-call|fixture_set=python-tier-a",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_h_validation|construct_family=async-await|fixture_set=python-tier-a",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_h_validation|construct_family=branch-local-mutation|fixture_set=python-tier-a",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_h_validation|construct_family=direct-call|fixture_set=python-tier-a",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_l_validation|construct_family=async-await|fixture_set=python-tier-a",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_l_validation|construct_family=branch-local-mutation|fixture_set=python-tier-a",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_l_validation|construct_family=direct-call|fixture_set=python-tier-a",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=async-await|fixture_set=python-tier-a",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=python-tier-a",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=direct-call|fixture_set=python-tier-a",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 0.0,
+      "slice_score": 100.0
+    }
+  ],
+  "slice_rankings": {
+    "most_stable_slice": {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_l|construct_family=async-await|fixture_set=python-tier-a",
+      "slice_score": 100.0
+    },
+    "most_failure_dense_slice": {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_l|construct_family=async-await|fixture_set=python-tier-a",
+      "failure_density": 0.0
+    },
+    "fastest_improving_slice": null
+  },
+  "preservation_stage_breakdown": [
+    {
+      "artifact_id": "fixture.python_importer.a_async_await",
+      "stages": {
+        "source_to_h": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "scir_h_validation": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "h_to_l": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "scir_l_validation": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "h_to_python": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        }
+      }
+    },
+    {
+      "artifact_id": "fixture.python_importer.a_basic_function",
+      "stages": {
+        "source_to_h": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "scir_h_validation": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "h_to_l": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "scir_l_validation": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "h_to_python": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        }
+      }
+    },
+    {
+      "artifact_id": "fixture.python_importer.b_direct_call",
+      "stages": {
+        "source_to_h": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "scir_h_validation": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "h_to_l": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "scir_l_validation": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        },
+        "h_to_python": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        }
+      }
+    }
+  ]
+}

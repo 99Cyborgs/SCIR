@@ -1,0 +1,90 @@
+{
+  "sweep_id": "example-proof-loop-sweep",
+  "run_id": "example-proof-loop-sweep-20260403T170000Z",
+  "commit_sha": "example-commit-sha",
+  "spec_version": "v0.1-draft",
+  "tool_version": "scir-benchmark-audit-v1",
+  "corpus_id": "example-proof-loop-corpus",
+  "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "generated_at": "2026-04-03T17:00:00+00:00",
+  "row_count": 1,
+  "stage_summary": [
+    {
+      "stage": "source_to_h",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 1.0,
+      "slice_score": 100.0
+    }
+  ],
+  "construct_family_summary": [
+    {
+      "construct_family": "branch-local-mutation",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 1.0,
+      "slice_score": 100.0
+    }
+  ],
+  "diagnostic_code_summary": [],
+  "slice_summary": [
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=example-proof-loop",
+      "row_count": 1,
+      "status_counts": {
+        "pass": 1,
+        "warn": 0,
+        "fail": 0,
+        "skip": 0
+      },
+      "validator_pass_rate": 1.0,
+      "preservation_correctness_rate": 1.0,
+      "avg_opaque_fraction": 0.0,
+      "avg_unsupported_fraction": 0.0,
+      "avg_duration_ms": 1.0,
+      "slice_score": 100.0
+    }
+  ],
+  "slice_rankings": {
+    "most_stable_slice": {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=example-proof-loop",
+      "slice_score": 100.0
+    },
+    "most_failure_dense_slice": {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=example-proof-loop",
+      "failure_density": 0.0
+    },
+    "fastest_improving_slice": null
+  },
+  "preservation_stage_breakdown": [
+    {
+      "artifact_id": "fixture.python_importer.a_basic_function",
+      "stages": {
+        "source_to_h": {
+          "status": "pass",
+          "preservation_level": "P1",
+          "expected_preservation_level": "P1",
+          "expectation_status": "match"
+        }
+      }
+    }
+  ]
+}

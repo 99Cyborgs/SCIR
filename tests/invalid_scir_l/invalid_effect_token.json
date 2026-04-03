@@ -1,0 +1,36 @@
+{
+  "module_id": "invalid.scir_l.effect_token",
+  "functions": [
+    {
+      "name": "bad_effect",
+      "returns": "int",
+      "params": [],
+      "blocks": [
+        {
+          "id": "entry",
+          "params": [
+            "eff0"
+          ],
+          "instructions": [
+            {
+              "id": "call0",
+              "op": "call",
+              "operands": [
+                "sym:identity",
+                0
+              ],
+              "origin": "invalid.scir_l.effect_token::call0",
+              "lowering_rule": "H_DIRECT_CALL"
+            }
+          ],
+          "terminator": {
+            "kind": "ret",
+            "value": "call0",
+            "origin": "invalid.scir_l.effect_token::ret",
+            "lowering_rule": "H_RETURN"
+          }
+        }
+      ]
+    }
+  ]
+}

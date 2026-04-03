@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""Repository-wide contract checker for SCIR governance artifacts.
+
+This validator ties docs, schemas, examples, manifests, metadata tables, and
+bootstrap code together so the repository cannot silently claim support,
+preservation, or benchmark posture that the executable surfaces do not justify.
+"""
 from __future__ import annotations
 
 import argparse
@@ -516,6 +522,8 @@ def validate_boundary_capability_contract(
     label: str,
     allow_capabilities: bool,
 ):
+    """Require Tier C capability accounting to stay mirrored between manifests and boundary contracts."""
+
     failures = []
     capability_imports = capability_dependency_entries(module_manifest)
     boundary_capabilities, capability_failures = boundary_capability_entries(boundary_contract)
@@ -552,6 +560,8 @@ def preservation_level_rank(level: str) -> int:
 
 
 def validate_preservation_stage_behavior(entry: dict, *, manifest_rel: str):
+    """Enforce that per-stage preservation expectations cannot silently overclaim or silently degrade."""
+
     failures = []
     stage_behavior = entry.get("expected_preservation_stage_behavior")
     if not isinstance(stage_behavior, dict):
@@ -990,6 +1000,8 @@ def check_spec_completeness_checklist(root: pathlib.Path):
 
 
 def check_scir_h_kernel_alignment(root: pathlib.Path):
+    """Cross-check spec, checklist, and executable kernel metadata for the canonical `SCIR-H` subset."""
+
     failures = []
     spec_rows, spec_parse_failures = parse_markdown_table(
         root,
@@ -1250,6 +1262,8 @@ def check_sweep_contract(root: pathlib.Path):
 
 
 def check_identity_contract(root: pathlib.Path):
+    """Verify that lineage and canonical-hash rules remain aligned with the executable identity model."""
+
     failures = []
     base_module = PYTHON_SCIRH_MODULES["a_async_await"]
     canonical = format_module(base_module)
@@ -1516,6 +1530,8 @@ def check_active_surface_contract(root: pathlib.Path):
 
 
 def check_benchmark_contract(root: pathlib.Path):
+    """Ensure benchmark docs, schemas, examples, and executable metadata describe the same bounded claim surface."""
+
     failures = []
     benchmark_strategy = (root / "BENCHMARK_STRATEGY.md").read_text(encoding="utf-8")
     tracks_doc = (root / "benchmarks" / "tracks.md").read_text(encoding="utf-8")
@@ -2069,6 +2085,8 @@ def check_track_c_benchmark_examples(root: pathlib.Path):
 
 
 def check_wasm_emitter_contract(root: pathlib.Path):
+    """Reject Wasm contract drift that would imply broader ABI or preservation claims than the frozen subset supports."""
+
     failures = []
     wasm_readme = (root / "backends" / "wasm" / "README.md").read_text(encoding="utf-8")
     lowering_contract = (root / "LOWERING_CONTRACT.md").read_text(encoding="utf-8")

@@ -1,0 +1,10 @@
+{
+  "run_id": "example-proof-loop-sweep-20260403T170000Z",
+  "generated_at": "2026-04-03T17:00:00+00:00",
+  "corpus_manifest": "reports/examples/corpus_manifest.example.json",
+  "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "split_mode": "simulated_no_training",
+  "duplicates": [],
+  "near_duplicates": [],
+  "leakage_flags": []
+}

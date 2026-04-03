@@ -1,0 +1,5 @@
+module invalid.legacy {
+fn bad() -> int ! {
+  return 1;
+}
+}

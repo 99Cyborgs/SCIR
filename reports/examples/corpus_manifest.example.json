@@ -1,0 +1,59 @@
+{
+  "corpus_id": "example-proof-loop-corpus",
+  "kind": "active_roundtrip",
+  "fixtures": [
+    {
+      "id": "fixture.python_importer.a_basic_function",
+      "language": "python",
+      "path": "tests/python_importer/cases/a_basic_function/source.py",
+      "tier": "A",
+      "expected_support": "roundtrip",
+      "expected_preservation_ceiling": "P1",
+      "expected_preservation_stage_behavior": {
+        "source_to_h": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_h_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_l": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_l_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_python": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "l_to_wasm": {
+          "status": "pass",
+          "preservation_level": "P2"
+        }
+      },
+      "features": [
+        "plain function definition"
+      ],
+      "hash": "sha256:d2e6ac761f971ce37e5fb1a1bef5fb0085b9fec4b26a44bcac7b899c26c6eb4e",
+      "frontend": "python",
+      "profiles": [
+        "R",
+        "D-PY"
+      ],
+      "pipeline_stages": [
+        "source_to_h",
+        "scir_h_validation",
+        "h_to_l",
+        "scir_l_validation",
+        "h_to_python",
+        "l_to_wasm"
+      ],
+      "construct_family": "branch-local-mutation",
+      "fixture_set": "python-tier-a"
+    }
+  ]
+}

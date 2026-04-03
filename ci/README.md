@@ -1,12 +1,14 @@
 # CI Policy
 Status: Normative
 
-CI enforces repository contracts before code scale arrives.
+CI enforces the narrowed MVP boundary.
 
-## Required pipelines
+## Active pipelines
 
-- validation pipeline
-- benchmark-contract pipeline
-- release requirements review
+- fast validation pipeline
+- slower evaluation pipeline
 
-See local pipeline files.
+Fast validation keeps repo contracts, fixture integrity, parser/validator correctness, negative invariant corpora, and sweep smoke visible on every active change.
+Slower evaluation keeps round-trip self-tests, full sweep report generation, and benchmark smoke separate from the quick gate.
+
+Deferred tooling or frontend surfaces must not silently re-enter CI.

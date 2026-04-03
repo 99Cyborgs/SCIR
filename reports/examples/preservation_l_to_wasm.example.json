@@ -1,0 +1,40 @@
+{
+  "report_id": "example-preservation-l-to-wasm-001",
+  "subject": "fixture.python_importer.a_basic_function",
+  "path": "l_to_wasm",
+  "source_artifact": "scir_l:fixture.python_importer.a_basic_function",
+  "target_artifact": "wasm:fixture.python_importer.a_basic_function.wat",
+  "profile": "P",
+  "preservation_level": "P2",
+  "status": "pass",
+  "downgrades": [
+    {
+      "reason": "helper-free Wasm emission lowers SCIR-L alloc/store/load into backend-local slot state",
+      "preservation_level": "P2"
+    },
+    {
+      "reason": "cmp emission remains limited to the current less-than-zero bootstrap shape",
+      "preservation_level": "P2"
+    }
+  ],
+  "boundary_annotations": [],
+  "observables": {
+    "preserved": [
+      "synchronous scalar control flow",
+      "return behavior"
+    ],
+    "normalized": [
+      "alloc/store/load lowered into backend-local slot operations"
+    ],
+    "contract_bounded": [
+      "cmp emitted only for the current less-than-zero bootstrap shape"
+    ],
+    "opaque": [],
+    "unsupported": []
+  },
+  "evidence": [
+    "wasm-emitter-bootstrap-validator",
+    "stable WAT emitted for the helper-free synchronous scalar subset",
+    "no helper imports or runtime shims"
+  ]
+}

@@ -1,49 +1,54 @@
 # Preservation Contract
 Status: Normative
 
-Canonical preservation labels:
+## Canonical labels
 
-| Label | Alias | Meaning |
-| --- | --- | --- |
-| `P0` | exact | observable behavior preserved exactly under the active profile |
-| `P1` | normalized | semantics preserved after declared normalizations |
-| `P2` | contract-bounded | semantics preserved subject to explicit backend/runtime/host contract |
-| `P3` | opaque-only | only boundary contract is preserved |
-| `PX` | unsupported | no preservation claim |
+| Label | Meaning |
+| --- | --- |
+| `P0` | exact semantic and observable preservation under the active profile |
+| `P1` | normalized preservation under the active profile |
+| `P2` | contract-bounded preservation |
+| `P3` | boundary annotation only |
+| `PX` | unsupported |
+
+## Operator-facing report surface
+
+Every preservation report must expose:
+
+- `path`
+- `profile`
+- `preservation_level`
+- `status`
+- `downgrades`
+- `boundary_annotations`
+- `evidence`
+
+Detailed observable buckets may exist for debugging, but they are not the required operator surface.
+
+## Active paths
+
+- `source_to_h`
+- `h_to_l`
+- `h_to_python`
+- `l_to_wasm`
 
 ## Rules
 
-- A preservation claim is invalid without a profile.
-- A preservation claim is invalid without named evidence.
-- `P0` is not allowed across opaque or unsafe internals.
-- `P2` must name the contract that bounds the claim.
-- `P3` must reference an explicit opaque boundary contract.
-- `PX` must map to an importer rejection or explicit unsupported marker.
+- no preservation claim is valid without path and profile
+- `P3` means boundary annotation, not semantic understanding
+- active corpus fixtures must declare `expected_preservation_ceiling` and `expected_preservation_stage_behavior`
+- a stage must not claim stronger preservation than its declared ceiling
+- a stage that reports weaker preservation than expected must carry diagnostics, downgrade evidence, boundary annotations, or a non-pass status
+- downgrade reasons must be machine-generated and explicit
+- Wasm success does not imply native or host parity
 
-## Path-specific ceilings
+## Active bounded Wasm record-cell ABI obligations
 
-| Path | Typical ceiling |
-| --- | --- |
-| source -> `SCIR-H` | `P0/P1` for Tier A, `P2` for contract-sensitive cases, `P3` for opaque imports, `PX` otherwise |
-| `SCIR-H -> SCIR-L` | `P0/P1` for structured subsets, `P2` when backend assumptions enter |
-| `SCIR-H -> reconstructed source` | `P0/P1` for profile-matched targets, `P2` for profile shifts |
-| `SCIR-L -> backend artifact` | `P0/P1` for restricted subsets, `P2` for runtime-sensitive code, `P3` through FFI or host stubs |
+The active post-scalar Wasm record-cell slice for `fixture.rust_importer.a_struct_field_borrow_mut` remains profile `P` with a `P2` ceiling and must report at least:
 
-## Bootstrap reconstruction freeze
+- one downgrade for record-cell layout normalization from canonical field order into Wasm field offsets,
+- one downgrade for the shared-handle caller contract that bounds caller-visible mutation to same-ABI callers,
+- evidence containing the field-offset map and the bounded shared-caller assumption,
+- explicit unsupported treatment for non-`int` record fields, imported-memory variants, and broader host/object layouts.
 
-For the current executable reconstruction slice:
-
-- `a_basic_function` and `a_async_await` are fixed at profile `R`, preservation `P1`
-- `c_opaque_call` is fixed at profile `D-PY`, preservation `P3`
-- reconstruction may not strengthen those ceilings silently
-- exact source-trivia preservation is not part of the bootstrap claim
-
-For the current Rust Phase 6A slice:
-
-- `a_mut_local`, `a_struct_field_borrow_mut`, and `a_async_await` are fixed at profile `R`, preservation `P1`
-- `c_unsafe_call` is fixed at profile `N`, preservation `P3`
-- rejected Rust Tier `D` cases remain `PX`
-
-## Observation discipline
-
-Observation is profile-qualified. Timing is not a default semantic observable. Scheduling is usually contract-bounded, not exact, and any `D-PY` or `D-JS` event-loop claim must remain explicit.
+Those obligations define the current executable boundary for the fixed Rust record-cell slice only. They do not activate broader post-scalar Wasm support.
