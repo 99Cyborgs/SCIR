@@ -13,11 +13,13 @@ SCIR is a two-layer semantic compression substrate.
 
 - the active MVP is limited to canonical `SCIR-H`, derived `SCIR-Hc`, derivative `SCIR-L`, their validators, Python subset import, Rust safe-subset import evidence, Python reconstruction from validated `SCIR-H`, the Wasm reference-backend MVP contract, and Track `A` / Track `B` benchmark harnesses
 - the confirmed executable proof loop is Python import -> `SCIR-H` -> `SCIR-H` validation -> `SCIR-Hc` derivation and validation -> `SCIR-H -> SCIR-L` lowering -> `SCIR-L` validation -> Python reconstruction -> Track `A` / Track `B` benchmark checks
+- the active backend path additionally validates emitted Wasm against bounded `SCIR-L` execution traces before accepting `l_to_wasm` success
 - Rust is active at the importer-evidence layer and optional bounded validation slice only; Rust reconstruction, active TypeScript implementation, Track `D`, native-backend breadth, and broad runtime or tooling claims remain deferred
 - the current operator entrypoints remain:
 
 ```bash
 python scripts/run_repo_validation.py
+python scripts/validate_translation.py
 python scripts/benchmark_contract_dry_run.py --claim-run
 python scripts/benchmark_repro.py --run-id <run-id>
 python scripts/sync_python_proof_loop_artifacts.py --mode check

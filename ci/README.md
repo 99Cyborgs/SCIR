@@ -6,9 +6,11 @@ CI enforces the narrowed MVP boundary.
 ## Active pipelines
 
 - fast validation pipeline
+- SCIR-Hc containment pipeline
 - slower evaluation pipeline
 
 Fast validation keeps repo contracts, fixture integrity, parser/validator correctness, negative invariant corpora, and sweep smoke visible on every active change.
+The SCIR-Hc containment pipeline keeps adversarial transform misuse, lineage drift, diff-audit drift, and claim-run containment failures as an explicit blocking lane.
 Slower evaluation keeps round-trip self-tests, full sweep report generation, and benchmark smoke separate from the quick gate.
 
 Deferred tooling or frontend surfaces must not silently re-enter CI.

@@ -1,0 +1,469 @@
+[
+  {
+    "id": "return_value_drift",
+    "provenance_case": "a_basic_function",
+    "equivalence_mode": "sequential_trace",
+    "observable_dimensions": [
+      "returns"
+    ],
+    "declared_capabilities": [],
+    "expected_dimension": "returns",
+    "oracle": {
+      "returns": 0,
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [
+        true
+      ],
+      "state_write_trace": [],
+      "effect_trace": [],
+      "capability_trace": []
+    },
+    "backend": {
+      "returns": 1,
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [
+        true
+      ],
+      "state_write_trace": [],
+      "effect_trace": [],
+      "capability_trace": []
+    }
+  },
+  {
+    "id": "call_trace_drift",
+    "provenance_case": "b_direct_call",
+    "equivalence_mode": "sequential_trace",
+    "observable_dimensions": [
+      "call_trace"
+    ],
+    "declared_capabilities": [],
+    "expected_dimension": "call_trace",
+    "oracle": {
+      "returns": 1,
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [
+        {
+          "kind": "call",
+          "target": "identity",
+          "args": [
+            1
+          ]
+        }
+      ],
+      "branch_trace": [],
+      "state_write_trace": [],
+      "effect_trace": [],
+      "capability_trace": []
+    },
+    "backend": {
+      "returns": 1,
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [
+        {
+          "kind": "call",
+          "target": "identity",
+          "args": []
+        }
+      ],
+      "branch_trace": [],
+      "state_write_trace": [],
+      "effect_trace": [],
+      "capability_trace": []
+    }
+  },
+  {
+    "id": "branch_inversion",
+    "provenance_case": "a_basic_function",
+    "equivalence_mode": "sequential_trace",
+    "observable_dimensions": [
+      "branch_trace"
+    ],
+    "declared_capabilities": [],
+    "expected_dimension": "branch_trace",
+    "oracle": {
+      "returns": 0,
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [
+        true
+      ],
+      "state_write_trace": [],
+      "effect_trace": [],
+      "capability_trace": []
+    },
+    "backend": {
+      "returns": 0,
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [
+        false
+      ],
+      "state_write_trace": [],
+      "effect_trace": [],
+      "capability_trace": []
+    }
+  },
+  {
+    "id": "alias_shaped_writes",
+    "provenance_case": "a_struct_field_borrow_mut",
+    "equivalence_mode": "sequential_trace",
+    "observable_dimensions": [
+      "state_write_trace"
+    ],
+    "declared_capabilities": [],
+    "expected_dimension": "state_write_trace",
+    "oracle": {
+      "returns": 0,
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [
+        true
+      ],
+      "state_write_trace": [
+        {
+          "target_kind": "field",
+          "value": 0
+        }
+      ],
+      "effect_trace": [],
+      "capability_trace": []
+    },
+    "backend": {
+      "returns": 0,
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [
+        true
+      ],
+      "state_write_trace": [
+        {
+          "target_kind": "memory",
+          "value": 0
+        }
+      ],
+      "effect_trace": [],
+      "capability_trace": []
+    }
+  },
+  {
+    "id": "partial_state_write_before_exception",
+    "provenance_case": "a_basic_function",
+    "equivalence_mode": "sequential_trace",
+    "observable_dimensions": [
+      "state_write_trace",
+      "termination_kind",
+      "traps_or_exceptions"
+    ],
+    "declared_capabilities": [],
+    "expected_dimension": "state_write_trace",
+    "oracle": {
+      "returns": null,
+      "traps_or_exceptions": "RuntimeError: boom",
+      "termination_kind": "trap",
+      "call_trace": [],
+      "branch_trace": [
+        true
+      ],
+      "state_write_trace": [
+        {
+          "target_kind": "state",
+          "value": -1
+        }
+      ],
+      "effect_trace": [
+        {
+          "effect": "write",
+          "target_kind": "state",
+          "value": -1
+        }
+      ],
+      "capability_trace": []
+    },
+    "backend": {
+      "returns": null,
+      "traps_or_exceptions": "RuntimeError: boom",
+      "termination_kind": "trap",
+      "call_trace": [],
+      "branch_trace": [
+        true
+      ],
+      "state_write_trace": [],
+      "effect_trace": [],
+      "capability_trace": []
+    }
+  },
+  {
+    "id": "reordered_effects",
+    "provenance_case": "a_basic_function",
+    "equivalence_mode": "sequential_trace",
+    "observable_dimensions": [
+      "effect_trace"
+    ],
+    "declared_capabilities": [],
+    "expected_dimension": "effect_trace",
+    "oracle": {
+      "returns": 0,
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [],
+      "state_write_trace": [
+        {
+          "target_kind": "state",
+          "value": -1
+        },
+        {
+          "target_kind": "state",
+          "value": 0
+        }
+      ],
+      "effect_trace": [
+        {
+          "effect": "write",
+          "target_kind": "state",
+          "value": -1
+        },
+        {
+          "effect": "write",
+          "target_kind": "state",
+          "value": 0
+        }
+      ],
+      "capability_trace": []
+    },
+    "backend": {
+      "returns": 0,
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [],
+      "state_write_trace": [
+        {
+          "target_kind": "state",
+          "value": -1
+        },
+        {
+          "target_kind": "state",
+          "value": 0
+        }
+      ],
+      "effect_trace": [
+        {
+          "effect": "write",
+          "target_kind": "state",
+          "value": 0
+        },
+        {
+          "effect": "write",
+          "target_kind": "state",
+          "value": -1
+        }
+      ],
+      "capability_trace": []
+    }
+  },
+  {
+    "id": "missing_capability_check",
+    "provenance_case": "c_opaque_call",
+    "equivalence_mode": "sequential_trace",
+    "observable_dimensions": [
+      "capability_trace"
+    ],
+    "declared_capabilities": [
+      "capability:foreign_api_ping"
+    ],
+    "expected_dimension": "capability_trace",
+    "oracle": {
+      "returns": {
+        "status": "ok"
+      },
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [],
+      "state_write_trace": [],
+      "effect_trace": [
+        {
+          "effect": "opaque",
+          "target": "foreign_api_ping"
+        }
+      ],
+      "capability_trace": [
+        "capability:foreign_api_ping"
+      ]
+    },
+    "backend": {
+      "returns": {
+        "status": "ok"
+      },
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [],
+      "state_write_trace": [],
+      "effect_trace": [
+        {
+          "effect": "opaque",
+          "target": "foreign_api_ping"
+        }
+      ],
+      "capability_trace": []
+    }
+  },
+  {
+    "id": "spurious_capability_use",
+    "provenance_case": "c_opaque_call",
+    "equivalence_mode": "sequential_trace",
+    "observable_dimensions": [
+      "capability_trace"
+    ],
+    "declared_capabilities": [
+      "capability:foreign_api_ping"
+    ],
+    "expected_dimension": "capability_trace",
+    "oracle": {
+      "returns": {
+        "status": "ok"
+      },
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [],
+      "state_write_trace": [],
+      "effect_trace": [
+        {
+          "effect": "opaque",
+          "target": "foreign_api_ping"
+        }
+      ],
+      "capability_trace": [
+        "capability:foreign_api_ping"
+      ]
+    },
+    "backend": {
+      "returns": {
+        "status": "ok"
+      },
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [],
+      "state_write_trace": [],
+      "effect_trace": [
+        {
+          "effect": "opaque",
+          "target": "foreign_api_ping"
+        }
+      ],
+      "capability_trace": [
+        "capability:foreign_api_ping",
+        "capability:rogue"
+      ]
+    }
+  },
+  {
+    "id": "dead_branch_elimination_trace_change",
+    "provenance_case": "a_basic_function",
+    "equivalence_mode": "sequential_trace",
+    "observable_dimensions": [
+      "branch_trace"
+    ],
+    "declared_capabilities": [],
+    "expected_dimension": "branch_trace",
+    "oracle": {
+      "returns": 0,
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [
+        true,
+        false
+      ],
+      "state_write_trace": [],
+      "effect_trace": [],
+      "capability_trace": []
+    },
+    "backend": {
+      "returns": 0,
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [],
+      "state_write_trace": [],
+      "effect_trace": [],
+      "capability_trace": []
+    }
+  },
+  {
+    "id": "backend_traps_where_oracle_returns",
+    "provenance_case": "a_basic_function",
+    "equivalence_mode": "sequential_trace",
+    "observable_dimensions": [
+      "traps_or_exceptions",
+      "termination_kind"
+    ],
+    "declared_capabilities": [],
+    "expected_dimension": "traps_or_exceptions",
+    "oracle": {
+      "returns": 0,
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [],
+      "state_write_trace": [],
+      "effect_trace": [],
+      "capability_trace": []
+    },
+    "backend": {
+      "returns": null,
+      "traps_or_exceptions": "RuntimeError: trap",
+      "termination_kind": "trap",
+      "call_trace": [],
+      "branch_trace": [],
+      "state_write_trace": [],
+      "effect_trace": [],
+      "capability_trace": []
+    }
+  },
+  {
+    "id": "oracle_traps_where_backend_returns",
+    "provenance_case": "a_basic_function",
+    "equivalence_mode": "sequential_trace",
+    "observable_dimensions": [
+      "traps_or_exceptions",
+      "termination_kind"
+    ],
+    "declared_capabilities": [],
+    "expected_dimension": "traps_or_exceptions",
+    "oracle": {
+      "returns": null,
+      "traps_or_exceptions": "RuntimeError: trap",
+      "termination_kind": "trap",
+      "call_trace": [],
+      "branch_trace": [],
+      "state_write_trace": [],
+      "effect_trace": [],
+      "capability_trace": []
+    },
+    "backend": {
+      "returns": 0,
+      "traps_or_exceptions": null,
+      "termination_kind": "return",
+      "call_trace": [],
+      "branch_trace": [],
+      "state_write_trace": [],
+      "effect_trace": [],
+      "capability_trace": []
+    }
+  }
+]

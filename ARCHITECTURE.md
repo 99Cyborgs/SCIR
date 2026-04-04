@@ -43,6 +43,7 @@ Implemented now:
 - canonical `SCIR-H` parser/formatter plus invariant-coded validation
 - `SCIR-H -> SCIR-Hc` compression, round-trip validation, and normalization statistics
 - bounded derivative `SCIR-L` lowering and validation for the active Python proof loop
+- execution-backed translation validation for the admitted `SCIR-L -> Wasm` backend path
 - fixed proof-loop corpus manifests and slice-based sweep smoke
 
 Partially implemented:
@@ -160,6 +161,11 @@ This repository does not treat Wasm emission, Python reconstruction, or lowering
 ## Backend stance
 
 Wasm is the first reference backend target because it exercises `SCIR-L` emission discipline without implying native or host-runtime parity.
+Active Wasm acceptance is now two-part:
+
+- shape validation for the bounded helper-free WAT contract
+- execution-backed translation validation that compares emitted backend behavior against bounded `SCIR-L` traces under the declared preservation contract
+
 The active helper-free Wasm backend now contains two bounded slices:
 
 - the original scalar subset,

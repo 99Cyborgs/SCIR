@@ -1,0 +1,51 @@
+name: validate-scirhc-containment
+
+on:
+  pull_request:
+    paths:
+      - "_internal/scirhc_transform.py"
+      - "validators/**"
+      - "runtime/**"
+      - "schemas/translation_validation_report.schema.json"
+      - "reports/examples/translation_validation_report.example.json"
+      - "tests/test_translation_validator.py"
+      - "tests/test_scirhc_*.py"
+      - "tests/test_lineage_contract.py"
+      - "scripts/scir_bootstrap_pipeline.py"
+      - "scripts/validate_translation.py"
+      - "scripts/benchmark_contract_dry_run.py"
+      - "scripts/validate_repo_contracts.py"
+      - "ci/validate_scirhc_containment.yml"
+      - ".github/workflows/validate_scirhc_containment.yml"
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  containment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run containment unit and adversarial tests
+        run: python -m unittest discover -s tests
+      - name: Run SCIR-Hc-aware bootstrap validation
+        run: python scripts/scir_bootstrap_pipeline.py --mode validate
+      - name: Run execution-backed translation validation
+        run: python scripts/validate_translation.py
+      - name: Run claim-grade benchmark containment lane
+        run: python scripts/benchmark_contract_dry_run.py --claim-run
+      - name: Run repository contract validation
+        run: python scripts/validate_repo_contracts.py --mode validate
+      - name: Upload claim-run artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scirhc-containment-artifacts
+          path: artifacts/benchmark_runs

@@ -1,0 +1,49 @@
+{
+  "report_id": "translation-validation-fixture-python-importer-a-basic-function-wasm",
+  "subject": "fixture.python_importer.a_basic_function",
+  "backend_kind": "wasm",
+  "target_profile": "P",
+  "preservation_level": "P2",
+  "outcome": "PASSED_SUBSET",
+  "equivalence_mode": "contract_bounded",
+  "observable_dimensions_checked": [
+    "returns",
+    "traps_or_exceptions",
+    "termination_kind",
+    "call_trace",
+    "branch_trace",
+    "state_write_trace",
+    "effect_trace",
+    "capability_trace"
+  ],
+  "backend_subset_class": "wasm_helper_free_bounded",
+  "execution_oracle": "scirl_bounded_interpreter",
+  "validation_strength": "execution_backed_subset",
+  "downgrade_reason": "helper_free_subset_bounded_execution",
+  "subset_admission_result": "admitted",
+  "subset_admission_reason": "helper_free_bounded_subset",
+  "unsupported_features_detected": [],
+  "helper_free_subset_required": true,
+  "contract_assumptions": [
+    "helper-free Wasm subset execution only",
+    "contract-bounded normalization is explicitly enabled",
+    "allocation variation normalizes local and cell writes into state-write observations"
+  ],
+  "dimension_results": {
+    "returns": true,
+    "traps_or_exceptions": true,
+    "termination_kind": true,
+    "call_trace": true,
+    "branch_trace": true,
+    "state_write_trace": true,
+    "effect_trace": true,
+    "capability_trace": true
+  },
+  "violations": [],
+  "findings": [],
+  "validated_invocations": 10,
+  "suspect_l_nodes": [],
+  "suspect_h_nodes": [],
+  "backend_regions": [],
+  "origin_trace_links": []
+}

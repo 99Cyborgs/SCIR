@@ -24,8 +24,9 @@ The validator stack must make unsupported, deferred, or downgraded behavior expl
 14. `SCIR-L` validation
 15. sweep smoke over the frozen Tier `A` micro corpus plus regression comparison when a baseline artifact exists
 16. admitted helper-free Wasm emission validation
-17. Python reconstruction validation
-18. benchmark manifest and Track `A` / `B` validation
+17. execution-backed `SCIR-L -> backend` translation validation for admitted backend paths
+18. Python reconstruction validation
+19. benchmark manifest and Track `A` / `B` validation
 
 ## Validator stack
 
@@ -35,9 +36,10 @@ The validator stack must make unsupported, deferred, or downgraded behavior expl
 | importer conformance checker | fixed source subset plus checked-in bundle | `module_manifest`, `feature_tier_report`, `validation_report` | yes |
 | `SCIR-H` validator | canonical `SCIR-H` | `validation_report` | yes |
 | `SCIR-Hc` validator | derived `SCIR-Hc` plus canonical round-trip target and benchmark-claim scope where applicable | `validation_report` | yes |
-| translation validator | paired `SCIR-H` and `SCIR-L` artifacts | `preservation_report` | yes on active lowering paths |
+| lowering-preservation validator | paired `SCIR-H` and `SCIR-L` artifacts | `preservation_report` | yes on active lowering paths |
 | `SCIR-L` validator | structured lowered module | `validation_report` | yes |
 | Wasm emitter checker | admitted `SCIR-L` subset plus bounded backend contract | WAT text plus `preservation_report` | yes on admitted helper-free Wasm cases |
+| backend translation validator | paired `SCIR-L` artifact, backend artifact, and bounded execution contract | `translation_validation_report` | yes on admitted backend paths |
 | reconstruction validator | canonical `SCIR-H` plus reconstructed Python | `reconstruction_report`, `preservation_report` | yes on active Python round trips |
 | benchmark contract checker | benchmark doctrine plus executable Track `A` / `B` bundle | `benchmark_manifest`, `benchmark_result` validation | yes |
 
@@ -49,7 +51,7 @@ The validator stack must make unsupported, deferred, or downgraded behavior expl
 | `SCIR-H` or `SCIR-Hc` semantic-path change | `validation_report` and checklist updates |
 | `H -> L` lowering change | `validation_report` for `SCIR-L`, `preservation_report`, lowering-rule coverage |
 | Python reconstruction change | `reconstruction_report`, `preservation_report` |
-| Wasm-contract change | emitted WAT contract, path-qualified `preservation_report`, and backend docs |
+| Wasm-contract change | emitted WAT contract, `translation_validation_report`, path-qualified `preservation_report`, and backend docs |
 | benchmark change | `benchmark_manifest`, `benchmark_result`, `comparison_summary`, `contamination_report`, `benchmark_report` |
 | queue, decision, or open-question change | derived export regeneration |
 
@@ -63,6 +65,7 @@ A change must not merge when any of the following is true:
 - `SCIR-Hc` drifts from canonical `SCIR-H` under parse-format or semantic round-trip checks,
 - `SCIR-Hc` becomes semantic authority, carries unexplained omission provenance, or enters a forbidden downstream path directly,
 - `SCIR-L` introduces semantics without a validated `SCIR-H` origin and named lowering rule,
+- an active `translation_validation_report` passes with an unsupported backend subset, ambiguous claim strength, or despite return drift, effect drift, capability drift, branch/state trace drift, or undeclared contract deviation,
 - an active preservation report omits `path`, `profile`, `preservation_level`, `downgrades`, or `boundary_annotations`,
 - active corpus preservation ceilings or per-stage expectations drift from observed behavior without explicit downgrade evidence,
 - benchmark reports leak `SCIR-Hc` evidence across `claim_class` / `evidence_class` boundaries,
@@ -122,9 +125,29 @@ Active `SCIR-L` must reject:
 
 ### Translation validation
 
-Active translation validation applies only to the bounded `H -> L` paths already justified by the executable Python proof loop and the importer-bounded Rust evidence path.
+Active translation validation has two bounded responsibilities:
 
-It must fail or downgrade when:
+- `H -> L` lowering-preservation validation for the executable Python proof loop and importer-bounded Rust evidence path
+- execution-backed `SCIR-L -> backend` validation for admitted helper-free Wasm emission only
+
+Execution-backed `SCIR-L -> backend` validation must now emit a report that makes all of the following explicit:
+
+- backend kind
+- target profile
+- equivalence mode
+- observable dimensions checked
+- backend subset class
+- execution oracle
+- validation strength
+- downgrade reason
+- subset-admission result and reason
+- unsupported features detected
+- helper-free subset requirement
+- contract assumptions
+- explicit outcome class
+- provenance-linked findings when mismatches occur
+
+Lowering-preservation validation must fail or downgrade when:
 
 - structured control is lost beyond the declared profile,
 - opaque or unsafe boundaries stop being explicit,
@@ -133,6 +156,35 @@ It must fail or downgrade when:
 - a stage overclaims stronger preservation than its fixture ceiling or declared stage expectation,
 - a stage weakens preservation without diagnostics, downgrade reasons, boundary annotations, or an explicit non-pass status,
 - lowering provenance continuity breaks.
+
+Backend translation validation must fail when:
+
+- return values diverge,
+- traps or exception outcomes diverge,
+- termination kind diverges,
+- required effects are missing or extra effects appear,
+- undeclared capabilities are observed,
+- control-flow branch outcomes collapse or diverge beyond the declared contract,
+- state-write traces diverge under the declared equivalence mode,
+- contract-bounded deviation is exercised without an explicit bounded contract,
+- deterministic validation inputs are absent,
+- helper-free Wasm subset admission is skipped,
+- or helper-free Wasm execution is attempted after the subset classifier reports unsupported imports, helper trampolines, indirect calls, mutable globals, memory growth, reference types, unsupported instructions, or unsupported control constructs.
+
+The default Wasm lane remains:
+
+- profile `P`
+- equivalence mode `contract_bounded`
+- observable dimensions `returns`, `traps_or_exceptions`, `termination_kind`, `call_trace`, `branch_trace`, `state_write_trace`, `effect_trace`, and `capability_trace`
+- explicit helper-free subset admission before any backend execution attempt
+
+The experimental Python translation-validation lane is permitted only as an opt-in maintenance lane.
+It must:
+
+- reuse the same `translation_validation_report` schema,
+- stay clearly marked experimental,
+- keep case-qualified reconstruction profiles explicit,
+- and remain outside the default repository validation gate.
 
 ### Wasm emission validation
 
@@ -143,6 +195,7 @@ That record-cell ABI must remain frozen to the fixed Rust slice unless a later r
 It must fail when:
 
 - emitted WAT introduces helper imports or runtime shims,
+- the subset classifier reports helper trampolines, indirect calls, mutable globals, memory growth, reference types, unsupported instructions, or unsupported control constructs,
 - a bounded local-slot case stops emitting path-qualified `l_to_wasm` evidence,
 - `cmp` emission widens beyond the current less-than-zero bootstrap shape,
 - `field.addr` emission widens beyond the fixed record-cell ABI,
@@ -156,8 +209,17 @@ Wasm validation must additionally fail when:
 - a record shape includes non-`int` fields in the first post-scalar slice,
 - a record handle crosses an imported, opaque, or otherwise non-shared ABI boundary,
 - the emitted module relies on imported memory, hidden allocator state, or host object layout,
+- execution-backed translation validation does not produce a passing `translation_validation_report`,
 - preservation evidence omits the field-offset map, shared-handle caller contract, or candidate-specific downgrade reasons,
 - or a non-candidate record, alias, or memory shape is emitted as if it were inside the bounded ABI.
+
+No new Wasm surface may enter execution-backed validation unless all promotion criteria are satisfied together:
+
+- subset classifier support lands for the new surface and fails closed when the surface is absent or malformed,
+- the bounded execution oracle can observe and compare the new surface under an explicit equivalence mode,
+- adversarial and mutation-based regression tests exist for the new observable dimensions and unsupported-surface rejections,
+- the example `translation_validation_report` and any affected backend report examples are updated,
+- and a decision-register entry plus validator-doctrine updates explicitly record the promotion.
 
 ### Admitted helper-free Wasm-emission modules
 
@@ -213,7 +275,7 @@ At minimum it must:
 - validate the active Python proof loop,
 - run sweep smoke on the frozen Tier `A` micro corpus and compare against the latest successful baseline artifact when available,
 - require `comparison_summary.json` and `contamination_report.json` for executable sweep smoke,
-- validate the admitted helper-free Wasm emitter slice and its path-qualified `l_to_wasm` reports,
+- validate the admitted helper-free Wasm emitter slice, its path-qualified `l_to_wasm` reports, and its execution-backed `translation_validation_report` outputs,
 - validate the active Track `A` / `B` benchmark harness and its claim-bound report surfaces,
 - reject TypeScript placeholder-corpus drift from the active validation baseline,
 - enforce `NOT_ACTIVE.md` markers on deferred or archived surfaces that remain on disk.
@@ -230,6 +292,10 @@ It is not the default MVP gate.
 `python scripts/run_repo_validation.py --include-track-c-pilot` remains the optional compatibility entrypoint for the first executable Track `C` pilot.
 That optional slice validates the same repository, importer, lowering, reconstruction, and Track `A` / `B` surfaces as the default gate, then runs the bounded Python single-function repair pilot on the fixed proof-loop cases only.
 It keeps `c_opaque_call` boundary-accounting-only, compares against direct source, typed-AST, and regularized-core baselines, and does not activate Track `C` as a default benchmark gate.
+
+`python scripts/validate_translation.py --include-experimental-python` remains the optional maintenance lane for bounded Python execution-backed translation validation.
+`python scripts/run_repo_validation.py --include-experimental-python-translation` may invoke that same lane explicitly.
+Those commands must not change the default validation gate, the active `SCIR-H -> Python` reconstruction contract, or the Wasm-first backend posture.
 
 `python scripts/benchmark_contract_dry_run.py --claim-run` remains the explicit claim-grade benchmark lane for Track `A` and Track `B`.
 That lane must fail if baseline results are missing, corpus hash mismatches are detected, a reproducibility block is missing, contamination is detected, or none of the active claim-gate conditions hold.

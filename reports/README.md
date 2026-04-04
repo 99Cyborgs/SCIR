@@ -18,6 +18,7 @@ Example artifacts are illustrative fixtures, not proof of implementation breadth
 - `SCIR-H` to `SCIR-L`
 - `SCIR-H` to Python reconstruction
 - `SCIR-L` to Wasm contract emission
+- `SCIR-L` to backend translation validation
 
 ## Conditional benchmark examples
 

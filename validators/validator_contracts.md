@@ -9,6 +9,7 @@ Status: Normative
 | `SCIR-Hc` validator | derived `SCIR-Hc` plus canonical round-trip target | `validation_report` |
 | `SCIR-L` validator | derivative `SCIR-L` | `validation_report` |
 | preservation validator | paired stage artifacts and claims | `preservation_report` or failing `validation_report` |
+| backend translation validator | paired `SCIR-L` artifact, backend artifact, and bounded execution contract | `translation_validation_report` |
 | reconstruction checker | reconstructed source plus claims | `reconstruction_report` plus `preservation_report` |
 
 ## Active blocking conditions
@@ -22,6 +23,7 @@ Status: Normative
 - missing `origin` or `lowering_rule` on active `SCIR-L`
 - `origin` that no longer points back into the emitting `SCIR-H` module
 - `SCIR-L` op outside the active subset
+- backend translation trace drift, effect drift, undeclared capability use, or contract-undeclared deviation on an active backend path
 - `SCIR-Hc` entering lowering, reconstruction, or backend emission directly
 - `benchmark_report` claim scope leaking `SCIR-Hc` evidence across claim classes, lineage coverage, or metric-class authority boundaries
 - active TypeScript or `D-JS` claim

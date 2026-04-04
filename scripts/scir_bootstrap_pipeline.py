@@ -88,6 +88,7 @@ from validate_repo_contracts import (
     collect_instance_validation_errors,
     validate_boundary_capability_contract,
 )
+from validators.translation_validator import default_observable_dimensions, validate_translation
 from validators.scirhc_validator import (
     ScirHcDoctrineError,
     assert_deterministic_derivation,
@@ -96,6 +97,12 @@ from validators.scirhc_validator import (
     assert_not_semantic_authority,
     assert_round_trip_integrity,
     assert_semantic_idempotence,
+)
+from validators.diff_audit_validator import DiffAuditValidationError, assert_diff_audit_entry
+from validators.execution_context_guard import (
+    ScirhcReportSurface,
+    TrustedScirhcCaller,
+    register_trusted_scirhc_caller,
 )
 from wasm_backend_metadata import WASM_BACKEND_METADATA
 
@@ -160,6 +167,7 @@ class PipelineViolationError(ForbiddenPathError):
 
 
 SCIRHC_ALLOWED_REPORT_CONTEXTS = {"validation_report", "benchmark_output"}
+SCIRHC_PIPELINE_CAPABILITY = register_trusted_scirhc_caller(TrustedScirhcCaller.PIPELINE_VALIDATION)
 
 
 def assert_canonical_pipeline_input(input_representation: str, stage: str) -> None:
@@ -180,13 +188,21 @@ def assert_scirhc_report_context(report_context: str) -> None:
 
 def make_scirhc_generation_context(module: Module, *, report_context: str):
     assert_scirhc_report_context(report_context)
-    return build_scirhc_generation_context(module)
+    surface = {
+        "validation_report": ScirhcReportSurface.VALIDATION_REPORT,
+        "benchmark_output": ScirhcReportSurface.BENCHMARK_OUTPUT,
+    }[report_context]
+    return build_scirhc_generation_context(
+        module,
+        report_surface=surface,
+        capability=SCIRHC_PIPELINE_CAPABILITY,
+    )
 
 
 def generate_scirhc_report_artifact(module: Module, *, ctx, boundary_contracts=None):
     """Generate report-scoped `SCIR-Hc` evidence plus the lineage data needed to contain its claims."""
 
-    with internal_scirhc_transform_access():
+    with internal_scirhc_transform_access(ctx):
         hc_module = scirh_to_scirhc(module, ctx=ctx, boundary_contracts=boundary_contracts)
         hc_text = format_scirhc_module(hc_module)
         stats = scirhc_normalization_stats(module, ctx=ctx, boundary_contracts=boundary_contracts)
@@ -979,13 +995,23 @@ def validate_scirhc_case(
             ("HC006", lambda: assert_no_hidden_semantics(hc_module)),
             ("HC005", lambda: assert_deterministic_derivation(module, hc_module)),
             ("HC008", lambda: assert_lineage_integrity({"lineage_references": lineage_references}, {module.module_id: module})),
+            (
+                "HC008",
+                lambda: assert_diff_audit_entry(
+                    diff_audit,
+                    module=module,
+                    scirhc=hc_module,
+                    lineage_references=lineage_references,
+                    compression_statistics=stats,
+                ),
+            ),
             ("HC002", lambda: assert_semantic_idempotence(module)),
             ("HC002", lambda: assert_round_trip_integrity(module)),
         ]
         for default_code, check in checks:
             try:
                 check()
-            except ScirHcDoctrineError as exc:
+            except (ScirHcDoctrineError, DiffAuditValidationError) as exc:
                 message = str(exc)
                 code = default_code
                 if "parse-format equality" in message:
@@ -2624,6 +2650,88 @@ def validate_wasm_artifacts(module: Module, lowered: dict, wat_text: str, report
     return failures
 
 
+def wasm_translation_validation_contract():
+    return {
+        "preservation_level": WASM_BACKEND_METADATA["preservation_level"],
+        "allowed_scheduling_variation": False,
+        "allowed_allocation_variation": True,
+        "fp_tolerance": 0.0,
+    }
+
+
+def resolve_translation_validation_options(
+    *,
+    backend_kind: str,
+    target_profile: str | None = None,
+    equivalence_mode: str | None = None,
+    observable_dimensions: list[str] | None = None,
+    allow_contract_bounded: bool | None = None,
+):
+    if backend_kind != "wasm":
+        raise PipelineError(f"unsupported translation-validation backend {backend_kind!r}")
+    resolved_profile = target_profile or WASM_BACKEND_METADATA["profile"]
+    if resolved_profile != WASM_BACKEND_METADATA["profile"]:
+        raise PipelineError(
+            f"Wasm translation validation must remain on profile {WASM_BACKEND_METADATA['profile']!r}"
+        )
+    resolved_mode = equivalence_mode or "contract_bounded"
+    resolved_observables = list(observable_dimensions or default_observable_dimensions("wasm"))
+    unsupported = sorted(set(resolved_observables) - set(default_observable_dimensions("wasm")))
+    if unsupported:
+        raise PipelineError(f"Wasm translation validation does not admit observables {unsupported!r}")
+    if allow_contract_bounded is None:
+        allow_contract_bounded = resolved_mode == "contract_bounded"
+    if resolved_mode == "contract_bounded" and not allow_contract_bounded:
+        raise PipelineError("contract_bounded translation validation requires allow_contract_bounded")
+    if resolved_mode != "contract_bounded" and allow_contract_bounded:
+        raise PipelineError("allow_contract_bounded is only valid with contract_bounded mode")
+    return {
+        "target_profile": resolved_profile,
+        "equivalence_mode": resolved_mode,
+        "observable_dimensions": resolved_observables,
+        "allow_contract_bounded": bool(allow_contract_bounded),
+    }
+
+
+def validate_wasm_translation(
+    root: pathlib.Path,
+    module: Module,
+    lowered: dict,
+    wat_text: str,
+    *,
+    translation_options: dict | None = None,
+):
+    translation_options = translation_options or resolve_translation_validation_options(backend_kind="wasm")
+    backend_artifact = {
+        "kind": "wasm",
+        "subject": module.module_id,
+        "module_id": module.module_id,
+        "text": wat_text,
+        "source_module": module,
+        "preservation_contract": wasm_translation_validation_contract(),
+    }
+    report = validate_translation(
+        lowered,
+        backend_artifact,
+        translation_options["target_profile"],
+        equivalence_mode=translation_options["equivalence_mode"],
+        observable_dimensions=translation_options["observable_dimensions"],
+        allow_contract_bounded=translation_options["allow_contract_bounded"],
+    )
+    failures = validate_instance(
+        root,
+        report,
+        "schemas/translation_validation_report.schema.json",
+        f"{case_name_from_module(module)} wasm_translation_validation",
+    )
+    if not report["outcome"].startswith("PASSED_"):
+        failures.extend(
+            f"{module.module_id}: Wasm translation validation failed: {violation}"
+            for violation in report["violations"]
+        )
+    return failures, report
+
+
 def validate_wasm_not_emittable(module: Module, lowered: dict):
     try:
         emit_wasm_module(module, lowered)
@@ -2975,6 +3083,8 @@ def validate_executable_output_set(outputs: dict):
     for case_name in WASM_EMITTABLE_CASES:
         if case_name not in outputs["wasm_reports"]:
             failures.append(f"{case_name}: Wasm-emittable case must emit a Wasm output")
+        elif "translation_validation_report" not in outputs["wasm_reports"][case_name]:
+            failures.append(f"{case_name}: Wasm-emittable case must emit a translation-validation report")
     for case_name in sorted(set(SUPPORTED_CASES) - set(WASM_EMITTABLE_CASES)):
         if case_name in outputs["wasm_reports"]:
             failures.append(f"{case_name}: non-emittable supported case must not emit a Wasm output")
@@ -4155,7 +4265,7 @@ def run_rust_track_d(root: pathlib.Path):
     return manifest, result
 
 
-def run_pipeline(root: pathlib.Path):
+def run_pipeline(root: pathlib.Path, *, translation_validation_options: dict | None = None):
     failures = []
     outputs = {
         "source_to_h_reports": {},
@@ -4272,9 +4382,18 @@ def run_pipeline(root: pathlib.Path):
                 )
             )
             failures.extend(validate_wasm_artifacts(parsed_module, lowered, wat_text, wasm_report))
+            wasm_translation_failures, wasm_translation_report = validate_wasm_translation(
+                root,
+                parsed_module,
+                lowered,
+                wat_text,
+                translation_options=translation_validation_options,
+            )
+            failures.extend(wasm_translation_failures)
             outputs["wasm_reports"][case_name] = {
                 "text": wat_text,
                 "preservation_report": wasm_report,
+                "translation_validation_report": wasm_translation_report,
             }
         else:
             failures.extend(validate_wasm_not_emittable(parsed_module, lowered))
@@ -5062,6 +5181,8 @@ def validate_rust_output_set(outputs: dict):
     for case_name in RUST_WASM_EMITTABLE_CASES:
         if case_name not in outputs["wasm_reports"]:
             failures.append(f"{case_name}: Wasm-emittable Rust case must emit a Wasm output")
+        elif "translation_validation_report" not in outputs["wasm_reports"][case_name]:
+            failures.append(f"{case_name}: Wasm-emittable Rust case must emit a translation-validation report")
     for case_name in sorted(set(RUST_SUPPORTED_CASES) - set(RUST_WASM_EMITTABLE_CASES)):
         if case_name in outputs["wasm_reports"]:
             failures.append(f"{case_name}: non-emittable Rust case must not emit a Wasm output")
@@ -5079,7 +5200,7 @@ def validate_rust_output_set(outputs: dict):
     return failures
 
 
-def run_rust_pipeline(root: pathlib.Path):
+def run_rust_pipeline(root: pathlib.Path, *, translation_validation_options: dict | None = None):
     require_rust_toolchain()
     failures = []
     outputs = {
@@ -5147,9 +5268,18 @@ def run_rust_pipeline(root: pathlib.Path):
                 )
             )
             failures.extend(validate_wasm_artifacts(parsed_module, lowered, wat_text, wasm_report))
+            wasm_translation_failures, wasm_translation_report = validate_wasm_translation(
+                root,
+                parsed_module,
+                lowered,
+                wat_text,
+                translation_options=translation_validation_options,
+            )
+            failures.extend(wasm_translation_failures)
             outputs["wasm_reports"][case_name] = {
                 "text": wat_text,
                 "preservation_report": wasm_report,
+                "translation_validation_report": wasm_translation_report,
             }
         else:
             failures.extend(validate_wasm_not_emittable(parsed_module, lowered))
@@ -5241,6 +5371,7 @@ def print_validation_success():
     print(
         "Validated importer outputs, compact canonical SCIR-H parsing and formatting, "
         "SCIR-L lowering, translation preservation reports, helper-free WAT emission, "
+        "execution-backed Wasm translation validation, "
         "reconstruction reports, "
         f"and compile/test evidence for {len(SUPPORTED_CASES)} supported bootstrap cases."
     )
@@ -5250,7 +5381,8 @@ def print_rust_validation_success():
     print("[pipeline] Rust importer-first validation passed")
     print(
         "Validated Rust importer outputs, compact canonical SCIR-H parsing and formatting, "
-        "SCIR-L lowering with field.addr, bounded helper-free WAT emission, and path-qualified translation preservation reports "
+        "SCIR-L lowering with field.addr, bounded helper-free WAT emission, execution-backed Wasm translation validation, "
+        "and path-qualified translation preservation reports "
         f"for {len(RUST_SUPPORTED_CASES)} supported Rust importer cases."
     )
 
@@ -5275,23 +5407,57 @@ def print_rust_test_success():
     )
 
 
+def parse_observable_set_arg(value: str | None):
+    if value is None:
+        return None
+    items = [item.strip() for item in value.split(",") if item.strip()]
+    return items or None
+
+
+def print_translation_validation_config(options: dict):
+    observables = ",".join(options["observable_dimensions"])
+    print(
+        "[pipeline] translation validation config "
+        f"profile={options['target_profile']} "
+        f"equivalence_mode={options['equivalence_mode']} "
+        f"observables={observables} "
+        f"allow_contract_bounded={options['allow_contract_bounded']}"
+    )
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", default="validate")
     parser.add_argument("--language", default="python", choices=["python", "rust"])
     parser.add_argument("--root")
+    parser.add_argument(
+        "--equivalence-mode",
+        choices=["deterministic_observational", "sequential_trace", "contract_bounded"],
+    )
+    parser.add_argument("--observable-set")
+    parser.add_argument("--target-profile", choices=["R", "N", "P", "D-PY", "D-JS"])
+    parser.add_argument("--allow-contract-bounded", dest="allow_contract_bounded", action="store_true")
+    parser.add_argument("--disallow-contract-bounded", dest="allow_contract_bounded", action="store_false")
+    parser.set_defaults(allow_contract_bounded=None)
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
     root = repo_root(args.root)
+    translation_validation_options = resolve_translation_validation_options(
+        backend_kind="wasm",
+        target_profile=args.target_profile,
+        equivalence_mode=args.equivalence_mode,
+        observable_dimensions=parse_observable_set_arg(args.observable_set),
+        allow_contract_bounded=args.allow_contract_bounded,
+    )
 
     try:
         if args.language == "python":
-            failures, _ = run_pipeline(root)
+            failures, _ = run_pipeline(root, translation_validation_options=translation_validation_options)
         else:
-            failures, _ = run_rust_pipeline(root)
+            failures, _ = run_rust_pipeline(root, translation_validation_options=translation_validation_options)
     except PipelineError as exc:
         print(f"[{args.mode}] {args.language} bootstrap pipeline failed")
         print(f" - {exc}")
@@ -5309,6 +5475,7 @@ def main():
             for item in self_test_failures:
                 print(f" - {item}")
             sys.exit(1)
+        print_translation_validation_config(translation_validation_options)
         if args.language == "python":
             print_validation_success()
             print_test_success()
@@ -5317,6 +5484,7 @@ def main():
             print_rust_test_success()
         sys.exit(0)
 
+    print_translation_validation_config(translation_validation_options)
     if args.language == "python":
         print_validation_success()
     else:

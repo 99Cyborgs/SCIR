@@ -33,9 +33,16 @@ from scir_h_bootstrap_model import (
     parse_scirhc_module,
     semantic_lineage_id,
 )
+from validators.execution_context_guard import (
+    ScirhcReportSurface,
+    TrustedScirhcCaller,
+    register_trusted_scirhc_caller,
+)
+from validators.lineage_contract import LineageContractError, assert_report_lineage_binding
 
 
 HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
+SCIRHC_VALIDATOR_CAPABILITY = register_trusted_scirhc_caller(TrustedScirhcCaller.SCIRHC_VALIDATOR)
 
 
 class ScirHcDoctrineError(ValueError):
@@ -180,6 +187,14 @@ def _lineage_references(report: dict):
     return None, "SCIR-Hc artifact"
 
 
+def make_validator_scirhc_context(scirh: Module):
+    return build_scirhc_generation_context(
+        scirh,
+        report_surface=ScirhcReportSurface.VALIDATION_REPORT,
+        capability=SCIRHC_VALIDATOR_CAPABILITY,
+    )
+
+
 def assert_not_semantic_authority(scirhc: HcModule) -> None:
     normalized = _normalize_scirhc(scirhc)
     _require(
@@ -319,8 +334,8 @@ def assert_deterministic_derivation(scirh: Module, scirhc: HcModule) -> None:
     normalized_scirh = normalize_module(scirh)
     normalized_scirhc = _normalize_scirhc(scirhc)
     assert_no_hidden_semantics(normalized_scirhc)
-    ctx = build_scirhc_generation_context(normalized_scirh)
-    with internal_scirhc_transform_access():
+    ctx = make_validator_scirhc_context(normalized_scirh)
+    with internal_scirhc_transform_access(ctx):
         expected = scirh_to_scirhc(normalized_scirh, ctx=ctx)
         _require(
             normalized_scirhc == expected,
@@ -335,8 +350,8 @@ def assert_deterministic_derivation(scirh: Module, scirhc: HcModule) -> None:
 
 def assert_semantic_idempotence(scirh: Module) -> None:
     normalized = normalize_module(scirh)
-    ctx = build_scirhc_generation_context(normalized)
-    with internal_scirhc_transform_access():
+    ctx = make_validator_scirhc_context(normalized)
+    with internal_scirhc_transform_access(ctx):
         derived = scirh_to_scirhc(normalized, ctx=ctx)
         reconstructed = scirhc_to_scirh(derived, ctx=ctx)
     if normalize_module(reconstructed) != normalized:
@@ -345,8 +360,8 @@ def assert_semantic_idempotence(scirh: Module) -> None:
 
 def assert_round_trip_integrity(scirh: Module) -> None:
     normalized = normalize_module(scirh)
-    ctx = build_scirhc_generation_context(normalized)
-    with internal_scirhc_transform_access():
+    ctx = make_validator_scirhc_context(normalized)
+    with internal_scirhc_transform_access(ctx):
         derived = scirh_to_scirhc(normalized, ctx=ctx)
         rendered = format_scirhc_module(derived)
         reparsed = parse_scirhc_module(rendered)
@@ -374,31 +389,14 @@ def assert_round_trip_integrity(scirh: Module) -> None:
 def assert_lineage_integrity(report: dict, canonical_registry: dict[str, Module] | None = None) -> None:
     """Bind every compressed claim surface back to canonical module lineage and normalized hashes."""
 
-    _require(isinstance(report, dict), "SCIR-Hc lineage validation requires an object payload")
-    lineage_references, label = _lineage_references(report)
-    for message in _lineage_reference_failures(lineage_references, label=label):
-        raise ScirHcDoctrineError(message)
-
-    for module_id, binding in lineage_references.items():
-        canonical = None if canonical_registry is None else canonical_registry.get(module_id)
-        if canonical_registry is not None and canonical is None:
-            raise ScirHcDoctrineError("Lineage reference not found")
-        if canonical is None:
-            continue
-        normalized = normalize_module(canonical)
-        if binding["semantic_lineage_id"] != semantic_lineage_id(normalized):
-            raise ScirHcDoctrineError("Lineage semantic id mismatch")
-        if binding["normalized_canonical_hash"] != canonical_content_hash(normalized):
-            raise ScirHcDoctrineError("Lineage hash mismatch")
-
-    for kind, item in _metric_items(report):
-        evidence = item.get("scir_h_evidence")
-        if not isinstance(evidence, list) or not evidence:
-            raise ScirHcDoctrineError("Incomplete lineage coverage")
-        if not all(isinstance(entry, str) and entry for entry in evidence):
-            raise ScirHcDoctrineError("Incomplete lineage coverage")
-        if any(entry not in lineage_references for entry in evidence):
-            raise ScirHcDoctrineError("Incomplete lineage coverage")
+    try:
+        assert_report_lineage_binding(
+            report,
+            canonical_registry=canonical_registry,
+            required_modules=set(canonical_registry or ()),
+        )
+    except LineageContractError as exc:
+        raise ScirHcDoctrineError(str(exc)) from exc
 
 
 def implies_semantic_authority(metric: dict) -> bool:

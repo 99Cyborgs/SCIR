@@ -1,0 +1,6 @@
+interface:
+  display_name: "SCIR Proof Loop Guard"
+  short_description: "Protect SCIR proof loop truth"
+  default_prompt: "Use $scir-proof-loop-guard to keep SCIR-H authoritative and select the right proof-loop, importer, and benchmark checks."
+policy:
+  allow_implicit_invocation: true

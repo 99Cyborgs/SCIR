@@ -1,0 +1,336 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SCIR Translation Validation Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_id",
+    "subject",
+    "backend_kind",
+    "target_profile",
+    "preservation_level",
+    "outcome",
+    "equivalence_mode",
+    "observable_dimensions_checked",
+    "backend_subset_class",
+    "execution_oracle",
+    "validation_strength",
+    "downgrade_reason",
+    "subset_admission_result",
+    "subset_admission_reason",
+    "unsupported_features_detected",
+    "helper_free_subset_required",
+    "contract_assumptions",
+    "dimension_results",
+    "violations",
+    "findings",
+    "validated_invocations",
+    "suspect_l_nodes",
+    "suspect_h_nodes",
+    "backend_regions",
+    "origin_trace_links"
+  ],
+  "properties": {
+    "report_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1
+    },
+    "backend_kind": {
+      "type": "string",
+      "enum": [
+        "wasm",
+        "python"
+      ]
+    },
+    "target_profile": {
+      "type": "string",
+      "enum": [
+        "R",
+        "N",
+        "P",
+        "D-PY",
+        "D-JS"
+      ]
+    },
+    "preservation_level": {
+      "type": "string",
+      "enum": [
+        "P0",
+        "P1",
+        "P2",
+        "P3",
+        "PX"
+      ]
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "PASSED_FULL",
+        "PASSED_SUBSET",
+        "DOWNGRADED_UNSUPPORTED_SUBSET",
+        "DOWNGRADED_MISSING_ORACLE",
+        "FAILED_MISMATCH",
+        "FAILED_RUNTIME_ERROR"
+      ]
+    },
+    "equivalence_mode": {
+      "type": "string",
+      "enum": [
+        "deterministic_observational",
+        "sequential_trace",
+        "contract_bounded"
+      ]
+    },
+    "observable_dimensions_checked": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "returns",
+          "traps_or_exceptions",
+          "termination_kind",
+          "call_trace",
+          "branch_trace",
+          "state_write_trace",
+          "effect_trace",
+          "capability_trace"
+        ]
+      }
+    },
+    "backend_subset_class": {
+      "type": "string",
+      "enum": [
+        "wasm_helper_free_bounded",
+        "wasm_requires_helpers",
+        "python_bounded",
+        "unknown"
+      ]
+    },
+    "execution_oracle": {
+      "type": "string",
+      "enum": [
+        "scirl_bounded_interpreter"
+      ]
+    },
+    "validation_strength": {
+      "type": "string",
+      "enum": [
+        "execution_backed_full",
+        "execution_backed_subset",
+        "structural_only",
+        "unsupported"
+      ]
+    },
+    "downgrade_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "subset_admission_result": {
+      "type": "string",
+      "enum": [
+        "admitted",
+        "rejected"
+      ]
+    },
+    "subset_admission_reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "unsupported_features_detected": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "helper_free_subset_required": {
+      "type": "boolean"
+    },
+    "contract_assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "dimension_results": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "returns": {
+          "type": "boolean"
+        },
+        "traps_or_exceptions": {
+          "type": "boolean"
+        },
+        "termination_kind": {
+          "type": "boolean"
+        },
+        "call_trace": {
+          "type": "boolean"
+        },
+        "branch_trace": {
+          "type": "boolean"
+        },
+        "state_write_trace": {
+          "type": "boolean"
+        },
+        "effect_trace": {
+          "type": "boolean"
+        },
+        "capability_trace": {
+          "type": "boolean"
+        }
+      }
+    },
+    "violations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "invocation",
+          "dimension",
+          "message",
+          "expected",
+          "observed",
+          "suspect_l_nodes",
+          "suspect_h_nodes",
+          "backend_regions",
+          "origin_trace_links"
+        ],
+        "properties": {
+          "invocation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dimension": {
+            "type": "string",
+            "enum": [
+              "returns",
+              "traps_or_exceptions",
+              "termination_kind",
+              "call_trace",
+              "branch_trace",
+              "state_write_trace",
+              "effect_trace",
+              "capability_trace"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected": true,
+          "observed": true,
+          "suspect_l_nodes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "suspect_h_nodes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "backend_regions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "origin_trace_links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/originTraceLink"
+            }
+          }
+        }
+      }
+    },
+    "validated_invocations": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "suspect_l_nodes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "suspect_h_nodes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "backend_regions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "origin_trace_links": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/originTraceLink"
+      }
+    }
+  },
+  "$defs": {
+    "originTraceLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dimension",
+        "l_node",
+        "h_origin"
+      ],
+      "properties": {
+        "dimension": {
+          "type": "string",
+          "enum": [
+            "returns",
+            "traps_or_exceptions",
+            "termination_kind",
+            "call_trace",
+            "branch_trace",
+            "state_write_trace",
+            "effect_trace",
+            "capability_trace"
+          ]
+        },
+        "l_node": {
+          "type": "string",
+          "minLength": 1
+        },
+        "h_origin": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
