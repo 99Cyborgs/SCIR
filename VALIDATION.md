@@ -18,6 +18,7 @@ This command validates:
 - seeded invalid `SCIR-H` and `SCIR-L` invariant corpora
 - slice-based sweep smoke over the fixed Python Tier `A` corpus with persisted artifacts, summaries, and regression comparison when a baseline is available
 - the admitted helper-free Wasm emitter slice
+- execution-backed translation validation for the admitted helper-free Wasm slice
 - the active Python proof loop
 - the active Track `A` / Track `B` benchmark harness
 
@@ -29,6 +30,7 @@ python scripts/build_execution_queue.py --mode check
 python scripts/python_importer_conformance.py --mode validate-fixtures
 python scripts/rust_importer_conformance.py --mode validate-fixtures
 python scripts/scir_bootstrap_pipeline.py --mode validate
+python scripts/validate_translation.py
 python scripts/scir_sweep.py --manifest tests/sweeps/python_proof_loop_smoke.json
 python scripts/benchmark_contract_dry_run.py
 python scripts/benchmark_contract_dry_run.py --claim-run
@@ -54,6 +56,7 @@ When a usable toolchain is available, the optional Rust slice validates the impo
 - bounded `SCIR-H -> SCIR-L` lowering
 - `SCIR-L` validation
 - helper-free Wasm emission for the admitted Rust local-mutation case
+- execution-backed translation validation for the admitted Rust helper-free Wasm slice
 - path-qualified Rust `H -> L` preservation reporting
 
 Command:

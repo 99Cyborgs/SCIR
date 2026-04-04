@@ -23,6 +23,7 @@ Status: Informative
 - `docs/`: explanatory doctrine and detailed navigation
 - `frontend/`: importer doctrine
 - `validators/`: validator stack contracts
+- `runtime/`: bounded `SCIR-L` interpreter and backend execution harnesses for translation validation
 - `backends/`: backend contracts; Wasm is the only active backend path
 - `benchmarks/`: benchmark doctrine
 - `tests/`: checked-in corpora and invalid examples

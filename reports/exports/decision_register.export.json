@@ -263,6 +263,30 @@
       "constraint_imposed": "`SCIR-Hc` must carry a derived-only authority marker, every omission must carry machine-readable provenance, direct `SCIR-Hc` input to lowering/reconstruction/backend emission must hard-fail, and benchmark reports must keep `SCIR-Hc` evidence inside declared `claim_class` / `evidence_class` boundaries.",
       "reversible": "yes",
       "first_validation": "`python scripts/run_repo_validation.py`"
+    },
+    {
+      "id": "DR-034",
+      "status": "accepted",
+      "decision": "Admitted `SCIR-L -> backend` paths now require execution-backed translation validation before backend success may pass.",
+      "constraint_imposed": "Helper-free Wasm success now requires bounded trace, effect, and capability agreement with admitted `SCIR-L` execution under an explicit preservation contract; no backend path may pass through static shape checks alone.",
+      "reversible": "yes",
+      "first_validation": "`python scripts/validate_translation.py`"
+    },
+    {
+      "id": "DR-035",
+      "status": "accepted",
+      "decision": "Translation-validation reports now carry explicit claim strength, subset admission, equivalence mode, observable set, downgrade reason, and provenance-linked findings.",
+      "constraint_imposed": "Helper-free Wasm validation must remain `execution_backed_subset` rather than a full backend claim, unsupported subset surface must downgrade deterministically before execution, and mismatch reports must reuse existing lowering provenance where available instead of inventing new provenance.",
+      "reversible": "yes",
+      "first_validation": "`python scripts/validate_translation.py`"
+    },
+    {
+      "id": "DR-036",
+      "status": "accepted",
+      "decision": "Expanding execution-backed Wasm validation beyond the current helper-free subset requires explicit promotion criteria, and the Python translation-validation lane remains experimental only.",
+      "constraint_imposed": "No new Wasm surface may enter execution-backed validation without subset-classifier support, bounded oracle support, adversarial plus mutation tests, updated example reports, and validator-doctrine plus decision-register updates; the Python execution-backed lane may run only through explicit opt-in commands and does not change the default Wasm-first contract.",
+      "reversible": "yes",
+      "first_validation": "`python scripts/run_repo_validation.py --include-experimental-python-translation`"
     }
   ]
 }

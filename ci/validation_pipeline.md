@@ -32,3 +32,13 @@ The quick gate is split into:
 2. importer fixture conformance
 3. bootstrap pipeline validation
 4. sweep smoke plus regression, comparison, and contamination summaries
+
+## SCIR-Hc Containment Lane
+
+The dedicated containment lane must:
+
+1. run `python -m unittest discover -s tests`
+2. run `python scripts/scir_bootstrap_pipeline.py --mode validate`
+3. run `python scripts/benchmark_contract_dry_run.py --claim-run`
+4. run `python scripts/validate_repo_contracts.py --mode validate`
+5. fail on unauthorized SCIR-Hc transform execution, incomplete lineage binding, invalid diff audit, metric-authority escalation, or missing containment artifacts

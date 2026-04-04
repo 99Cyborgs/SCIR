@@ -1,12 +1,6 @@
 from __future__ import annotations
 
-import hashlib
-import inspect
-import json
-import pathlib
 import re
-from contextlib import contextmanager
-from dataclasses import dataclass
 
 from scir_h_bootstrap_model import (
     CompressionOrigin,
@@ -23,7 +17,6 @@ from scir_h_bootstrap_model import (
     _record_field_type_map,
     _scirh_stmt_to_scirhc,
     _scirhc_stmt_to_scirh,
-    canonical_content_hash,
     carries_ownership_type,
     format_module,
     infer_hc_function_effects,
@@ -32,133 +25,42 @@ from scir_h_bootstrap_model import (
     normalize_hc_module,
     normalize_module,
     parse_scirhc_module,
-    semantic_lineage_id,
+)
+from validators.execution_context_guard import (
+    ScirhcGenerationContext,
+    TrustedScirhcCaller,
+    activate_scirhc_execution,
+    build_scirhc_generation_context,
+    build_scirhc_generation_token,
+    build_scirhc_lineage_root,
+    require_active_scirhc_execution,
+    require_lineage_root_match,
+    scirhc_lineage_root_payload,
+    validate_scirhc_context,
 )
 
 
 HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
-_INTERNAL_CALL_DEPTH = 0
-REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
-ALLOWED_INTERNAL_CALLERS = {
-    REPO_ROOT / "scripts" / "scir_bootstrap_pipeline.py",
-    REPO_ROOT / "scripts" / "benchmark_contract_dry_run.py",
-    REPO_ROOT / "validators" / "scirhc_validator.py",
-}
-
-
-@dataclass(frozen=True)
-class ScirhcLineageRoot:
-    module_id: str
-    semantic_lineage_id: str
-    normalized_canonical_hash: str
-
-
-@dataclass(frozen=True)
-class ScirhcGenerationContext:
-    is_report_context: bool
-    generation_token: str
-    lineage_root: ScirhcLineageRoot
-
-
-@contextmanager
-def internal_scirhc_transform_access():
-    global _INTERNAL_CALL_DEPTH
-    stack_paths = {
-        pathlib.Path(frame_info.filename).resolve()
-        for frame_info in inspect.stack()
+ALLOWED_TRANSFORM_CALLERS = frozenset(
+    {
+        TrustedScirhcCaller.PIPELINE_VALIDATION,
+        TrustedScirhcCaller.BENCHMARK_CLAIM,
+        TrustedScirhcCaller.SCIRHC_VALIDATOR,
     }
-    if not any(path in ALLOWED_INTERNAL_CALLERS for path in stack_paths):
-        raise ScirhcContextError("Unauthorized SCIR-Hc transform access")
-    _INTERNAL_CALL_DEPTH += 1
-    try:
-        yield
-    finally:
-        _INTERNAL_CALL_DEPTH -= 1
-
-
-def _require_internal_call_context() -> None:
-    if _INTERNAL_CALL_DEPTH <= 0:
-        raise ScirhcContextError("Unauthorized SCIR-Hc transform access")
-
-
-def scirhc_lineage_root_payload(root: ScirhcLineageRoot) -> dict[str, str]:
-    return {
-        "semantic_lineage_id": root.semantic_lineage_id,
-        "normalized_canonical_hash": root.normalized_canonical_hash,
-    }
-
-
-def build_scirhc_lineage_root(module: Module) -> ScirhcLineageRoot:
-    normalized = normalize_module(module)
-    return ScirhcLineageRoot(
-        module_id=normalized.module_id,
-        semantic_lineage_id=semantic_lineage_id(normalized),
-        normalized_canonical_hash=canonical_content_hash(normalized),
-    )
-
-
-def _generation_token_payload(lineage_root: ScirhcLineageRoot) -> str:
-    return json.dumps(
-        {
-            "module_id": lineage_root.module_id,
-            "semantic_lineage_id": lineage_root.semantic_lineage_id,
-            "normalized_canonical_hash": lineage_root.normalized_canonical_hash,
-        },
-        sort_keys=True,
-        separators=(",", ":"),
-    )
-
-
-def build_scirhc_generation_token(lineage_root: ScirhcLineageRoot) -> str:
-    return hashlib.sha256(_generation_token_payload(lineage_root).encode("utf-8")).hexdigest()
-
-
-def build_scirhc_generation_context(
-    module: Module,
-    *,
-    is_report_context: bool = True,
-) -> ScirhcGenerationContext:
-    lineage_root = build_scirhc_lineage_root(module)
-    return ScirhcGenerationContext(
-        is_report_context=is_report_context,
-        generation_token=build_scirhc_generation_token(lineage_root),
-        lineage_root=lineage_root,
-    )
-
-
-def require_scirhc_context(ctx: ScirhcGenerationContext | None) -> None:
-    if ctx is None:
-        raise ScirhcContextError("Missing SCIR-Hc generation context")
-    if not ctx.is_report_context:
-        raise ScirhcContextError("SCIR-Hc generation allowed only in report context")
-    if not ctx.generation_token:
-        raise ScirhcContextError("Missing generation token")
-    if not ctx.lineage_root:
-        raise ScirhcContextError("Missing lineage root")
-    if not isinstance(ctx.lineage_root, ScirhcLineageRoot):
-        raise ScirhcContextError("Invalid lineage root")
-    if not HEX64_RE.fullmatch(ctx.generation_token):
-        raise ScirhcContextError("Invalid generation token")
-    if not HEX64_RE.fullmatch(ctx.lineage_root.semantic_lineage_id):
-        raise ScirhcContextError("Invalid lineage root semantic lineage id")
-    if not HEX64_RE.fullmatch(ctx.lineage_root.normalized_canonical_hash):
-        raise ScirhcContextError("Invalid lineage root canonical hash")
-    expected_token = build_scirhc_generation_token(ctx.lineage_root)
-    if ctx.generation_token != expected_token:
-        raise ScirhcContextError("Invalid generation token")
+)
 
 
 def _require_context_for_module(module: Module, ctx: ScirhcGenerationContext | None) -> Module:
-    require_scirhc_context(ctx)
-    _require_internal_call_context()
-    normalized = normalize_module(module)
-    expected_root = build_scirhc_lineage_root(normalized)
-    if ctx.lineage_root != expected_root:
-        raise ScirhcContextError("SCIR-Hc lineage root does not match canonical SCIR-H")
-    return normalized
+    validate_scirhc_context(ctx, allowed_callers=ALLOWED_TRANSFORM_CALLERS)
+    require_active_scirhc_execution(ctx, allowed_callers=ALLOWED_TRANSFORM_CALLERS)
+    return require_lineage_root_match(module, ctx)
 
 
-def _lineage_reference_dict(lineage_root: ScirhcLineageRoot) -> dict[str, dict[str, str]]:
+def internal_scirhc_transform_access(ctx: ScirhcGenerationContext):
+    return activate_scirhc_execution(ctx, allowed_callers=ALLOWED_TRANSFORM_CALLERS)
+
+
+def _lineage_reference_dict(lineage_root) -> dict[str, dict[str, str]]:
     return {lineage_root.module_id: scirhc_lineage_root_payload(lineage_root)}
 
 
@@ -223,8 +125,8 @@ def scirhc_to_scirh(
     *,
     ctx: ScirhcGenerationContext | None = None,
 ) -> Module:
-    require_scirhc_context(ctx)
-    _require_internal_call_context()
+    validate_scirhc_context(ctx, allowed_callers=ALLOWED_TRANSFORM_CALLERS)
+    require_active_scirhc_execution(ctx, allowed_callers=ALLOWED_TRANSFORM_CALLERS)
     normalized_hc = normalize_hc_module(module)
     record_field_types = _record_field_type_map(normalized_hc)
     function_returns = infer_hc_function_return_types(normalized_hc)

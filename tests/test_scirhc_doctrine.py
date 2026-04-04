@@ -17,7 +17,6 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 from _internal.scirhc_transform import (  # noqa: E402
     ScirhcGenerationContext,
-    build_scirhc_generation_context,
     build_scirhc_generation_token,
     build_scirhc_lineage_root,
     scirhc_lineage_root_payload,
@@ -51,6 +50,14 @@ from validators.scirhc_validator import (  # noqa: E402
     assert_metric_authority,
     assert_round_trip_integrity,
 )
+from validators.execution_context_guard import (  # noqa: E402
+    ScirhcExecutionProvenance,
+    TrustedScirhcCaller,
+    register_trusted_scirhc_caller,
+)
+
+
+TEST_CAPABILITY = register_trusted_scirhc_caller(TrustedScirhcCaller.BENCHMARK_CLAIM)
 
 
 def sample_module() -> Module:
@@ -140,11 +147,16 @@ class ScirHcDoctrineTests(unittest.TestCase):
     def test_scirhc_generation_outside_report_context_fails(self) -> None:
         lineage_root = build_scirhc_lineage_root(sample_module())
         ctx = ScirhcGenerationContext(
-            is_report_context=False,
-            generation_token=build_scirhc_generation_token(lineage_root),
+            report_surface="lowering_pass",
+            generation_token=build_scirhc_generation_token(
+                lineage_root,
+                ScirhcExecutionProvenance(TEST_CAPABILITY.caller),
+            ),
             lineage_root=lineage_root,
+            provenance=ScirhcExecutionProvenance(TEST_CAPABILITY.caller),
+            capability=TEST_CAPABILITY,
         )
-        with self.assertRaisesRegex(ScirhcContextError, "allowed only in report context"):
+        with self.assertRaisesRegex(ScirhcContextError, "Invalid SCIR-Hc report surface"):
             generate_scirhc_report_artifact(sample_module(), ctx=ctx)
 
     def test_invalid_lineage_hash_fails(self) -> None:

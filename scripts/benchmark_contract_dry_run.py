@@ -36,6 +36,7 @@ from _internal.scirhc_transform import (
     generate_scirhc_diff_audit,
     internal_scirhc_transform_access,
     scirhc_lineage_root_payload,
+    scirhc_normalization_stats,
     scirh_to_scirhc,
 )
 from scir_h_bootstrap_model import ScirHModelError, ScirhcContextError
@@ -50,6 +51,12 @@ from validators.scirhc_validator import (
     assert_claim_scope_compliance,
     assert_lineage_integrity,
     assert_semantic_idempotence,
+)
+from validators.diff_audit_validator import DiffAuditValidationError, assert_diff_audit_bundle, assert_diff_audit_entry
+from validators.execution_context_guard import (
+    ScirhcReportSurface,
+    TrustedScirhcCaller,
+    register_trusted_scirhc_caller,
 )
 
 
@@ -146,6 +153,7 @@ TRACK_EXPECTATIONS = {
 }
 BENCHMARK_CORPUS_MANIFEST_REL = "tests/corpora/python_proof_loop_corpus.json"
 BENCHMARK_SWEEP_MANIFEST_REL = "tests/sweeps/python_proof_loop_full.json"
+SCIRHC_BENCHMARK_CAPABILITY = register_trusted_scirhc_caller(TrustedScirhcCaller.BENCHMARK_CLAIM)
 
 
 def read(path: pathlib.Path) -> str:
@@ -1006,6 +1014,16 @@ def benchmark_lineage_scope() -> list[str]:
     return sorted(benchmark_report_canonical_registry())
 
 
+def benchmark_scirhc_stats(module) -> dict[str, int]:
+    ctx = build_scirhc_generation_context(
+        module,
+        report_surface=ScirhcReportSurface.BENCHMARK_OUTPUT,
+        capability=SCIRHC_BENCHMARK_CAPABILITY,
+    )
+    with internal_scirhc_transform_access(ctx):
+        return scirhc_normalization_stats(module, ctx=ctx)
+
+
 def metric_class_for_name(metric_name: str) -> str:
     for rule in CLAIM_SCOPE_RULES.values():
         metric_class = rule["metric_classes"].get(metric_name)
@@ -1016,15 +1034,34 @@ def metric_class_for_name(metric_name: str) -> str:
 
 def build_scirhc_diff_audit_bundle() -> dict[str, object]:
     modules = {}
-    with internal_scirhc_transform_access():
-        for module_id, module in benchmark_report_canonical_registry().items():
-            ctx = build_scirhc_generation_context(module)
+    expected_module_audits = {}
+    for module_id, module in benchmark_report_canonical_registry().items():
+        ctx = build_scirhc_generation_context(
+            module,
+            report_surface=ScirhcReportSurface.BENCHMARK_OUTPUT,
+            capability=SCIRHC_BENCHMARK_CAPABILITY,
+        )
+        with internal_scirhc_transform_access(ctx):
             scirhc = scirh_to_scirhc(module, ctx=ctx)
-            modules[module_id] = generate_scirhc_diff_audit(module, scirhc, ctx=ctx)
-    return {
+            diff_audit = generate_scirhc_diff_audit(module, scirhc, ctx=ctx)
+        lineage_references = {
+            ctx.lineage_root.module_id: scirhc_lineage_root_payload(ctx.lineage_root),
+        }
+        assert_diff_audit_entry(
+            diff_audit,
+            module=module,
+            scirhc=scirhc,
+            lineage_references=lineage_references,
+            compression_statistics=benchmark_scirhc_stats(module),
+        )
+        modules[module_id] = diff_audit
+        expected_module_audits[module_id] = diff_audit
+    bundle = {
         "representation": SCIRHC_REPORT_REPRESENTATION,
         "modules": modules,
     }
+    assert_diff_audit_bundle(bundle, expected_module_audits=expected_module_audits)
+    return bundle
 
 
 def build_claim_gate(

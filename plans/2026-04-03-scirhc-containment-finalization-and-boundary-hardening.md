@@ -29,20 +29,21 @@ Close the remaining SCIR-Hc containment gaps by making transform access internal
 
 - `plans/2026-04-03-scirhc-containment-finalization-and-boundary-hardening.md`
 - `_internal/scirhc_transform.py`
-- `_internal/__init__.py`
-- `scripts/scir_h_bootstrap_model.py`
+- `validators/execution_context_guard.py`
+- `validators/lineage_contract.py`
+- `validators/diff_audit_validator.py`
 - `scripts/scir_bootstrap_pipeline.py`
 - `scripts/benchmark_contract_dry_run.py`
-- `schemas/benchmark_report.schema.json`
-- `reports/examples/benchmark_report.example.json`
-- `specs/scir_hc_doctrine.md`
-- `specs/validator_invariants.md`
-- `VALIDATION_STRATEGY.md`
-- `BENCHMARK_STRATEGY.md`
 - `validators/scirhc_validator.py`
-- `validators/validator_contracts.md`
-- `docs/SCIR_HC_FAILURE_MODES.md`
 - `tests/test_scirhc_doctrine.py`
+- `tests/test_scirhc_adversarial.py`
+- `tests/test_lineage_contract.py`
+- `validators/README.md`
+- `ci/README.md`
+- `ci/validation_pipeline.md`
+- `ci/validate_scirhc_containment.yml`
+- `.github/workflows/validate_scirhc_containment.yml`
+- `scripts/validate_repo_contracts.py`
 
 ## Invariants that must remain true
 
@@ -62,9 +63,9 @@ Close the remaining SCIR-Hc containment gaps by making transform access internal
 ## Validation steps
 
 - `python -m py_compile validators/scirhc_validator.py`
-- `python -m unittest discover -s tests -p test_scirhc_doctrine.py`
+- `python -m unittest discover -s tests`
 - `python scripts/scir_bootstrap_pipeline.py --mode validate`
-- `python scripts/benchmark_contract_dry_run.py`
+- `python scripts/benchmark_contract_dry_run.py --claim-run`
 - `python scripts/validate_repo_contracts.py --mode validate`
 
 ## Rollback strategy
@@ -82,8 +83,8 @@ Revert the hardening slice as one unit so the internal transform gate, validator
 
 ## Completion evidence
 
-- `python -m py_compile validators/scirhc_validator.py` passed
-- `python -m unittest discover -s tests -p test_scirhc_doctrine.py` passed
+- `python -m py_compile _internal/scirhc_transform.py validators/execution_context_guard.py validators/lineage_contract.py validators/diff_audit_validator.py validators/scirhc_validator.py scripts/scir_bootstrap_pipeline.py scripts/benchmark_contract_dry_run.py scripts/validate_repo_contracts.py tests/test_scirhc_doctrine.py tests/test_scirhc_adversarial.py tests/test_lineage_contract.py` passed
+- `python -m unittest discover -s tests` passed
 - `python scripts/scir_bootstrap_pipeline.py --mode validate` passed
-- `python scripts/benchmark_contract_dry_run.py` passed and wrote artifacts under `artifacts/benchmark_runs/python-proof-loop-full-20260403T193945Z`
+- `python scripts/benchmark_contract_dry_run.py --claim-run` passed and wrote artifacts under `artifacts/benchmark_runs/python-proof-loop-full-20260403T235053Z`
 - `python scripts/validate_repo_contracts.py --mode validate` passed

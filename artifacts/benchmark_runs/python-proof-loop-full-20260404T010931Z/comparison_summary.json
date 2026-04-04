@@ -1,0 +1,1167 @@
+{
+  "sweep_id": "python-proof-loop-full",
+  "run_id": "python-proof-loop-full-20260404T010931Z",
+  "commit_sha": "24dc5733f1b2a5b3d7173652383517310bdd312e",
+  "spec_version": "v0.1-draft",
+  "tool_version": "scir-benchmark-audit-v1",
+  "corpus_id": "python-proof-loop-corpus",
+  "corpus_manifest_hash": "sha256:0c3b78d3b092277d89bb79a7df485b3f794b3ae30668acbed4fba318b48e4398",
+  "generated_at": "2026-04-04T01:09:31.791528+00:00",
+  "comparison_metrics": [
+    "LCR",
+    "GR",
+    "SE",
+    "SCPR",
+    "round_trip",
+    "LCR_scirhc",
+    "GR_scirhc",
+    "SCPR_scirhc"
+  ],
+  "aggregate": {
+    "scir_metrics": {
+      "LCR": 1.6569,
+      "GR": 0.9545,
+      "SE": 0.213,
+      "SCPR": 1.0,
+      "round_trip": 1.0,
+      "LCR_scirhc": 1.8198,
+      "GR_scirhc": 0.9545,
+      "SCPR_scirhc": 1.0
+    },
+    "delta_vs_source": {
+      "LCR": 0.6569,
+      "GR": -0.0455,
+      "SE": 0.0632,
+      "SCPR": 0.0,
+      "round_trip": 0.0,
+      "LCR_scirhc": 0.8198,
+      "GR_scirhc": -0.0455,
+      "SCPR_scirhc": 0.0
+    },
+    "delta_vs_ast": {
+      "LCR": -5.1103,
+      "GR": -0.0455,
+      "SE": 0.1611,
+      "SCPR": 0.0,
+      "round_trip": 0.0,
+      "LCR_scirhc": -4.9474,
+      "GR_scirhc": -0.0455,
+      "SCPR_scirhc": 0.0
+    },
+    "delta_vs_normalized": {
+      "LCR": 0.6569,
+      "GR": -0.0455,
+      "SE": 0.0561,
+      "SCPR": 0.0,
+      "round_trip": 0.0,
+      "LCR_scirhc": 0.8198,
+      "GR_scirhc": -0.0455,
+      "SCPR_scirhc": 0.0
+    }
+  },
+  "slices": [
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=P|pipeline_stage=l_to_wasm|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=P|pipeline_stage=l_to_wasm|construct_family=direct-call|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_l|construct_family=async-await|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_l|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_l|construct_family=direct-call|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_python|construct_family=async-await|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": 1.0,
+        "round_trip": 1.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": 1.0
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": 0.0
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": 0.0
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": 0.0
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_python|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": 1.0,
+        "round_trip": 1.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": 1.0
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": 0.0
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": 0.0
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": 0.0
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=h_to_python|construct_family=direct-call|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": 1.0,
+        "round_trip": 1.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": 1.0
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": 0.0
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": 0.0
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": 0.0
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_h_validation|construct_family=async-await|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_h_validation|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_h_validation|construct_family=direct-call|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_l_validation|construct_family=async-await|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_l_validation|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=scir_l_validation|construct_family=direct-call|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=async-await|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": 1.4737,
+        "GR": 1.0,
+        "SE": 0.25,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": 1.4211,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": 0.4737,
+        "GR": 0.0,
+        "SE": 0.0921,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": 0.4211,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": -3.0526,
+        "GR": 0.0,
+        "SE": 0.157,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": -3.1052,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": 0.4737,
+        "GR": 0.0,
+        "SE": 0.0921,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": 0.4211,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": 1.4737,
+        "GR": 1.0,
+        "SE": 0.2143,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": 1.7368,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": 0.4737,
+        "GR": 0.0,
+        "SE": 0.109,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": 0.7368,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": -7.7368,
+        "GR": 0.0,
+        "SE": 0.1857,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": -7.4737,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": 0.4737,
+        "GR": 0.0,
+        "SE": 0.0038,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": 0.7368,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=direct-call|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": 1.5263,
+        "GR": 1.0,
+        "SE": 0.1379,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": 1.7368,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": 0.5263,
+        "GR": 0.0,
+        "SE": 0.0326,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": 0.7368,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": -5.4211,
+        "GR": 0.0,
+        "SE": 0.1,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": -5.2106,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": 0.5263,
+        "GR": 0.0,
+        "SE": 0.0326,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": 0.7368,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=h_to_l|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=h_to_python|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": 1.0,
+        "round_trip": 1.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": 1.0
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": 0.0
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": 0.0
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": 0.0,
+        "SE": null,
+        "SCPR": 0.0,
+        "round_trip": 0.0,
+        "LCR_scirhc": null,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": 0.0
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=scir_h_validation|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=scir_l_validation|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": null,
+        "GR": 1.0,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": 1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": null,
+        "GR": null,
+        "SE": null,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": null,
+        "GR_scirhc": null,
+        "SCPR_scirhc": null
+      }
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=source_to_h|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "scir_metrics": {
+        "LCR": 2.1538,
+        "GR": 0.0,
+        "SE": 0.25,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": 2.3846,
+        "GR_scirhc": 0.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_source": {
+        "LCR": 1.1538,
+        "GR": -1.0,
+        "SE": 0.0192,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": 1.3846,
+        "GR_scirhc": -1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_ast": {
+        "LCR": -4.2308,
+        "GR": -1.0,
+        "SE": 0.2018,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": -4.0,
+        "GR_scirhc": -1.0,
+        "SCPR_scirhc": null
+      },
+      "delta_vs_normalized": {
+        "LCR": 1.1538,
+        "GR": -1.0,
+        "SE": 0.0962,
+        "SCPR": null,
+        "round_trip": null,
+        "LCR_scirhc": 1.3846,
+        "GR_scirhc": -1.0,
+        "SCPR_scirhc": null
+      }
+    }
+  ],
+  "tolerance_failures": [
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=async-await|fixture_set=python-proof-loop",
+      "baseline_name": "direct source",
+      "metric": "LCR",
+      "delta": 0.4737,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=async-await|fixture_set=python-proof-loop",
+      "baseline_name": "direct source",
+      "metric": "LCR_scirhc",
+      "delta": 0.4211,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=async-await|fixture_set=python-proof-loop",
+      "baseline_name": "lightweight regularized core or s-expression",
+      "metric": "LCR",
+      "delta": 0.4737,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=async-await|fixture_set=python-proof-loop",
+      "baseline_name": "lightweight regularized core or s-expression",
+      "metric": "LCR_scirhc",
+      "delta": 0.4211,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "baseline_name": "direct source",
+      "metric": "LCR",
+      "delta": 0.4737,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "baseline_name": "direct source",
+      "metric": "LCR_scirhc",
+      "delta": 0.7368,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "baseline_name": "lightweight regularized core or s-expression",
+      "metric": "LCR",
+      "delta": 0.4737,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+      "baseline_name": "lightweight regularized core or s-expression",
+      "metric": "LCR_scirhc",
+      "delta": 0.7368,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=direct-call|fixture_set=python-proof-loop",
+      "baseline_name": "direct source",
+      "metric": "LCR",
+      "delta": 0.5263,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=direct-call|fixture_set=python-proof-loop",
+      "baseline_name": "direct source",
+      "metric": "LCR_scirhc",
+      "delta": 0.7368,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=direct-call|fixture_set=python-proof-loop",
+      "baseline_name": "lightweight regularized core or s-expression",
+      "metric": "LCR",
+      "delta": 0.5263,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=direct-call|fixture_set=python-proof-loop",
+      "baseline_name": "lightweight regularized core or s-expression",
+      "metric": "LCR_scirhc",
+      "delta": 0.7368,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=source_to_h|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "baseline_name": "direct source",
+      "metric": "LCR",
+      "delta": 1.1538,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=source_to_h|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "baseline_name": "direct source",
+      "metric": "GR",
+      "delta": -1.0,
+      "tolerance": -0.05
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=source_to_h|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "baseline_name": "direct source",
+      "metric": "LCR_scirhc",
+      "delta": 1.3846,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=source_to_h|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "baseline_name": "direct source",
+      "metric": "GR_scirhc",
+      "delta": -1.0,
+      "tolerance": -0.05
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=source_to_h|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "baseline_name": "typed-AST",
+      "metric": "GR",
+      "delta": -1.0,
+      "tolerance": -0.05
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=source_to_h|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "baseline_name": "typed-AST",
+      "metric": "GR_scirhc",
+      "delta": -1.0,
+      "tolerance": -0.05
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=source_to_h|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "baseline_name": "lightweight regularized core or s-expression",
+      "metric": "LCR",
+      "delta": 1.1538,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=source_to_h|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "baseline_name": "lightweight regularized core or s-expression",
+      "metric": "GR",
+      "delta": -1.0,
+      "tolerance": -0.05
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=source_to_h|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "baseline_name": "lightweight regularized core or s-expression",
+      "metric": "LCR_scirhc",
+      "delta": 1.3846,
+      "tolerance": 0.1
+    },
+    {
+      "slice_id": "frontend=python|tier=C|split=test|profile=D-PY|pipeline_stage=source_to_h|construct_family=opaque-boundary|fixture_set=python-proof-loop",
+      "baseline_name": "lightweight regularized core or s-expression",
+      "metric": "GR_scirhc",
+      "delta": -1.0,
+      "tolerance": -0.05
+    }
+  ],
+  "contamination_flags": []
+}

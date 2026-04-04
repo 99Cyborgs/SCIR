@@ -32,6 +32,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Fail if rustc/cargo are unavailable instead of skipping the Rust validation slice.",
     )
+    parser.add_argument(
+        "--include-experimental-python-translation",
+        action="store_true",
+        help="Also run the non-default experimental Python translation-validation lane without changing the default gate.",
+    )
     return parser
 
 
@@ -57,12 +62,18 @@ def main() -> int:
     deep_rust_commands = [
         [sys.executable, "scripts/scir_bootstrap_pipeline.py", "--language", "rust", "--mode", "validate"],
     ]
+    experimental_python_translation_command = [
+        sys.executable,
+        "scripts/validate_translation.py",
+        "--include-experimental-python",
+    ]
 
     for command in baseline_commands:
         run_command(command)
 
     deep_rust_status = "skipped_not_requested"
     conditional_track_c_status = "skipped_not_requested"
+    experimental_python_translation_status = "skipped_not_requested"
     if args.require_rust:
         if not rust_available:
             print(
@@ -75,6 +86,9 @@ def main() -> int:
         deep_rust_status = "executed"
     if args.include_track_c_pilot:
         conditional_track_c_status = "executed"
+    if args.include_experimental_python_translation:
+        run_command(experimental_python_translation_command)
+        experimental_python_translation_status = "executed"
 
     print(
         json.dumps(
@@ -90,9 +104,11 @@ def main() -> int:
                 "benchmark_validation_status": "executed",
                 "sweep_validation_status": "executed",
                 "conditional_track_c_validation_status": conditional_track_c_status,
+                "experimental_python_translation_validation_status": experimental_python_translation_status,
                 "deep_rust_validation_status": deep_rust_status,
                 "full_rust_validation_command": "python scripts/run_repo_validation.py --require-rust",
                 "conditional_track_c_validation_command": "python scripts/run_repo_validation.py --include-track-c-pilot",
+                "experimental_python_translation_validation_command": "python scripts/run_repo_validation.py --include-experimental-python-translation",
             },
             indent=2,
         )

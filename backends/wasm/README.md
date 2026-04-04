@@ -19,6 +19,7 @@ The active Wasm backend is limited to helper-free stable WAT emission for the sm
 - explicit profile `P`
 - explicit `P2` ceiling
 - explicit downgrade and boundary reporting
+- execution-backed translation validation against the paired `SCIR-L` artifact
 
 ### Admitted Python emitted modules
 
@@ -94,6 +95,13 @@ Wasm emission does not imply:
 - native parity
 - host-runtime parity
 - support for deferred constructs
+
+## Validation boundary
+
+Admitted Wasm output now requires both:
+
+- stable helper-free WAT inside this bounded backend contract
+- a passing `translation_validation_report` that compares backend behavior against bounded `SCIR-L` execution under profile `P`
 
 ## Required report path
 

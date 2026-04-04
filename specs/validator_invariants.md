@@ -55,6 +55,14 @@ These invariants are hard constraints. Validators must reject violations.
 | T002 | lowering does not erase required boundary annotations |
 | T003 | provenance remains traceable |
 | T004 | path and profile remain explicit |
+| T005 | active backend traces do not lose or add observable control-flow outcomes beyond the declared contract |
+| T006 | active backend traces do not lose or add required effects |
+| T007 | active backend traces do not use undeclared capabilities |
+| T008 | contract-bounded deviation must remain explicit and bounded |
+| T009 | active backend validation classifies subset admission before execution and reports exact excluded backend features |
+| T010 | translation-validation reports make equivalence mode, observable dimensions, validation strength, downgrade reason, and outcome explicit |
+| T011 | translation-validation mismatch findings reuse existing lowering provenance where available and do not invent missing provenance |
+| T012 | expanding execution-backed Wasm validation requires subset-classifier support, bounded oracle support, adversarial tests, updated example reports, and an explicit recorded promotion decision |
 
 ## Active shape constraints
 
@@ -74,6 +82,10 @@ These invariants are hard constraints. Validators must reject violations.
 - `opaque<T>` values must not be projected as if their internals were modeled
 - active lowering must carry both `origin` and `lowering_rule`
 - active `SCIR-L` provenance origins must remain rooted in the emitting `SCIR-H` module id
+- active execution-backed Wasm validation must reject helper imports, helper trampolines, indirect calls, mutable globals, memory growth, reference types, and other unadmitted WAT surface before execution begins
+- active execution-backed translation validation reports must record explicit outcome class, validation strength, equivalence mode, observable dimensions checked, subset-admission status, downgrade reason, and unsupported features
+- the optional experimental Python translation-validation lane must remain non-default and must not change the active `SCIR-H -> Python` reconstruction contract
+- no new Wasm surface may enter execution-backed validation until classifier coverage, bounded oracle coverage, adversarial regression tests, and example-report updates land together with a decision-register entry
 - pretty views must not be accepted as canonical storage
 
 ## Diagnostic contract
