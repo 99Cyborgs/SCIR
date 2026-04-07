@@ -9,10 +9,11 @@ lint:
 	$(PYTHON) scripts/validate_repo_contracts.py --mode lint
 
 test:
-	$(PYTHON) scripts/validate_repo_contracts.py --mode test
+	$(PYTHON) scripts/scir_bootstrap_pipeline.py --mode test
+	$(PYTHON) -m unittest discover -s tests
 	$(PYTHON) scripts/python_importer_conformance.py --mode test
 	$(PYTHON) scripts/rust_importer_conformance.py --mode test
-	$(PYTHON) scripts/scir_bootstrap_pipeline.py --mode test
+	$(PYTHON) scripts/validate_repo_contracts.py --mode test
 
 validate:
 	$(PYTHON) scripts/run_repo_validation.py

@@ -42,7 +42,7 @@ from scir_h_bootstrap_model import (  # noqa: E402
     scirh_to_scirhc as public_scirh_to_scirhc,
 )
 from scir_python_bootstrap import SCIRH_MODULES as PYTHON_SCIRH_MODULES  # noqa: E402
-from validate_repo_contracts import collect_instance_validation_errors  # noqa: E402
+from scir.contract_utils import collect_instance_validation_errors  # noqa: E402
 from validators.scirhc_validator import (  # noqa: E402
     ScirHcDoctrineError,
     assert_claim_scope_compliance,

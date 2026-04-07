@@ -33,6 +33,27 @@ python scripts/run_repo_validation.py --include-track-c-pilot
 python scripts/run_repo_validation.py --include-experimental-python-translation
 ```
 
+## Install
+
+Use a local virtual environment from the repository root:
+
+```bash
+python -m venv .venv
+.venv\Scripts\python -m pip install --upgrade pip
+.venv\Scripts\python -m pip install -e .[dev]
+```
+
+The editable install supplies the declared Python dependency surface and exposes the shared `scir` package boundary used by validators, benchmark helpers, and document renderers.
+
+## Generated contract documents
+
+The metadata-rendered contract documents stay checked in. When the underlying contract metadata changes, verify or refresh them explicitly:
+
+```bash
+python scripts/render_contract_docs.py --mode check
+python scripts/render_contract_docs.py --mode write
+```
+
 ## Next Steps
 
 1. keep the Python proof loop healthy without widening beyond the admitted subset

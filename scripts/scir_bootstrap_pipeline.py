@@ -84,7 +84,7 @@ from scir_rust_bootstrap import (
     SOURCE_TEXTS as RUST_SOURCE_TEXTS,
     build_bundle as build_rust_bundle,
 )
-from validate_repo_contracts import (
+from scir.contract_utils import (
     collect_instance_validation_errors,
     validate_boundary_capability_contract,
 )
@@ -3069,41 +3069,59 @@ def validate_reconstruction_artifacts(
 
 def validate_executable_output_set(outputs: dict):
     failures = []
+    output_groups = {}
+    for key in [
+        "scir_hc_reports",
+        "scir_l_reports",
+        "translation_reports",
+        "reconstruction_reports",
+        "reconstruction_preservation_reports",
+        "wasm_reports",
+    ]:
+        group = outputs.get(key)
+        if group is None:
+            failures.append(f"output bundle missing {key}")
+            output_groups[key] = {}
+        elif not isinstance(group, dict):
+            failures.append(f"output bundle {key} must be a dict")
+            output_groups[key] = {}
+        else:
+            output_groups[key] = group
     for case_name in SUPPORTED_CASES:
-        if case_name not in outputs["scir_hc_reports"]:
+        if case_name not in output_groups["scir_hc_reports"]:
             failures.append(f"{case_name}: supported case must emit an SCIR-Hc output")
-        if case_name not in outputs["scir_l_reports"]:
+        if case_name not in output_groups["scir_l_reports"]:
             failures.append(f"{case_name}: supported case must emit an SCIR-L output")
-        if case_name not in outputs["translation_reports"]:
+        if case_name not in output_groups["translation_reports"]:
             failures.append(f"{case_name}: supported case must emit a translation output")
-        if case_name not in outputs["reconstruction_reports"]:
+        if case_name not in output_groups["reconstruction_reports"]:
             failures.append(f"{case_name}: supported case must emit a reconstruction output")
-        if case_name not in outputs["reconstruction_preservation_reports"]:
+        if case_name not in output_groups["reconstruction_preservation_reports"]:
             failures.append(f"{case_name}: supported case must emit a reconstruction preservation report")
     for case_name in WASM_EMITTABLE_CASES:
-        if case_name not in outputs["wasm_reports"]:
+        if case_name not in output_groups["wasm_reports"]:
             failures.append(f"{case_name}: Wasm-emittable case must emit a Wasm output")
-        elif "translation_validation_report" not in outputs["wasm_reports"][case_name]:
+        elif "translation_validation_report" not in output_groups["wasm_reports"][case_name]:
             failures.append(f"{case_name}: Wasm-emittable case must emit a translation-validation report")
     for case_name in sorted(set(SUPPORTED_CASES) - set(WASM_EMITTABLE_CASES)):
-        if case_name in outputs["wasm_reports"]:
+        if case_name in output_groups["wasm_reports"]:
             failures.append(f"{case_name}: non-emittable supported case must not emit a Wasm output")
     for case_name in SCIRH_ONLY_CASES:
-        if case_name not in outputs["scir_hc_reports"]:
+        if case_name not in output_groups["scir_hc_reports"]:
             failures.append(f"{case_name}: importer-only case must emit an SCIR-Hc output")
     for case_name in [*SCIRH_ONLY_CASES, *REJECTED_CASES]:
-        if case_name in outputs["scir_l_reports"]:
+        if case_name in output_groups["scir_l_reports"]:
             failures.append(f"{case_name}: non-executable case must not emit SCIR-L output")
-        if case_name in outputs["translation_reports"]:
+        if case_name in output_groups["translation_reports"]:
             failures.append(f"{case_name}: non-executable case must not emit translation output")
-        if case_name in outputs["reconstruction_reports"]:
+        if case_name in output_groups["reconstruction_reports"]:
             failures.append(f"{case_name}: non-executable case must not emit reconstruction output")
-        if case_name in outputs["reconstruction_preservation_reports"]:
+        if case_name in output_groups["reconstruction_preservation_reports"]:
             failures.append(f"{case_name}: non-executable case must not emit reconstruction preservation report")
-        if case_name in outputs["wasm_reports"]:
+        if case_name in output_groups["wasm_reports"]:
             failures.append(f"{case_name}: non-executable case must not emit Wasm output")
     for case_name in REJECTED_CASES:
-        if case_name in outputs["scir_hc_reports"]:
+        if case_name in output_groups["scir_hc_reports"]:
             failures.append(f"{case_name}: rejected case must not emit SCIR-Hc output")
     return failures
 

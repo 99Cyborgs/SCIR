@@ -17,10 +17,9 @@ import subprocess
 import sys
 import tempfile
 
-try:
-    from jsonschema import Draft202012Validator
-except ImportError:  # pragma: no cover - optional dependency
-    Draft202012Validator = None
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from benchmark_contract_metadata import (
     BENCHMARK_CONTRACT_METADATA,
@@ -44,14 +43,14 @@ from scir_python_bootstrap import (
     SCIRH_MODULES as PYTHON_SCIRH_MODULES,
 )
 from scir_rust_bootstrap import RUST_IMPORTER_METADATA
+from scir.contract_docs import rendered_contract_documents
+from scir.contract_utils import collect_instance_validation_errors, validate_boundary_capability_contract
 from wasm_backend_metadata import WASM_BACKEND_METADATA, wasm_emittable_module_ids
-
-
-ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 REQUIRED_FILES = [
     "README.md",
     "AGENTS.md",
+    "pyproject.toml",
     "ARCHITECTURE.md",
     "SYSTEM_BOUNDARY.md",
     "REPO_MAP.md",
@@ -85,6 +84,7 @@ REQUIRED_FILES = [
     "plans/2026-04-06-q-06-010-lock-track-c-provenance-note-location.md",
     "plans/2026-04-02-q-02-003-sync-python-proof-loop-artifacts.md",
     "plans/2026-04-03-benchmark-credibility-hardening.md",
+    "docs/portfolio_positioning.md",
     "docs/project_overview.md",
     "docs/SCIR_HC_FAILURE_MODES.md",
     "docs/scir_h_overview.md",
@@ -176,6 +176,7 @@ REQUIRED_FILES = [
     "scripts/benchmark_audit_common.py",
     "scripts/benchmark_contract_dry_run.py",
     "scripts/benchmark_repro.py",
+    "scripts/render_contract_docs.py",
     "scripts/sync_python_proof_loop_artifacts.py",
     "scripts/validate_translation.py",
     "reports/README.md",
@@ -378,7 +379,6 @@ WASM_README_NON_EMITTABLE_RULES_HEADING = "### Non-emittable lowering rules"
 LOWERING_CONTRACT_WASM_ADMITTED_HEADING = "### Wasm-admitted lowering rules"
 LOWERING_CONTRACT_WASM_NON_EMITTABLE_HEADING = "### Wasm-non-emittable lowering rules"
 VALIDATION_STRATEGY_WASM_MODULES_HEADING = "### Admitted helper-free Wasm-emission modules"
-CAPABILITY_DEPENDENCY_PREFIX = "capability:"
 PRESERVATION_STAGE_NAMES = [
     "source_to_h",
     "scir_h_validation",
@@ -410,170 +410,6 @@ NOT_ACTIVE_MARKERS = {
         "default validation",
     ],
 }
-
-
-def is_number(value):
-    return isinstance(value, (int, float)) and not isinstance(value, bool)
-
-
-def matches_type(value, expected_type):
-    if isinstance(expected_type, list):
-        return any(matches_type(value, item) for item in expected_type)
-    return {
-        "object": isinstance(value, dict),
-        "array": isinstance(value, list),
-        "string": isinstance(value, str),
-        "number": is_number(value),
-        "integer": isinstance(value, int) and not isinstance(value, bool),
-        "boolean": isinstance(value, bool),
-        "null": value is None,
-    }.get(expected_type, True)
-
-
-def normalize_for_uniqueness(value):
-    return json.dumps(value, sort_keys=True, separators=(",", ":"))
-
-
-def collect_fallback_validation_errors(instance, schema, path="$"):
-    failures = []
-    expected_type = schema.get("type")
-    if expected_type is not None and not matches_type(instance, expected_type):
-        return [(path, f"expected type {expected_type!r}")]
-
-    expected_enum = schema.get("enum")
-    if expected_enum is not None and instance not in expected_enum:
-        failures.append((path, f"expected one of {expected_enum!r}"))
-
-    min_length = schema.get("minLength")
-    if min_length is not None and isinstance(instance, str) and len(instance) < min_length:
-        failures.append((path, f"expected string length >= {min_length}"))
-
-    min_items = schema.get("minItems")
-    if min_items is not None and isinstance(instance, list) and len(instance) < min_items:
-        failures.append((path, f"expected at least {min_items} items"))
-
-    pattern = schema.get("pattern")
-    if pattern is not None and isinstance(instance, str) and re.fullmatch(pattern, instance) is None:
-        failures.append((path, f"expected string matching {pattern!r}"))
-
-    if schema.get("uniqueItems") and isinstance(instance, list):
-        normalized = [normalize_for_uniqueness(item) for item in instance]
-        if len(normalized) != len(set(normalized)):
-            failures.append((path, "expected unique items"))
-
-    if isinstance(instance, dict):
-        properties = schema.get("properties", {})
-        required = schema.get("required", [])
-        for key in required:
-            if key not in instance:
-                failures.append((path, f"missing required property {key}"))
-        additional = schema.get("additionalProperties", True)
-        for key, value in instance.items():
-            child_path = f"{path}.{key}"
-            if key in properties:
-                failures.extend(
-                    collect_fallback_validation_errors(value, properties[key], child_path)
-                )
-            elif additional is False:
-                failures.append((path, f"unexpected property {key}"))
-            elif isinstance(additional, dict):
-                failures.extend(
-                    collect_fallback_validation_errors(value, additional, child_path)
-                )
-
-    if isinstance(instance, list) and "items" in schema:
-        for idx, item in enumerate(instance):
-            failures.extend(
-                collect_fallback_validation_errors(item, schema["items"], f"{path}[{idx}]")
-            )
-
-    return failures
-
-
-def collect_instance_validation_errors(instance, schema):
-    if Draft202012Validator is None:
-        return collect_fallback_validation_errors(instance, schema)
-    errors = sorted(
-        Draft202012Validator(schema).iter_errors(instance),
-        key=lambda error: ([str(part) for part in error.absolute_path], error.message),
-    )
-    failures = []
-    for error in errors:
-        path = "$"
-        for part in error.absolute_path:
-            path += f"[{part}]" if isinstance(part, int) else f".{part}"
-        failures.append((path, error.message))
-    return failures
-
-
-def capability_dependency_entries(module_manifest: dict | None):
-    if not isinstance(module_manifest, dict):
-        return set()
-    dependencies = module_manifest.get("dependencies", [])
-    if not isinstance(dependencies, list):
-        return set()
-    return {
-        dependency
-        for dependency in dependencies
-        if isinstance(dependency, str) and dependency.startswith(CAPABILITY_DEPENDENCY_PREFIX)
-    }
-
-
-def boundary_capability_entries(boundary_contract: dict | None):
-    if not isinstance(boundary_contract, dict):
-        return set(), []
-    capability_entries = set()
-    failures = []
-    for entry in boundary_contract.get("capabilities", []):
-        if not isinstance(entry, str) or not entry:
-            failures.append("capabilities entries must be non-empty strings")
-            continue
-        if not entry.startswith(CAPABILITY_DEPENDENCY_PREFIX):
-            failures.append(
-                f"capability entry {entry!r} must use the {CAPABILITY_DEPENDENCY_PREFIX}<name> form"
-            )
-            continue
-        capability_entries.add(entry)
-    return capability_entries, failures
-
-
-def validate_boundary_capability_contract(
-    module_manifest: dict | None,
-    boundary_contract: dict | None,
-    *,
-    label: str,
-    allow_capabilities: bool,
-):
-    """Require Tier C capability accounting to stay mirrored between manifests and boundary contracts."""
-
-    failures = []
-    capability_imports = capability_dependency_entries(module_manifest)
-    boundary_capabilities, capability_failures = boundary_capability_entries(boundary_contract)
-    for item in capability_failures:
-        failures.append(f"{label}: {item}")
-
-    if not allow_capabilities:
-        if boundary_capabilities:
-            failures.append(f"{label}: non-boundary fixtures must not declare capability requirements")
-        if capability_imports:
-            failures.append(f"{label}: non-boundary fixtures must not declare capability imports {sorted(capability_imports)!r}")
-        return failures
-
-    missing_capabilities = sorted(boundary_capabilities - capability_imports)
-    if missing_capabilities:
-        failures.append(
-            f"{label}: missing capability imports for boundary requirements {missing_capabilities!r}"
-        )
-
-    unused_capabilities = sorted(capability_imports - boundary_capabilities)
-    if unused_capabilities:
-        failures.append(
-            f"{label}: unused capability imports not referenced by the boundary contract {unused_capabilities!r}"
-        )
-
-    return failures
-
-
 def preservation_level_rank(level: str) -> int:
     try:
         return PRESERVATION_LEVELS.index(level)
@@ -675,6 +511,17 @@ def load_json_artifact(root: pathlib.Path, rel_path: str, failures: list[str]):
 
 def load_json_file(path: pathlib.Path):
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def check_rendered_contract_documents(root: pathlib.Path, *relative_paths: str):
+    failures = []
+    rendered_docs = rendered_contract_documents()
+    for rel_path in relative_paths:
+        expected = rendered_docs[rel_path]
+        actual = (root / rel_path).read_text(encoding="utf-8")
+        if actual != expected:
+            failures.append(f"{rel_path}: rendered contract document drifted from metadata")
+    return failures
 
 
 def file_sha256(root: pathlib.Path, rel_path: str) -> str:
@@ -1055,6 +902,7 @@ def check_spec_completeness_checklist(root: pathlib.Path):
             failures.append(f"SPEC_COMPLETENESS_CHECKLIST.md: empty MVP status for {row['construct']}")
         if not row["action_taken"]:
             failures.append(f"SPEC_COMPLETENESS_CHECKLIST.md: empty action taken for {row['construct']}")
+    failures.extend(check_rendered_contract_documents(root, "SPEC_COMPLETENESS_CHECKLIST.md"))
     return failures
 
 
@@ -1437,6 +1285,7 @@ def check_python_proof_loop_contract(root: pathlib.Path):
             "docs/reconstruction_policy.md: active reconstruction cases expected "
             + repr(expected_executable)
         )
+    failures.extend(check_rendered_contract_documents(root, "frontend/python/IMPORT_SCOPE.md"))
     return failures
 
 
@@ -1496,6 +1345,7 @@ def check_rust_importer_contract(root: pathlib.Path):
             "frontend/rust/IMPORT_SCOPE.md: rejected Rust importer cases expected "
             + repr(expected_rejected)
         )
+    failures.extend(check_rendered_contract_documents(root, "frontend/rust/IMPORT_SCOPE.md"))
     return failures
 
 
@@ -1503,8 +1353,10 @@ def check_active_surface_contract(root: pathlib.Path):
     failures = []
     required_inputs = {
         "README.md": root / "README.md",
+        "pyproject.toml": root / "pyproject.toml",
         "VALIDATION.md": root / "VALIDATION.md",
         "Makefile": root / "Makefile",
+        "scripts/render_contract_docs.py": root / "scripts" / "render_contract_docs.py",
         "scripts/run_repo_validation.py": root / "scripts" / "run_repo_validation.py",
         "scripts/sync_python_proof_loop_artifacts.py": root / "scripts" / "sync_python_proof_loop_artifacts.py",
         "VALIDATION_STRATEGY.md": root / "VALIDATION_STRATEGY.md",
@@ -1517,8 +1369,10 @@ def check_active_surface_contract(root: pathlib.Path):
         return failures
 
     readme = required_inputs["README.md"].read_text(encoding="utf-8")
+    pyproject_toml = required_inputs["pyproject.toml"].read_text(encoding="utf-8")
     validation_doc = required_inputs["VALIDATION.md"].read_text(encoding="utf-8")
     makefile = required_inputs["Makefile"].read_text(encoding="utf-8")
+    render_contract_docs = required_inputs["scripts/render_contract_docs.py"].read_text(encoding="utf-8")
     run_repo_validation = required_inputs["scripts/run_repo_validation.py"].read_text(encoding="utf-8")
     sync_python_artifacts = required_inputs["scripts/sync_python_proof_loop_artifacts.py"].read_text(encoding="utf-8")
     validation_strategy = required_inputs["VALIDATION_STRATEGY.md"].read_text(encoding="utf-8")
@@ -1531,12 +1385,18 @@ def check_active_surface_contract(root: pathlib.Path):
         failures.append("Makefile: active commands must not invoke archived TypeScript conformance")
     if "typescript_importer_conformance.py" in run_repo_validation:
         failures.append("scripts/run_repo_validation.py: active validation must not invoke archived TypeScript conformance")
+    if 'name = "scir-bootstrap"' not in pyproject_toml:
+        failures.append("pyproject.toml: project name must remain explicit")
+    if '"jsonschema>=' not in pyproject_toml:
+        failures.append("pyproject.toml: jsonschema dependency must remain explicit")
     if "--include-track-c-pilot" in makefile:
         failures.append("Makefile: default benchmark commands must not activate the non-default Track C pilot")
     if "benchmark-claim:" not in makefile:
         failures.append("Makefile: benchmark-claim target must remain explicit")
     if "benchmark-repro:" not in makefile:
         failures.append("Makefile: benchmark-repro target must remain explicit")
+    if "unittest discover -s tests" not in makefile:
+        failures.append("Makefile: full unittest discovery must remain part of the default test lane")
     if "Track `D`" in benchmark_strategy and "deferred" not in benchmark_strategy:
         failures.append("BENCHMARK_STRATEGY.md: Track D must remain explicitly deferred")
     for rel_name, text in {"OPEN_QUESTIONS.md": open_questions, "EXECUTION_QUEUE.md": execution_queue}.items():
@@ -1549,6 +1409,8 @@ def check_active_surface_contract(root: pathlib.Path):
         failures.append("VALIDATION_STRATEGY.md: Rust reconstruction must remain explicitly deferred")
     if 'benchmark_command = [sys.executable, "scripts/benchmark_contract_dry_run.py"]' not in run_repo_validation:
         failures.append("scripts/run_repo_validation.py: default benchmark command must remain Track A/B only")
+    if '"-m", "unittest", "discover", "-s", "tests"' not in run_repo_validation:
+        failures.append("scripts/run_repo_validation.py: full unittest discovery must remain explicit")
     if 'benchmark_command.append("--include-track-c-pilot")' not in run_repo_validation:
         failures.append("scripts/run_repo_validation.py: optional Track C pilot flag handling must remain explicit")
     if '"conditional_track_c_validation_status"' not in run_repo_validation:
@@ -1577,10 +1439,26 @@ def check_active_surface_contract(root: pathlib.Path):
         failures.append("README.md: Python proof-loop artifact sync check command must remain explicit")
     if "python scripts/sync_python_proof_loop_artifacts.py --mode write" not in readme:
         failures.append("README.md: Python proof-loop artifact sync write command must remain explicit")
+    if "python -m venv .venv" not in readme:
+        failures.append("README.md: editable-install virtualenv command must remain explicit")
+    if ".venv\\Scripts\\python -m pip install -e .[dev]" not in readme:
+        failures.append("README.md: editable-install command must remain explicit")
+    if "python scripts/render_contract_docs.py --mode check" not in readme:
+        failures.append("README.md: rendered contract doc drift check command must remain explicit")
+    if "python scripts/render_contract_docs.py --mode write" not in readme:
+        failures.append("README.md: rendered contract doc refresh command must remain explicit")
     if "python scripts/sync_python_proof_loop_artifacts.py --mode check" not in validation_doc:
         failures.append("VALIDATION.md: Python proof-loop artifact sync check command must remain explicit")
     if "python scripts/sync_python_proof_loop_artifacts.py --mode write" not in validation_doc:
         failures.append("VALIDATION.md: Python proof-loop artifact sync write command must remain explicit")
+    if "python scripts/render_contract_docs.py --mode check" not in validation_doc:
+        failures.append("VALIDATION.md: rendered contract doc drift check command must remain explicit")
+    if "python scripts/render_contract_docs.py --mode write" not in validation_doc:
+        failures.append("VALIDATION.md: rendered contract doc refresh command must remain explicit")
+    if "python -m unittest discover -s tests" not in validation_doc:
+        failures.append("VALIDATION.md: full unittest discovery command must remain explicit")
+    if '"--mode",' not in render_contract_docs or '"check", "write"' not in render_contract_docs:
+        failures.append("scripts/render_contract_docs.py: render command modes must remain explicit")
     if '"--mode", choices=["check", "write"]' not in sync_python_artifacts:
         failures.append("scripts/sync_python_proof_loop_artifacts.py: sync command modes must remain explicit")
     if "run_track_c_pilot" not in sync_python_artifacts or "build_bundle" not in sync_python_artifacts:
@@ -1593,7 +1471,13 @@ def check_active_surface_contract(root: pathlib.Path):
 def check_benchmark_contract(root: pathlib.Path):
     """Ensure benchmark docs, schemas, examples, and executable metadata describe the same bounded claim surface."""
 
-    failures = []
+    failures = check_rendered_contract_documents(
+        root,
+        "benchmarks/tracks.md",
+        "benchmarks/baselines.md",
+        "benchmarks/success_failure_gates.md",
+        "benchmarks/corpora_policy.md",
+    )
     benchmark_strategy = (root / "BENCHMARK_STRATEGY.md").read_text(encoding="utf-8")
     tracks_doc = (root / "benchmarks" / "tracks.md").read_text(encoding="utf-8")
     baselines_doc = (root / "benchmarks" / "baselines.md").read_text(encoding="utf-8")
@@ -2237,7 +2121,7 @@ def check_track_c_benchmark_examples(root: pathlib.Path):
 def check_wasm_emitter_contract(root: pathlib.Path):
     """Reject Wasm contract drift that would imply broader ABI or preservation claims than the frozen subset supports."""
 
-    failures = []
+    failures = check_rendered_contract_documents(root, "backends/wasm/README.md")
     wasm_readme = (root / "backends" / "wasm" / "README.md").read_text(encoding="utf-8")
     lowering_contract = (root / "LOWERING_CONTRACT.md").read_text(encoding="utf-8")
     validation_doc = (root / "VALIDATION.md").read_text(encoding="utf-8")

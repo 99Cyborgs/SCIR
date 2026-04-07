@@ -12,12 +12,16 @@ import shutil
 import sys
 import tempfile
 
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from scir_h_bootstrap_model import ScirHModelError, format_module, parse_module
-from scir_python_bootstrap import ImporterError, VALIDATOR_NAME, build_bundle
-from validate_repo_contracts import (
+from scir.contract_utils import (
     collect_instance_validation_errors,
     validate_boundary_capability_contract,
 )
+from scir_python_bootstrap import ImporterError, VALIDATOR_NAME, build_bundle
 
 
 FIXTURE_ROOT = pathlib.Path("tests") / "python_importer" / "cases"

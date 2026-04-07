@@ -41,10 +41,10 @@ from _internal.scirhc_transform import (
     scirh_to_scirhc,
 )
 from scir_h_bootstrap_model import ScirHModelError, ScirhcContextError
+from scir.contract_utils import collect_instance_validation_errors
 from scir_sweep import run_sweep
 from scir_bootstrap_pipeline import run_benchmark_suite, run_track_c_pilot
 from scir_python_bootstrap import SCIRH_MODULES as PYTHON_SCIRH_MODULES, SPEC_VERSION
-from validate_repo_contracts import collect_instance_validation_errors
 from validators.scirhc_validator import (
     CLAIM_SCOPE_RULES,
     DEFAULT_BENCHMARK_CLAIM_CLASS,

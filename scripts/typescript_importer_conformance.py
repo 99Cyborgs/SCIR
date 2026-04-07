@@ -4,7 +4,11 @@ import json
 import pathlib
 import sys
 
-from validate_repo_contracts import collect_instance_validation_errors
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scir.contract_utils import collect_instance_validation_errors
 
 
 FIXTURE_ROOT = pathlib.Path("tests") / "typescript_importer" / "cases"

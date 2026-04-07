@@ -11,6 +11,7 @@ python scripts/run_repo_validation.py
 This command validates:
 
 - repository contracts
+- full unit-test discovery for semantic-core and doctrine tests
 - derived exports
 - Python importer fixture integrity
 - Rust importer fixture integrity
@@ -26,6 +27,7 @@ This command validates:
 
 ```bash
 python scripts/validate_repo_contracts.py --mode validate
+python -m unittest discover -s tests
 python scripts/build_execution_queue.py --mode check
 python scripts/python_importer_conformance.py --mode validate-fixtures
 python scripts/rust_importer_conformance.py --mode validate-fixtures
@@ -42,6 +44,8 @@ python scripts/benchmark_repro.py --run-id <run-id>
 When Python proof-loop metadata or bounded Track `C` sample-producing logic changes, refresh the checked-in generated artifacts before rerunning validation:
 
 ```bash
+python scripts/render_contract_docs.py --mode check
+python scripts/render_contract_docs.py --mode write
 python scripts/sync_python_proof_loop_artifacts.py --mode check
 python scripts/sync_python_proof_loop_artifacts.py --mode write
 ```

@@ -41,8 +41,8 @@ from scir_bootstrap_pipeline import (
     preservation_expectation_status,
     run_pipeline,
 )
+from scir.contract_utils import collect_instance_validation_errors
 from scir_python_bootstrap import SPEC_VERSION
-from validate_repo_contracts import collect_instance_validation_errors
 
 
 SWEEP_RESULT_SCHEMA = "schemas/sweep_result.schema.json"

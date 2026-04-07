@@ -52,7 +52,7 @@ def main() -> int:
 
     baseline_commands = [
         [sys.executable, "scripts/validate_repo_contracts.py", "--mode", "validate"],
-        [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_scirhc_doctrine.py"],
+        [sys.executable, "-m", "unittest", "discover", "-s", "tests"],
         [sys.executable, "scripts/python_importer_conformance.py", "--mode", "validate-fixtures"],
         [sys.executable, "scripts/rust_importer_conformance.py", "--mode", "validate-fixtures"],
         [sys.executable, "scripts/scir_bootstrap_pipeline.py", "--mode", "validate"],

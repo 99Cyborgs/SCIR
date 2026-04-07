@@ -20,7 +20,8 @@ Status: Informative
 
 - `specs/`: normative semantics and validator-facing contracts
 - `schemas/`: report and manifest schemas
-- `docs/`: explanatory doctrine and detailed navigation
+- `docs/`: explanatory doctrine, detailed navigation, and consolidated informative portfolio notes
+- `scir/`: shared package boundary for contract utilities and metadata-backed document rendering
 - `frontend/`: importer doctrine
 - `validators/`: validator stack contracts
 - `runtime/`: bounded `SCIR-L` interpreter and backend execution harnesses for translation validation

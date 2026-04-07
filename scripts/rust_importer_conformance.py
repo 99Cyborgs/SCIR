@@ -12,7 +12,15 @@ import shutil
 import sys
 import tempfile
 
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from scir_h_bootstrap_model import ScirHModelError, format_module, parse_module
+from scir.contract_utils import (
+    collect_instance_validation_errors,
+    validate_boundary_capability_contract,
+)
 from scir_rust_bootstrap import (
     CASE_CONFIG,
     CARGO_TOML,
@@ -23,10 +31,6 @@ from scir_rust_bootstrap import (
     SCIRH_MODULES,
     VALIDATOR_NAME,
     build_bundle,
-)
-from validate_repo_contracts import (
-    collect_instance_validation_errors,
-    validate_boundary_capability_contract,
 )
 
 
