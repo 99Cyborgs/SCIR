@@ -170,6 +170,7 @@ def build_superseded_dirty_checkpoint(root: pathlib.Path) -> dict | None:
 
 
 def resolve_checkpoint_git_context(root: pathlib.Path) -> tuple[str, str, list[str]]:
+    recorded_git_context = load_recorded_git_context(root)
     try:
         current_head = run_git_stdout(root, "rev-parse", "HEAD").strip()
         working_tree_status = [
@@ -178,13 +179,15 @@ def resolve_checkpoint_git_context(root: pathlib.Path) -> tuple[str, str, list[s
             if line.strip()
         ]
     except ValueError:
-        recorded_git_context = load_recorded_git_context(root)
         if recorded_git_context is None:
             raise
         return recorded_git_context
 
     if working_tree_status:
         return current_head, "current_head", working_tree_status
+
+    if recorded_git_context is not None and recorded_git_context[1] == "baseline_parent":
+        return recorded_git_context
 
     try:
         baseline_parent = run_git_stdout(root, "rev-parse", "HEAD^").strip()

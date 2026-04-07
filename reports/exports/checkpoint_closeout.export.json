@@ -125,7 +125,7 @@
       },
       {
         "path": "scripts/build_execution_queue.py",
-        "sha256": "sha256:5dd229533b529837e4b18a06f53e807b7c7e5918e32dfc6e572e82c6af6117ad"
+        "sha256": "sha256:4cc65dd47011c96beba7e5c60d8ae82cb51bad5d03a1f39fb24c87a20e5fe257"
       },
       {
         "path": "scripts/validate_repo_contracts.py",
