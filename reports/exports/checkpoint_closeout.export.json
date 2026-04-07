@@ -52,7 +52,7 @@
   "evidence_refs": {
     "queue_markdown": {
       "path": "EXECUTION_QUEUE.md",
-      "sha256": "sha256:a77536d8d69a2063f24cf27f6247064828aa8835ce0aa403df3fffdd9289b3a5"
+      "sha256": "sha256:488c6a8401accfeecf5ede0e6ef0c6fb0237853baaa76fd43b17aa4c60cce29a"
     },
     "queue_export": {
       "path": "reports/exports/execution_queue.export.json",
@@ -63,17 +63,17 @@
       {
         "path": "plans/2026-04-01-mvp-narrowing-and-contract-hardening.md",
         "section": "CLOSEOUT",
-        "sha256": "sha256:dfb7851278367f69f38f093516996a8253397a0c2ead2dbd5c06b2c0ac8322d9"
+        "sha256": "sha256:156cd91b97908a595c123f6203d30fb7aad38bd78bea68f82eaa5d218d18f73a"
       },
       {
         "path": "plans/2026-04-07-q-06-011-lock-track-c-provenance-note-overwrite-semantics.md",
         "section": "CLOSEOUT",
-        "sha256": "sha256:4ec6df4cbe3a01edf2687b47a5b5e9c2bc9b76364334247b1e5b3665dca03d47"
+        "sha256": "sha256:5be48720c68ef4049fa1195fb3eeacaa66185817b857adba7ade9a15cd59d525"
       },
       {
         "path": "plans/2026-04-07-q-06-012-checkpoint-integrity-and-governance-evidence-binding.md",
         "section": "CLOSEOUT",
-        "sha256": "sha256:c343b035451204b7fa0c1174ab882a29def55e3dbbbdbbf129d980f7e1ce1011"
+        "sha256": "sha256:c32e57b6571b7dc36a306642a2284f595bc3ecbbdf96c1e644cb71f0ae878854"
       }
     ],
     "validation_outputs": [
@@ -97,39 +97,39 @@
     "schema_or_contract_surfaces": [
       {
         "path": "EXECUTION_QUEUE.md",
-        "sha256": "sha256:a77536d8d69a2063f24cf27f6247064828aa8835ce0aa403df3fffdd9289b3a5"
+        "sha256": "sha256:488c6a8401accfeecf5ede0e6ef0c6fb0237853baaa76fd43b17aa4c60cce29a"
       },
       {
         "path": "DECISION_REGISTER.md",
-        "sha256": "sha256:0d686d80057c5dbc8bf5a9f2c6503f1fc9cb2d1a15e7c07c42d2fb938a72b605"
+        "sha256": "sha256:b510ecda404c5360e58e54117cb7ed664e876428e26cdc543fff0de3c57bface"
       },
       {
         "path": "schemas/execution_queue.schema.json",
-        "sha256": "sha256:de0c831bc18d563f7c315806977ab724431d29899d46ad81fbaa052c3f7ac134"
+        "sha256": "sha256:94f7d1bd6c1ecfd14dcca7d9f53c5df4673c781af46281bad9204677974056a4"
       },
       {
         "path": "schemas/decision_register.schema.json",
-        "sha256": "sha256:d56b40091368b345d43821341383031800dfc7181fce2553a3c92597a8697946"
+        "sha256": "sha256:a9858eefa524ee9911212b362e3cb1fcbe8a78d48105d2ceb0c36214a44cbeaa"
       },
       {
         "path": "schemas/checkpoint_closeout.schema.json",
-        "sha256": "sha256:a9d02dfaab7dfeaf269f306c590ee61df709526233f29813c49bc16d8d987698"
+        "sha256": "sha256:72614635b7721e0465aae96f450ebe3d1990d340c000242349ecef310334c678"
       },
       {
         "path": "VALIDATION.md",
-        "sha256": "sha256:a1f4bc1652060be7344a76b559d40a41322eb89d175806dcb9bd0a2723a873fc"
+        "sha256": "sha256:e344d9ce206cbdc20d4f706cc516d15b0f4a4a6527585cadf0ce08c94bdbd6f7"
       },
       {
         "path": "VALIDATION_STRATEGY.md",
-        "sha256": "sha256:a02d1bf71b197f47d6468faeffbe96ae2b0ce81d45ea81d4f800350aac907f10"
+        "sha256": "sha256:07c0ab4d56e7a0d7c731e809d2ba1a193296927379cdcd29b593c793b2b49df2"
       },
       {
         "path": "scripts/build_execution_queue.py",
-        "sha256": "sha256:b98f1ce6ffd302528dd1a31e8c4f42f769c379b28c9ab94d5c95de116014db87"
+        "sha256": "sha256:5dd229533b529837e4b18a06f53e807b7c7e5918e32dfc6e572e82c6af6117ad"
       },
       {
         "path": "scripts/validate_repo_contracts.py",
-        "sha256": "sha256:7a873fedb3c2f5d476953c3c853326e2664370c318cab3f66d2d37524dbbeb62"
+        "sha256": "sha256:cad136577608d52650f313ca3caced4f70f63413a0ad7851d0604b85b69631fb"
       }
     ]
   },
@@ -149,17 +149,17 @@
       {
         "path": "schemas/execution_queue.schema.json",
         "declared_version": null,
-        "sha256": "sha256:de0c831bc18d563f7c315806977ab724431d29899d46ad81fbaa052c3f7ac134"
+        "sha256": "sha256:94f7d1bd6c1ecfd14dcca7d9f53c5df4673c781af46281bad9204677974056a4"
       },
       {
         "path": "schemas/decision_register.schema.json",
         "declared_version": null,
-        "sha256": "sha256:d56b40091368b345d43821341383031800dfc7181fce2553a3c92597a8697946"
+        "sha256": "sha256:a9858eefa524ee9911212b362e3cb1fcbe8a78d48105d2ceb0c36214a44cbeaa"
       },
       {
         "path": "schemas/checkpoint_closeout.schema.json",
         "declared_version": null,
-        "sha256": "sha256:a9d02dfaab7dfeaf269f306c590ee61df709526233f29813c49bc16d8d987698"
+        "sha256": "sha256:72614635b7721e0465aae96f450ebe3d1990d340c000242349ecef310334c678"
       }
     ],
     "exported_artifacts": [
@@ -171,7 +171,7 @@
       {
         "path": "reports/exports/decision_register.export.json",
         "generated_at": null,
-        "sha256": "sha256:beb5fae1e99380ed31191fd1da64b193b4bb5807dbf3475f4cf3b414f2cadd57"
+        "sha256": "sha256:5828ec19c9c2f7c19224d26c0afc2a6141c41e27729da2f083b8157bbb129f20"
       }
     ]
   },
