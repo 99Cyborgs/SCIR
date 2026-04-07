@@ -1,6 +1,6 @@
 # 2026-04-01 MVP Narrowing and Contract Hardening
 
-Status: in-progress
+Status: complete
 Owner: Codex
 Date: 2026-04-01
 
@@ -171,6 +171,10 @@ Revert the MVP-narrowing patch set as a unit if validation cannot be brought bac
 - the retained Track `C` pilot now has one deterministic checked-in provenance-note path at `reports/examples/benchmark_track_c_refresh_provenance.example.md`, and the note content is generator-backed from the same Track `C` sample manifest and result as the retained sample bundle
 - benchmark and repository validation now fail if the Track `C` provenance-note location doctrine drifts or if the checked-in note content no longer matches the generator-backed sample bundle
 - `DR-038` records the provenance-note storage boundary, `Q-06-010` is closed, and the execution queue now advances to `Q-06-011`
+- the retained Track `C` pilot now has explicit overwrite-in-place semantics for the fixed checked-in provenance note, so non-editorial refreshes replace that single note rather than appending ambiguous history or creating sibling variants
+- benchmark and repository validation now fail if the overwrite-semantics doctrine drifts or if operator-facing overwrite wording disappears from the benchmark and reports readmes
+- `DR-039` records the overwrite-semantics boundary, `Q-06-011` is closed, and the execution queue advances only to the bounded `Q-06-012` checkpoint-governance hardening slice rather than a substantive roadmap successor
+- `DR-040`, `DR-041`, and `DR-042` now bind the `Q-06-011` closeout, the explicit `EMPTY BY DESIGN` queue posture, and the no-successor decision to one canonical checkpoint artifact with fail-closed re-entry rules, and `Q-06-012` closes that governance-hardening slice without widening scope
 - derived exports for the decision register, open questions, and execution queue were regenerated from their markdown sources
 - TypeScript and broad tooling surfaces were kept in-place but downgraded to deferred status rather than active MVP claims
 - passed `python scripts/validate_repo_contracts.py --mode validate`
@@ -183,3 +187,10 @@ Revert the MVP-narrowing patch set as a unit if validation cannot be brought bac
 - passed `python scripts/benchmark_contract_dry_run.py`
 - passed `python scripts/scir_bootstrap_pipeline.py --language rust --mode test`
 - passed `python scripts/run_repo_validation.py --require-rust`
+
+## CLOSEOUT
+
+- Scope completed: the narrowed MVP hardening slice reached the last bounded Track `C` governance item, closed `Q-06-011`, then used bounded `Q-06-012` governance hardening to make the resulting empty-queue checkpoint auditable and reproducible without adding new product scope.
+- Invariants satisfied: `SCIR-H` remained the only semantic authority, `SCIR-L` stayed derivative-only, Track `A` and Track `B` remained the only default executable benchmark gates, and Track `C` stayed explicit opt-in only.
+- Residual risks: any new substantive work still requires explicit roadmap selection plus a fresh queue item; future Track `C` posture changes still require decision-register, queue, and checkpoint-export updates before landing.
+- Validation status: passed on 2026-04-07 via `python scripts/build_execution_queue.py --mode check`, `python scripts/validate_repo_contracts.py --mode validate`, `python scripts/validate_repo_contracts.py --mode test`, `python scripts/benchmark_contract_dry_run.py --include-track-c-pilot`, `python scripts/run_repo_validation.py`, and `python scripts/run_repo_validation.py --include-track-c-pilot`.

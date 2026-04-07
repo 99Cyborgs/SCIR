@@ -134,6 +134,8 @@ STRATEGY_TRACK_C_PROVENANCE_NOTE_FORMAT_HEADING = "### Conditional Track C non-e
 TRACKS_TRACK_C_PROVENANCE_NOTE_FORMAT_HEADING = "## Track C non-editorial sample refresh provenance note format"
 STRATEGY_TRACK_C_PROVENANCE_NOTE_LOCATION_HEADING = "### Conditional Track C non-editorial sample refresh provenance note location"
 TRACKS_TRACK_C_PROVENANCE_NOTE_LOCATION_HEADING = "## Track C non-editorial sample refresh provenance note location"
+STRATEGY_TRACK_C_PROVENANCE_NOTE_OVERWRITE_HEADING = "### Conditional Track C non-editorial sample refresh provenance note overwrite semantics"
+TRACKS_TRACK_C_PROVENANCE_NOTE_OVERWRITE_HEADING = "## Track C non-editorial sample refresh provenance note overwrite semantics"
 
 TRACK_EXPECTATIONS = {
     "track_a": {
@@ -410,6 +412,12 @@ def check_benchmark_doc_contract(root: pathlib.Path):
         STRATEGY_TRACK_C_PROVENANCE_NOTE_LOCATION_HEADING,
     )
     failures.extend(parse_failures)
+    strategy_track_c_provenance_note_overwrite, parse_failures = parse_markdown_bullet_list_section(
+        root,
+        "BENCHMARK_STRATEGY.md",
+        STRATEGY_TRACK_C_PROVENANCE_NOTE_OVERWRITE_HEADING,
+    )
+    failures.extend(parse_failures)
     track_c_task_family, parse_failures = parse_markdown_bullet_list_section(
         root,
         "benchmarks/tracks.md",
@@ -462,6 +470,12 @@ def check_benchmark_doc_contract(root: pathlib.Path):
         root,
         "benchmarks/tracks.md",
         TRACKS_TRACK_C_PROVENANCE_NOTE_LOCATION_HEADING,
+    )
+    failures.extend(parse_failures)
+    track_c_provenance_note_overwrite, parse_failures = parse_markdown_bullet_list_section(
+        root,
+        "benchmarks/tracks.md",
+        TRACKS_TRACK_C_PROVENANCE_NOTE_OVERWRITE_HEADING,
     )
     failures.extend(parse_failures)
     corpora_track_c_cases, parse_failures = parse_markdown_bullet_list_section(
@@ -648,6 +662,14 @@ def check_benchmark_doc_contract(root: pathlib.Path):
             "BENCHMARK_STRATEGY.md: conditional Track C non-editorial sample refresh provenance note location expected "
             + repr(track_c_contract["non_editorial_sample_refresh_note_location"])
         )
+    if (
+        strategy_track_c_provenance_note_overwrite is not None
+        and strategy_track_c_provenance_note_overwrite != track_c_contract["non_editorial_sample_refresh_note_overwrite"]
+    ):
+        failures.append(
+            "BENCHMARK_STRATEGY.md: conditional Track C non-editorial sample refresh provenance note overwrite semantics expected "
+            + repr(track_c_contract["non_editorial_sample_refresh_note_overwrite"])
+        )
     if track_c_task_family is not None and track_c_task_family != [track_c_contract["task_family"]]:
         failures.append(
             "benchmarks/tracks.md: Track C pilot task family expected "
@@ -698,6 +720,14 @@ def check_benchmark_doc_contract(root: pathlib.Path):
         failures.append(
             "benchmarks/tracks.md: Track C non-editorial sample refresh provenance note location expected "
             + repr(track_c_contract["non_editorial_sample_refresh_note_location"])
+        )
+    if (
+        track_c_provenance_note_overwrite is not None
+        and track_c_provenance_note_overwrite != track_c_contract["non_editorial_sample_refresh_note_overwrite"]
+    ):
+        failures.append(
+            "benchmarks/tracks.md: Track C non-editorial sample refresh provenance note overwrite semantics expected "
+            + repr(track_c_contract["non_editorial_sample_refresh_note_overwrite"])
         )
     if corpora_track_c_cases is not None and corpora_track_c_cases != track_c_contract["pilot_cases"]:
         failures.append(
@@ -822,6 +852,10 @@ def check_benchmark_doc_contract(root: pathlib.Path):
         failures.append("benchmarks/README.md: Track C provenance note system_under_test field must remain explicit")
     if "`reports/examples/benchmark_track_c_refresh_provenance.example.md`" not in benchmark_readme:
         failures.append("benchmarks/README.md: Track C provenance note location must remain explicit")
+    if "replace the entire checked-in note at that path" not in benchmark_readme:
+        failures.append("benchmarks/README.md: Track C provenance note overwrite semantics must remain explicit")
+    if "do not append history into the note or create sibling variants" not in benchmark_readme:
+        failures.append("benchmarks/README.md: Track C provenance note overwrite exclusions must remain explicit")
     if track_c_contract["opt_in_command"] not in benchmark_strategy:
         failures.append("BENCHMARK_STRATEGY.md: Track C opt-in benchmark command must remain explicit")
     if "python scripts/benchmark_contract_dry_run.py --claim-run" not in benchmark_strategy:
@@ -848,6 +882,10 @@ def check_benchmark_doc_contract(root: pathlib.Path):
         failures.append("reports/README.md: Track C provenance note system_under_test field must remain explicit")
     if "`benchmark_track_c_refresh_provenance.example.md`" not in reports_readme:
         failures.append("reports/README.md: Track C provenance note location must remain explicit")
+    if "replaces the entire checked-in note at that fixed path" not in reports_readme:
+        failures.append("reports/README.md: Track C provenance note overwrite semantics must remain explicit")
+    if "does not append historical entries or create sibling note variants" not in reports_readme:
+        failures.append("reports/README.md: Track C provenance note overwrite exclusions must remain explicit")
     if "`benchmark_report.example.json`" not in reports_readme:
         failures.append("reports/README.md: benchmark report example must remain explicit")
     if "`comparison_summary.example.json`" not in reports_readme:

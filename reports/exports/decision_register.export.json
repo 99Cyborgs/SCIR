@@ -303,6 +303,81 @@
       "constraint_imposed": "The retained Track `C` sample bundle must keep its provenance note at `reports/examples/benchmark_track_c_refresh_provenance.example.md`, adjacent to the checked-in sample manifest and result, and that note must stay generator-backed from the same Track `C` sample outputs instead of living in ad hoc locations.",
       "reversible": "yes",
       "first_validation": "`python scripts/sync_python_proof_loop_artifacts.py --mode check`"
+    },
+    {
+      "id": "DR-039",
+      "status": "accepted",
+      "decision": "Non-editorial Track `C` sample refreshes must overwrite the one checked-in provenance note in place.",
+      "constraint_imposed": "Any non-editorial Track `C` sample refresh that remains within the retained pilot contract must replace the entire contents of `reports/examples/benchmark_track_c_refresh_provenance.example.md`; it must not append historical entries into that file or create sibling variants that would make the retained checked-in note ambiguous.",
+      "reversible": "yes",
+      "first_validation": "`python scripts/validate_repo_contracts.py --mode validate`"
+    },
+    {
+      "id": "DR-040",
+      "status": "accepted",
+      "decision": "The `Q-06-011` `ready -> complete` closeout transition must be backed by explicit checkpoint decision evidence.",
+      "constraint_imposed": "Marking `Q-06-011` complete now requires a recorded transition basis, evidence references, and reproducibility-bound checkpoint context rather than a markdown status flip alone.",
+      "reversible": "yes",
+      "first_validation": "`python scripts/build_execution_queue.py --mode check`"
+    },
+    {
+      "id": "DR-041",
+      "status": "accepted",
+      "decision": "An empty execution queue must be recorded explicitly as `EMPTY BY DESIGN`.",
+      "constraint_imposed": "A queue with no ready items must also record the empty-state decision, the no-successor rationale, and the re-entry rules that govern any future return to `ready`.",
+      "reversible": "yes",
+      "first_validation": "`python scripts/build_execution_queue.py --mode check`"
+    },
+    {
+      "id": "DR-042",
+      "status": "accepted",
+      "decision": "No successor queue item may be created after the current closeout without an authoritative roadmap-derived follow-on and regenerated governance exports.",
+      "constraint_imposed": "The queue must remain empty after `Q-06-012` unless roadmap selection is complete, a bounded next item is defined, validator and export impact are assessed, and the queue plus checkpoint exports are regenerated consistently.",
+      "reversible": "yes",
+      "first_validation": "`python scripts/validate_repo_contracts.py --mode validate`"
+    }
+  ],
+  "decision_records": [
+    {
+      "id": "DR-040",
+      "transition": "Q-06-011 READY -> COMPLETE",
+      "justification": "The bounded overwrite-semantics slice is complete, the relevant dated plans now carry CLOSEOUT evidence, and the queue closeout is no longer treated as an implicit markdown-only status flip.",
+      "evidence_references": [
+        "EXECUTION_QUEUE.md#Q-06-011",
+        "plans/2026-04-07-q-06-011-lock-track-c-provenance-note-overwrite-semantics.md#CLOSEOUT",
+        "plans/2026-04-01-mvp-narrowing-and-contract-hardening.md#CLOSEOUT",
+        "reports/exports/execution_queue.export.json",
+        "reports/exports/checkpoint_closeout.export.json"
+      ],
+      "reversibility": "yes; reopen only if the closeout evidence, queue export, or checkpoint reproducibility context is shown incomplete or inconsistent",
+      "residual_risk": "Later operators could still misread Q-06-011 as a standalone markdown closeout if the checkpoint artifact and decision export drift apart."
+    },
+    {
+      "id": "DR-041",
+      "transition": "QUEUE STATE READY -> EMPTY BY DESIGN",
+      "justification": "After the bounded Q-06-012 governance-hardening slice, no ready item remains and the queue now records that empty state as an explicit governance decision instead of an inferred absence of work.",
+      "evidence_references": [
+        "EXECUTION_QUEUE.md#CURRENT-QUEUE-STATE",
+        "EXECUTION_QUEUE.md#QUEUE-RE-ENTRY-RULES",
+        "reports/exports/execution_queue.export.json",
+        "reports/exports/checkpoint_closeout.export.json"
+      ],
+      "reversibility": "yes; the queue may return to ready only by satisfying the published re-entry rules and regenerating the queue plus checkpoint exports",
+      "residual_risk": "Hand-edited queue or export surfaces could still drift unless queue/export validation remains part of the blocking checkpoint gate."
+    },
+    {
+      "id": "DR-042",
+      "transition": "SUCCESSOR ITEM CREATED -> NONE",
+      "justification": "No authoritative roadmap-derived follow-on is currently selected beyond the bounded Q-06-012 governance hardening slice, so the queue must not invent a substantive successor item at this checkpoint.",
+      "evidence_references": [
+        "IMPLEMENTATION_PLAN.md",
+        "plans/2026-04-01-mvp-narrowing-and-contract-hardening.md#CLOSEOUT",
+        "plans/2026-04-07-q-06-012-checkpoint-integrity-and-governance-evidence-binding.md#CLOSEOUT",
+        "EXECUTION_QUEUE.md#CURRENT-QUEUE-STATE",
+        "reports/exports/checkpoint_closeout.export.json"
+      ],
+      "reversibility": "yes; create a successor only after authoritative roadmap selection is complete, a bounded item is defined, validator and export impact are assessed, and the queue plus checkpoint exports are regenerated consistently",
+      "residual_risk": "A future operator could still try to resume work ad hoc unless the re-entry rules stay fail-closed and checkpoint evidence remains current."
     }
   ]
 }

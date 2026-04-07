@@ -8,6 +8,8 @@ This directory holds schema-valid example artifacts and derived exports.
 - `examples/`: illustrative report and manifest fixtures
 - `exports/`: derived exports whose source of truth remains markdown
 
+`reports/exports/checkpoint_closeout.export.json` is the canonical machine-readable checkpoint snapshot for an empty-by-design queue. It binds queue state, decision refs, evidence refs, validation context, residual risks, and re-entry conditions into one auditable closeout artifact, and it supersedes any earlier dirty workspace capture only by preserving that prior checkpoint's provenance inside the canonical baseline export.
+
 ## Rule
 
 Example artifacts are illustrative fixtures, not proof of implementation breadth. They must not overstate support, preservation, or benchmark success.
@@ -55,3 +57,4 @@ Use this exact minimal note shape when recording that provenance:
 ```
 
 The checked-in note for the retained sample bundle lives at `reports/examples/benchmark_track_c_refresh_provenance.example.md` so it remains adjacent to the Track `C` sample manifest and result.
+Any non-editorial refresh replaces the entire checked-in note at that fixed path; it does not append historical entries or create sibling note variants for the retained sample bundle.

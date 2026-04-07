@@ -1,0 +1,236 @@
+{
+  "generated_at": "2026-04-07T11:43:37.2228492-05:00",
+  "queue_state": {
+    "status": "EMPTY_BY_DESIGN",
+    "ready_items": [],
+    "no_successor_item_reason": "No authoritative roadmap-derived follow-on is currently selected beyond the bounded Q-06-012 governance hardening slice."
+  },
+  "last_completed": {
+    "queue_id": "Q-06-012",
+    "label": "Checkpoint integrity + governance evidence binding",
+    "title": "Checkpoint integrity and governance evidence binding"
+  },
+  "next_action": null,
+  "validation_state": {
+    "status": "PASSED",
+    "synchronized_with_working_tree": true
+  },
+  "decision_record_refs": [
+    {
+      "id": "DR-040",
+      "transition": "Q-06-011 READY -> COMPLETE",
+      "evidence_references": [
+        "EXECUTION_QUEUE.md#Q-06-011",
+        "plans/2026-04-07-q-06-011-lock-track-c-provenance-note-overwrite-semantics.md#CLOSEOUT",
+        "plans/2026-04-01-mvp-narrowing-and-contract-hardening.md#CLOSEOUT",
+        "reports/exports/execution_queue.export.json",
+        "reports/exports/checkpoint_closeout.export.json"
+      ]
+    },
+    {
+      "id": "DR-041",
+      "transition": "QUEUE STATE READY -> EMPTY BY DESIGN",
+      "evidence_references": [
+        "EXECUTION_QUEUE.md#CURRENT-QUEUE-STATE",
+        "EXECUTION_QUEUE.md#QUEUE-RE-ENTRY-RULES",
+        "reports/exports/execution_queue.export.json",
+        "reports/exports/checkpoint_closeout.export.json"
+      ]
+    },
+    {
+      "id": "DR-042",
+      "transition": "SUCCESSOR ITEM CREATED -> NONE",
+      "evidence_references": [
+        "IMPLEMENTATION_PLAN.md",
+        "plans/2026-04-01-mvp-narrowing-and-contract-hardening.md#CLOSEOUT",
+        "plans/2026-04-07-q-06-012-checkpoint-integrity-and-governance-evidence-binding.md#CLOSEOUT",
+        "EXECUTION_QUEUE.md#CURRENT-QUEUE-STATE",
+        "reports/exports/checkpoint_closeout.export.json"
+      ]
+    }
+  ],
+  "evidence_refs": {
+    "queue_markdown": {
+      "path": "EXECUTION_QUEUE.md",
+      "sha256": "sha256:a77536d8d69a2063f24cf27f6247064828aa8835ce0aa403df3fffdd9289b3a5"
+    },
+    "queue_export": {
+      "path": "reports/exports/execution_queue.export.json",
+      "generated_at": "2026-04-07T11:43:37.2228492-05:00",
+      "sha256": "sha256:8981a8d4f804a4b77c1ba3bfd9b7ea6d3f41adc61465d3f67f252894272ae0d4"
+    },
+    "relevant_plan_closeouts": [
+      {
+        "path": "plans/2026-04-01-mvp-narrowing-and-contract-hardening.md",
+        "section": "CLOSEOUT",
+        "sha256": "sha256:dfb7851278367f69f38f093516996a8253397a0c2ead2dbd5c06b2c0ac8322d9"
+      },
+      {
+        "path": "plans/2026-04-07-q-06-011-lock-track-c-provenance-note-overwrite-semantics.md",
+        "section": "CLOSEOUT",
+        "sha256": "sha256:4ec6df4cbe3a01edf2687b47a5b5e9c2bc9b76364334247b1e5b3665dca03d47"
+      },
+      {
+        "path": "plans/2026-04-07-q-06-012-checkpoint-integrity-and-governance-evidence-binding.md",
+        "section": "CLOSEOUT",
+        "sha256": "sha256:c343b035451204b7fa0c1174ab882a29def55e3dbbbdbbf129d980f7e1ce1011"
+      }
+    ],
+    "validation_outputs": [
+      {
+        "command": "python scripts/build_execution_queue.py --mode check",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/validate_repo_contracts.py --mode validate",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/validate_repo_contracts.py --mode test",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/run_repo_validation.py",
+        "status": "passed"
+      }
+    ],
+    "schema_or_contract_surfaces": [
+      {
+        "path": "EXECUTION_QUEUE.md",
+        "sha256": "sha256:a77536d8d69a2063f24cf27f6247064828aa8835ce0aa403df3fffdd9289b3a5"
+      },
+      {
+        "path": "DECISION_REGISTER.md",
+        "sha256": "sha256:0d686d80057c5dbc8bf5a9f2c6503f1fc9cb2d1a15e7c07c42d2fb938a72b605"
+      },
+      {
+        "path": "schemas/execution_queue.schema.json",
+        "sha256": "sha256:de0c831bc18d563f7c315806977ab724431d29899d46ad81fbaa052c3f7ac134"
+      },
+      {
+        "path": "schemas/decision_register.schema.json",
+        "sha256": "sha256:d56b40091368b345d43821341383031800dfc7181fce2553a3c92597a8697946"
+      },
+      {
+        "path": "schemas/checkpoint_closeout.schema.json",
+        "sha256": "sha256:a9d02dfaab7dfeaf269f306c590ee61df709526233f29813c49bc16d8d987698"
+      },
+      {
+        "path": "VALIDATION.md",
+        "sha256": "sha256:a1f4bc1652060be7344a76b559d40a41322eb89d175806dcb9bd0a2723a873fc"
+      },
+      {
+        "path": "VALIDATION_STRATEGY.md",
+        "sha256": "sha256:a02d1bf71b197f47d6468faeffbe96ae2b0ce81d45ea81d4f800350aac907f10"
+      },
+      {
+        "path": "scripts/build_execution_queue.py",
+        "sha256": "sha256:b98f1ce6ffd302528dd1a31e8c4f42f769c379b28c9ab94d5c95de116014db87"
+      },
+      {
+        "path": "scripts/validate_repo_contracts.py",
+        "sha256": "sha256:7a873fedb3c2f5d476953c3c853326e2664370c318cab3f66d2d37524dbbeb62"
+      }
+    ]
+  },
+  "validation_context": {
+    "queue_snapshot": "2026-04-07T11:43:37.2228492-05:00",
+    "head_commit_hash": "6b79ba2f2f787717c2aae558778d3b07aaabfeb1",
+    "commit_hash_basis": "baseline_parent",
+    "working_tree_dirty": false,
+    "working_tree_status": [],
+    "validation_commands": [
+      "python scripts/build_execution_queue.py --mode check",
+      "python scripts/validate_repo_contracts.py --mode validate",
+      "python scripts/validate_repo_contracts.py --mode test",
+      "python scripts/run_repo_validation.py"
+    ],
+    "schema_versions": [
+      {
+        "path": "schemas/execution_queue.schema.json",
+        "declared_version": null,
+        "sha256": "sha256:de0c831bc18d563f7c315806977ab724431d29899d46ad81fbaa052c3f7ac134"
+      },
+      {
+        "path": "schemas/decision_register.schema.json",
+        "declared_version": null,
+        "sha256": "sha256:d56b40091368b345d43821341383031800dfc7181fce2553a3c92597a8697946"
+      },
+      {
+        "path": "schemas/checkpoint_closeout.schema.json",
+        "declared_version": null,
+        "sha256": "sha256:a9d02dfaab7dfeaf269f306c590ee61df709526233f29813c49bc16d8d987698"
+      }
+    ],
+    "exported_artifacts": [
+      {
+        "path": "reports/exports/execution_queue.export.json",
+        "generated_at": "2026-04-07T11:43:37.2228492-05:00",
+        "sha256": "sha256:8981a8d4f804a4b77c1ba3bfd9b7ea6d3f41adc61465d3f67f252894272ae0d4"
+      },
+      {
+        "path": "reports/exports/decision_register.export.json",
+        "generated_at": null,
+        "sha256": "sha256:beb5fae1e99380ed31191fd1da64b193b4bb5807dbf3475f4cf3b414f2cadd57"
+      }
+    ]
+  },
+  "superseded_dirty_checkpoint": {
+    "generated_at": "2026-04-07T11:43:37.2228492-05:00",
+    "artifact_sha256": "sha256:bd7a355427b8f9650c4a73a72fddb223baffcd7824b47d3b7a2402fd74b1a8f7",
+    "head_commit_hash": "6b79ba2f2f787717c2aae558778d3b07aaabfeb1",
+    "commit_hash_basis": "current_head",
+    "working_tree_dirty": true,
+    "working_tree_status": [
+      "M BENCHMARK_STRATEGY.md",
+      "M DECISION_REGISTER.md",
+      "M EXECUTION_QUEUE.md",
+      "M VALIDATION.md",
+      "M VALIDATION_STRATEGY.md",
+      "M benchmarks/README.md",
+      "M benchmarks/tracks.md",
+      "M plans/2026-04-01-mvp-narrowing-and-contract-hardening.md",
+      "M plans/2026-04-06-q-06-009-lock-track-c-provenance-note-format.md",
+      "M plans/2026-04-06-q-06-010-lock-track-c-provenance-note-location.md",
+      "M plans/2026-04-07-repo-maintainability-and-validation-rebalance.md",
+      "M reports/README.md",
+      "M reports/exports/decision_register.export.json",
+      "M reports/exports/execution_queue.export.json",
+      "M schemas/decision_register.schema.json",
+      "M schemas/execution_queue.schema.json",
+      "M scir/contract_docs.py",
+      "M scripts/NOT_ACTIVE.md",
+      "M scripts/benchmark_contract_dry_run.py",
+      "M scripts/benchmark_contract_metadata.py",
+      "M scripts/build_execution_queue.py",
+      "M scripts/scir_bootstrap_pipeline.py",
+      "M scripts/validate_repo_contracts.py",
+      "?? artifacts/benchmark_runs/python-proof-loop-full-20260407T155526Z/",
+      "?? artifacts/benchmark_runs/python-proof-loop-full-20260407T155606Z/",
+      "?? artifacts/benchmark_runs/python-proof-loop-full-20260407T155650Z/",
+      "?? artifacts/benchmark_runs/python-proof-loop-full-20260407T155833Z/",
+      "?? artifacts/benchmark_runs/python-proof-loop-full-20260407T164321Z/",
+      "?? artifacts/sweeps/6b79ba2f2f78-20260407T155540Z/",
+      "?? artifacts/sweeps/6b79ba2f2f78-20260407T155625Z/",
+      "?? artifacts/sweeps/6b79ba2f2f78-20260407T155806Z/",
+      "?? artifacts/sweeps/6b79ba2f2f78-20260407T164254Z/",
+      "?? plans/2026-04-07-q-06-011-lock-track-c-provenance-note-overwrite-semantics.md",
+      "?? plans/2026-04-07-q-06-012-checkpoint-integrity-and-governance-evidence-binding.md",
+      "?? plans/2026-04-07-queue-closeout-and-validation-checkpoint.md",
+      "?? reports/exports/checkpoint_closeout.export.json",
+      "?? schemas/checkpoint_closeout.schema.json",
+      "?? scripts/deferred_track_d.py"
+    ]
+  },
+  "residual_risks": [
+    "Later operators could still misread Q-06-011 as a standalone markdown closeout if the checkpoint artifact and decision export drift apart.",
+    "Hand-edited queue or export surfaces could still drift unless queue/export validation remains part of the blocking checkpoint gate.",
+    "A future operator could still try to resume work ad hoc unless the re-entry rules stay fail-closed and checkpoint evidence remains current."
+  ],
+  "reentry_conditions": [
+    "roadmap selection is complete in an authoritative roadmap or active-plan source before the queue leaves EMPTY BY DESIGN",
+    "a bounded next item is defined with queue ID, scope, touched surfaces, validation, and done evidence",
+    "validator and export impact are assessed before any new item is marked ready",
+    "EXECUTION_QUEUE.md, reports/exports/execution_queue.export.json, and reports/exports/checkpoint_closeout.export.json are regenerated consistently before re-entry is recorded"
+  ]
+}

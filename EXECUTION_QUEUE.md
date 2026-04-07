@@ -9,12 +9,13 @@ It is derived from:
 
 - `IMPLEMENTATION_PLAN.md` for phase ordering
 - `plans/2026-04-01-mvp-narrowing-and-contract-hardening.md` for the active near-term work surface
+- `plans/2026-04-07-q-06-012-checkpoint-integrity-and-governance-evidence-binding.md` for checkpoint integrity and governance evidence binding
 - `OPEN_QUESTIONS.md` for unresolved blocker boundaries
 - `STATUS.md` for portfolio context only, not task ordering
 
 ## Queue metadata
 
-- Queue snapshot: `2026-04-02T12:10:00-05:00`
+- Queue snapshot: `2026-04-07T11:43:37.2228492-05:00`
 - Active milestone: `MVP Kernel Hardening`
 - Autonomy mode: `high`
 - Escalation threshold: `doctrine conflict; missing source authority; sequencing violation`
@@ -433,7 +434,7 @@ It is derived from:
 - Queue ID: `Q-06-011`
 - Title: `Require deterministic overwrite semantics for the fixed Track C provenance note`
 - Source milestone or phase: `Optional Track C pilot`
-- Status: `ready`
+- Status: `done`
 - Why now: `The note path is now fixed, so the next credible step is to define how future non-editorial Track C sample refreshes replace the existing checked-in note without leaving ambiguous historical residue at that path.`
 - Prerequisites: `Q-06-010`
 - Work instructions: `Codify deterministic overwrite semantics for the fixed Track C provenance note, keep the retained pilot's path, note format, and runner-derived provenance explicit, and do not promote Track C into the default executable benchmark gate.`
@@ -441,6 +442,20 @@ It is derived from:
 - Validation: `python scripts/build_execution_queue.py --mode check`; `python scripts/benchmark_contract_dry_run.py --include-track-c-pilot`; `python scripts/run_repo_validation.py --include-track-c-pilot`
 - Escalate only if: `locking provenance-note overwrite semantics would need broader corpus, weaker criteria, or any change that turns Track C into the default executable benchmark gate`
 - Done evidence: `non-editorial Track C provenance-note replacement semantics are explicit`; `path, format, and runner-derived provenance remain mandatory`; `Track A and Track B remain the only default executable benchmark tracks`
+
+### Q-06-012 - Checkpoint integrity and governance evidence binding
+
+- Queue ID: `Q-06-012`
+- Title: `Checkpoint integrity and governance evidence binding`
+- Source milestone or phase: `Optional Track C pilot`
+- Status: `done`
+- Why now: `Q-06-011 is already closed and the queue is empty by design, but the current closeout checkpoint still needs explicit decision binding, reproducibility context, and re-entry rules before it is auditable enough to serve as a stable handoff boundary.`
+- Prerequisites: `Q-06-011`
+- Work instructions: `Bind the Q-06-011 closeout, the empty-by-design queue decision, and the no-successor posture to explicit governance evidence, emit one canonical checkpoint snapshot, and keep queue re-entry fail-closed until roadmap selection and export regeneration are explicit.`
+- Touched surfaces: `DECISION_REGISTER.md`; `EXECUTION_QUEUE.md`; `reports/exports/`; `schemas/`; `scripts/build_execution_queue.py`; `scripts/validate_repo_contracts.py`; `VALIDATION.md`; `VALIDATION_STRATEGY.md`; `plans/`
+- Validation: `python scripts/build_execution_queue.py --mode check`; `python scripts/validate_repo_contracts.py --mode validate`; `python scripts/validate_repo_contracts.py --mode test`; `python scripts/run_repo_validation.py`
+- Escalate only if: `hardening the checkpoint would require inventing a substantive roadmap successor, weakening empty-queue fail-closed behavior, or changing technical architecture`
+- Done evidence: `explicit decision records bind the Q-06-011 closeout, empty queue, and no-successor posture`; `reports/exports/checkpoint_closeout.export.json captures exact checkpoint context`; `queue re-entry remains fail-closed until authoritative roadmap selection and export regeneration are explicit`
 
 ### Q-00-002 - Keep Track `A` and Track `B` locked to the fixed Python proof loop
 
@@ -469,3 +484,25 @@ It is derived from:
 - Validation: `python scripts/build_execution_queue.py --mode check`; `python scripts/validate_repo_contracts.py --mode test`; `make test`
 - Escalate only if: `a construct cannot be categorized as supported, importer-only, deferred, or removed without changing normative semantics`
 - Done evidence: `construct-by-construct status stays explicit`; `invalid canonical examples fail`; `lineage and canonical/view separation stay checked`
+
+## CURRENT QUEUE STATE
+
+QUEUE STATE: `EMPTY BY DESIGN`
+
+READY ITEMS: NONE
+
+LAST COMPLETED:
+- Q-06-012 (Checkpoint integrity + governance evidence binding)
+
+NO SUCCESSOR ITEM CREATED: `No authoritative roadmap-derived follow-on is currently selected beyond the bounded Q-06-012 governance hardening slice.`
+
+QUEUE STATUS:
+- SYNCHRONIZED WITH WORKING TREE: TRUE
+- VALIDATION STATE: PASSED
+
+## QUEUE RE-ENTRY RULES
+
+- `roadmap selection is complete in an authoritative roadmap or active-plan source before the queue leaves EMPTY BY DESIGN`
+- `a bounded next item is defined with queue ID, scope, touched surfaces, validation, and done evidence`
+- `validator and export impact are assessed before any new item is marked ready`
+- `EXECUTION_QUEUE.md, reports/exports/execution_queue.export.json, and reports/exports/checkpoint_closeout.export.json are regenerated consistently before re-entry is recorded`

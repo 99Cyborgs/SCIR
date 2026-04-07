@@ -82,6 +82,8 @@ REQUIRED_FILES = [
     "plans/2026-04-01-q-06-008-require-track-c-refresh-regeneration-provenance.md",
     "plans/2026-04-06-q-06-009-lock-track-c-provenance-note-format.md",
     "plans/2026-04-06-q-06-010-lock-track-c-provenance-note-location.md",
+    "plans/2026-04-07-q-06-011-lock-track-c-provenance-note-overwrite-semantics.md",
+    "plans/2026-04-07-q-06-012-checkpoint-integrity-and-governance-evidence-binding.md",
     "plans/2026-04-02-q-02-003-sync-python-proof-loop-artifacts.md",
     "plans/2026-04-03-benchmark-credibility-hardening.md",
     "docs/portfolio_positioning.md",
@@ -126,6 +128,7 @@ REQUIRED_FILES = [
     "schemas/decision_register.schema.json",
     "schemas/open_questions.schema.json",
     "schemas/execution_queue.schema.json",
+    "schemas/checkpoint_closeout.schema.json",
     "frontend/README.md",
     "frontend/python/IMPORT_SCOPE.md",
     "frontend/rust/IMPORT_SCOPE.md",
@@ -208,6 +211,7 @@ REQUIRED_FILES = [
     "reports/exports/decision_register.export.json",
     "reports/exports/open_questions.export.json",
     "reports/exports/execution_queue.export.json",
+    "reports/exports/checkpoint_closeout.export.json",
     "tests/README.md",
     "tests/corpora/python_tier_a_micro_corpus.json",
     "tests/corpora/python_proof_loop_corpus.json",
@@ -267,6 +271,8 @@ DECISION_REGISTER_HEADER = [
     "Reversible",
     "First validation",
 ]
+DECISION_RECORD_DETAIL_HEADING = "## Detailed decision records"
+CHECKPOINT_DECISION_RECORD_IDS = ["DR-040", "DR-041", "DR-042"]
 OPEN_QUESTIONS_HEADER = [
     "ID",
     "Question",
@@ -315,6 +321,7 @@ DECISION_REGISTER_SCHEMA_REL = "schemas/decision_register.schema.json"
 OPEN_QUESTIONS_EXPORT_REL = "reports/exports/open_questions.export.json"
 OPEN_QUESTIONS_SCHEMA_REL = "schemas/open_questions.schema.json"
 EXECUTION_QUEUE_EXPORT_REL = "reports/exports/execution_queue.export.json"
+CHECKPOINT_CLOSEOUT_EXPORT_REL = "reports/exports/checkpoint_closeout.export.json"
 EXECUTION_QUEUE_BUILD_SCRIPT_REL = "scripts/build_execution_queue.py"
 INVALID_SCIR_H_ROOT = pathlib.Path("tests") / "invalid_scir_h"
 INVALID_SCIR_H_MANIFEST_REL = "tests/invalid_scir_h/manifest.json"
@@ -363,6 +370,7 @@ BENCHMARK_STRATEGY_TRACK_C_EDITORIAL_REFRESH_HEADING = "### Conditional Track C 
 BENCHMARK_STRATEGY_TRACK_C_PROVENANCE_HEADING = "### Conditional Track C non-editorial sample refresh provenance"
 BENCHMARK_STRATEGY_TRACK_C_PROVENANCE_NOTE_FORMAT_HEADING = "### Conditional Track C non-editorial sample refresh provenance note format"
 BENCHMARK_STRATEGY_TRACK_C_PROVENANCE_NOTE_LOCATION_HEADING = "### Conditional Track C non-editorial sample refresh provenance note location"
+BENCHMARK_STRATEGY_TRACK_C_PROVENANCE_NOTE_OVERWRITE_HEADING = "### Conditional Track C non-editorial sample refresh provenance note overwrite semantics"
 BENCHMARK_TRACKS_TRACK_C_TASK_FAMILY_HEADING = "## Track C pilot task family"
 BENCHMARK_TRACKS_TRACK_C_EXECUTION_POSTURE_HEADING = "## Track C executable pilot posture"
 BENCHMARK_TRACKS_TRACK_C_DISPOSITION_HEADING = "## Track C disposition"
@@ -372,6 +380,7 @@ BENCHMARK_TRACKS_TRACK_C_EDITORIAL_REFRESH_HEADING = "## Track C editorial-only 
 BENCHMARK_TRACKS_TRACK_C_PROVENANCE_HEADING = "## Track C non-editorial sample refresh provenance"
 BENCHMARK_TRACKS_TRACK_C_PROVENANCE_NOTE_FORMAT_HEADING = "## Track C non-editorial sample refresh provenance note format"
 BENCHMARK_TRACKS_TRACK_C_PROVENANCE_NOTE_LOCATION_HEADING = "## Track C non-editorial sample refresh provenance note location"
+BENCHMARK_TRACKS_TRACK_C_PROVENANCE_NOTE_OVERWRITE_HEADING = "## Track C non-editorial sample refresh provenance note overwrite semantics"
 WASM_README_PYTHON_HEADING = "### Admitted Python emitted modules"
 WASM_README_RUST_HEADING = "### Admitted Rust emitted modules"
 WASM_README_ADMITTED_RULES_HEADING = "### Admitted lowering rules"
@@ -601,6 +610,53 @@ def parse_markdown_bullet_list_section(root: pathlib.Path, path_rel: str, headin
     return items, failures
 
 
+def split_semicolon_list(value: str):
+    return [item.strip().strip("`") for item in value.split(";") if item.strip()]
+
+
+def parse_decision_record_details(root: pathlib.Path, path_rel: str):
+    text = (root / path_rel).read_text(encoding="utf-8")
+    section_match = re.search(
+        rf"^{re.escape(DECISION_RECORD_DETAIL_HEADING)}\s*$\n(?P<body>.*?)(?=^## |\Z)",
+        text,
+        re.MULTILINE | re.DOTALL,
+    )
+    if section_match is None:
+        return None, [f"{path_rel}: section {DECISION_RECORD_DETAIL_HEADING!r} not found"]
+
+    records = []
+    failures = []
+    pattern = re.compile(
+        r"^### (?P<id>DR-[0-9]{3})\s*$\n(?P<body>.*?)(?=^### |^## |\Z)",
+        re.MULTILINE | re.DOTALL,
+    )
+    field_map = {
+        "Transition": "transition",
+        "Justification": "justification",
+        "Evidence references": "evidence_references",
+        "Reversibility": "reversibility",
+        "Residual risk": "residual_risk",
+    }
+    for match in pattern.finditer(section_match.group("body")):
+        body = match.group("body")
+        record = {"id": match.group("id")}
+        for label, key in field_map.items():
+            field_match = re.search(rf"^- {re.escape(label)}:\s*(.+)$", body, re.MULTILINE)
+            if field_match is None:
+                failures.append(f"{path_rel}: decision record {record['id']} missing field {label!r}")
+                continue
+            value = field_match.group(1).strip()
+            if key == "evidence_references":
+                record[key] = split_semicolon_list(value)
+            else:
+                record[key] = value.strip("`")
+        records.append(record)
+
+    if not records:
+        failures.append(f"{path_rel}: no detailed decision records found")
+    return records, failures
+
+
 def validate_track_c_result_lock_criteria(track_c_contract: dict, result: dict, label: str):
     failures = []
     metrics = result.get("metrics", {})
@@ -773,6 +829,19 @@ def check_schema_metadata(root: pathlib.Path):
             "worsened_metrics",
             "improved_metrics",
         ],
+        "schemas/checkpoint_closeout.schema.json": [
+            "generated_at",
+            "queue_state",
+            "last_completed",
+            "next_action",
+            "validation_state",
+            "decision_record_refs",
+            "evidence_refs",
+            "validation_context",
+            "superseded_dirty_checkpoint",
+            "residual_risks",
+            "reentry_conditions",
+        ],
     }
     failures = []
     for rel, required_fields in expectations.items():
@@ -813,7 +882,27 @@ def check_decision_register_export(root: pathlib.Path):
     failures.extend(parse_failures)
     if rows is None:
         return failures
-    derived = {"decisions": rows}
+    detail_records, parse_failures = parse_decision_record_details(root, "DECISION_REGISTER.md")
+    failures.extend(parse_failures)
+    if detail_records is None:
+        return failures
+    summary_ids = {row["id"] for row in rows}
+    for record in detail_records:
+        if record["id"] not in summary_ids:
+            failures.append(
+                f"DECISION_REGISTER.md: detailed decision record {record['id']} missing summary-table row"
+            )
+    missing_checkpoint_records = [
+        record_id for record_id in CHECKPOINT_DECISION_RECORD_IDS if not any(
+            record.get("id") == record_id for record in detail_records
+        )
+    ]
+    if missing_checkpoint_records:
+        failures.append(
+            "DECISION_REGISTER.md: missing checkpoint decision records "
+            + ", ".join(missing_checkpoint_records)
+        )
+    derived = {"decisions": rows, "decision_records": detail_records}
     schema = load_json_artifact(root, DECISION_REGISTER_SCHEMA_REL, failures)
     export = load_json_artifact(root, DECISION_REGISTER_EXPORT_REL, failures)
     if schema is None or export is None:
@@ -821,9 +910,8 @@ def check_decision_register_export(root: pathlib.Path):
     for label, instance in [("DECISION_REGISTER.md derived export", derived), (DECISION_REGISTER_EXPORT_REL, export)]:
         for location, message in collect_instance_validation_errors(instance, schema):
             failures.append(f"{label} {location}: {message}")
-    mismatch = describe_list_export_mismatch(DECISION_REGISTER_EXPORT_REL, "decisions", rows, export)
-    if mismatch:
-        failures.append(mismatch)
+    if export != derived:
+        failures.append(f"{DECISION_REGISTER_EXPORT_REL}: content drifted from DECISION_REGISTER.md")
     return failures
 
 
@@ -863,10 +951,14 @@ def check_execution_queue_export(root: pathlib.Path):
     )
     if completed.returncode == 0:
         return []
-    failures = [f"{EXECUTION_QUEUE_EXPORT_REL}: synchronization check failed"]
+    failures = []
     output = "\n".join(
         part.strip() for part in [completed.stdout, completed.stderr] if part and part.strip()
     )
+    if CHECKPOINT_CLOSEOUT_EXPORT_REL in output:
+        failures.append(f"{CHECKPOINT_CLOSEOUT_EXPORT_REL}: synchronization check failed")
+    if EXECUTION_QUEUE_EXPORT_REL in output or not failures:
+        failures.append(f"{EXECUTION_QUEUE_EXPORT_REL}: synchronization check failed")
     if output:
         failures.extend(f"{EXECUTION_QUEUE_BUILD_SCRIPT_REL}: {line}" for line in output.splitlines())
     return failures
@@ -1607,6 +1699,12 @@ def check_benchmark_contract(root: pathlib.Path):
         BENCHMARK_STRATEGY_TRACK_C_PROVENANCE_NOTE_LOCATION_HEADING,
     )
     failures.extend(parse_failures)
+    strategy_track_c_provenance_note_overwrite, parse_failures = parse_markdown_bullet_list_section(
+        root,
+        "BENCHMARK_STRATEGY.md",
+        BENCHMARK_STRATEGY_TRACK_C_PROVENANCE_NOTE_OVERWRITE_HEADING,
+    )
+    failures.extend(parse_failures)
     tracks_track_c_task_family, parse_failures = parse_markdown_bullet_list_section(
         root,
         "benchmarks/tracks.md",
@@ -1659,6 +1757,12 @@ def check_benchmark_contract(root: pathlib.Path):
         root,
         "benchmarks/tracks.md",
         BENCHMARK_TRACKS_TRACK_C_PROVENANCE_NOTE_LOCATION_HEADING,
+    )
+    failures.extend(parse_failures)
+    tracks_track_c_provenance_note_overwrite, parse_failures = parse_markdown_bullet_list_section(
+        root,
+        "benchmarks/tracks.md",
+        BENCHMARK_TRACKS_TRACK_C_PROVENANCE_NOTE_OVERWRITE_HEADING,
     )
     failures.extend(parse_failures)
     corpora_track_c_cases, parse_failures = parse_markdown_bullet_list_section(
@@ -1837,6 +1941,14 @@ def check_benchmark_contract(root: pathlib.Path):
             "BENCHMARK_STRATEGY.md: conditional Track C non-editorial sample refresh provenance note location expected "
             + repr(track_c_contract["non_editorial_sample_refresh_note_location"])
         )
+    if (
+        strategy_track_c_provenance_note_overwrite is not None
+        and strategy_track_c_provenance_note_overwrite != track_c_contract["non_editorial_sample_refresh_note_overwrite"]
+    ):
+        failures.append(
+            "BENCHMARK_STRATEGY.md: conditional Track C non-editorial sample refresh provenance note overwrite semantics expected "
+            + repr(track_c_contract["non_editorial_sample_refresh_note_overwrite"])
+        )
     if tracks_track_c_task_family is not None and tracks_track_c_task_family != [track_c_contract["task_family"]]:
         failures.append(
             "benchmarks/tracks.md: Track C pilot task family expected "
@@ -1887,6 +1999,14 @@ def check_benchmark_contract(root: pathlib.Path):
         failures.append(
             "benchmarks/tracks.md: Track C non-editorial sample refresh provenance note location expected "
             + repr(track_c_contract["non_editorial_sample_refresh_note_location"])
+        )
+    if (
+        tracks_track_c_provenance_note_overwrite is not None
+        and tracks_track_c_provenance_note_overwrite != track_c_contract["non_editorial_sample_refresh_note_overwrite"]
+    ):
+        failures.append(
+            "benchmarks/tracks.md: Track C non-editorial sample refresh provenance note overwrite semantics expected "
+            + repr(track_c_contract["non_editorial_sample_refresh_note_overwrite"])
         )
     if corpora_track_c_cases is not None and corpora_track_c_cases != track_c_contract["pilot_cases"]:
         failures.append(
@@ -2016,6 +2136,10 @@ def check_benchmark_contract(root: pathlib.Path):
         failures.append("benchmarks/README.md: Track C provenance note system_under_test field must remain explicit")
     if "`reports/examples/benchmark_track_c_refresh_provenance.example.md`" not in benchmarks_readme:
         failures.append("benchmarks/README.md: Track C provenance note location must remain explicit")
+    if "replace the entire checked-in note at that path" not in benchmarks_readme:
+        failures.append("benchmarks/README.md: Track C provenance note overwrite semantics must remain explicit")
+    if "do not append history into the note or create sibling variants" not in benchmarks_readme:
+        failures.append("benchmarks/README.md: Track C provenance note overwrite exclusions must remain explicit")
     if "illustrative only and do not belong to the default executable benchmark gate" not in reports_readme:
         failures.append("reports/README.md: Track C sample-artifact posture must remain explicit")
     if "non-default executable pilot" not in reports_readme:
@@ -2038,6 +2162,10 @@ def check_benchmark_contract(root: pathlib.Path):
         failures.append("reports/README.md: Track C provenance note system_under_test field must remain explicit")
     if "`benchmark_track_c_refresh_provenance.example.md`" not in reports_readme:
         failures.append("reports/README.md: Track C provenance note location must remain explicit")
+    if "replaces the entire checked-in note at that fixed path" not in reports_readme:
+        failures.append("reports/README.md: Track C provenance note overwrite semantics must remain explicit")
+    if "does not append historical entries or create sibling note variants" not in reports_readme:
+        failures.append("reports/README.md: Track C provenance note overwrite exclusions must remain explicit")
     if "`benchmark_report.example.json`" not in reports_readme:
         failures.append("reports/README.md: benchmark report example must remain explicit")
     if "`comparison_summary.example.json`" not in reports_readme:
@@ -2371,6 +2499,14 @@ def mutate_break_decision_register_export(root: pathlib.Path):
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def mutate_break_decision_record_detail(root: pathlib.Path):
+    path = root / "DECISION_REGISTER.md"
+    text = path.read_text(encoding="utf-8")
+    old = "- Evidence references: `EXECUTION_QUEUE.md#Q-06-011`; `plans/2026-04-07-q-06-011-lock-track-c-provenance-note-overwrite-semantics.md#CLOSEOUT`; `plans/2026-04-01-mvp-narrowing-and-contract-hardening.md#CLOSEOUT`; `reports/exports/execution_queue.export.json`; `reports/exports/checkpoint_closeout.export.json`"
+    new = "- Evidence refs: `EXECUTION_QUEUE.md#Q-06-011`"
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
 def mutate_break_open_questions_export(root: pathlib.Path):
     path = root / OPEN_QUESTIONS_EXPORT_REL
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -2381,8 +2517,24 @@ def mutate_break_open_questions_export(root: pathlib.Path):
 def mutate_break_execution_queue_export(root: pathlib.Path):
     path = root / EXECUTION_QUEUE_EXPORT_REL
     data = json.loads(path.read_text(encoding="utf-8"))
-    data["next_action"]["queue_id"] = "Q-00-999"
+    if data.get("next_action") is not None:
+        data["next_action"]["queue_id"] = "Q-00-999"
+    else:
+        data["current_queue_state"]["queue_status"]["validation_state"] = "FAILED"
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def mutate_break_checkpoint_closeout_export(root: pathlib.Path):
+    path = root / CHECKPOINT_CLOSEOUT_EXPORT_REL
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["reentry_conditions"] = data["reentry_conditions"][:-1]
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def mutate_remove_queue_reentry_rules(root: pathlib.Path):
+    path = root / "EXECUTION_QUEUE.md"
+    text = path.read_text(encoding="utf-8")
+    path.write_text(text.replace("## QUEUE RE-ENTRY RULES", "## QUEUE REENTRY", 1), encoding="utf-8")
 
 
 def mutate_break_python_executable_case_list(root: pathlib.Path):
@@ -2671,6 +2823,22 @@ def mutate_break_track_c_provenance_note_location_list(root: pathlib.Path):
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
+def mutate_break_track_c_provenance_note_overwrite_list(root: pathlib.Path):
+    path = root / "benchmarks" / "tracks.md"
+    text = path.read_text(encoding="utf-8")
+    old = (
+        "## Track C non-editorial sample refresh provenance note overwrite semantics\n\n"
+        "- `overwrite the entire checked-in note at reports/examples/benchmark_track_c_refresh_provenance.example.md on every non-editorial refresh`\n"
+        "- `do not append historical entries or create sibling variants for the retained checked-in note`"
+    )
+    new = (
+        "## Track C non-editorial sample refresh provenance note overwrite semantics\n\n"
+        "- `append refresh history to the checked-in note when convenient`\n"
+        "- `do not append historical entries or create sibling variants for the retained checked-in note`"
+    )
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
 def mutate_break_track_c_benchmark_readme_provenance(root: pathlib.Path):
     path = root / "benchmarks" / "README.md"
     text = path.read_text(encoding="utf-8")
@@ -2703,6 +2871,14 @@ def mutate_break_track_c_benchmark_readme_note_location(root: pathlib.Path):
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
+def mutate_break_track_c_benchmark_readme_note_overwrite(root: pathlib.Path):
+    path = root / "benchmarks" / "README.md"
+    text = path.read_text(encoding="utf-8")
+    old = "Each non-editorial refresh must replace the entire checked-in note at that path; do not append history into the note or create sibling variants for the retained checked-in sample bundle."
+    new = "Each non-editorial refresh may append a short history block to the existing note."
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
 def mutate_break_track_c_reports_readme_provenance(root: pathlib.Path):
     path = root / "reports" / "README.md"
     text = path.read_text(encoding="utf-8")
@@ -2730,6 +2906,14 @@ def mutate_break_track_c_reports_readme_note_location(root: pathlib.Path):
     path = root / "reports" / "README.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace("benchmark_track_c_refresh_provenance.example.md", "track_c_note.md", 1), encoding="utf-8")
+
+
+def mutate_break_track_c_reports_readme_note_overwrite(root: pathlib.Path):
+    path = root / "reports" / "README.md"
+    text = path.read_text(encoding="utf-8")
+    old = "Any non-editorial refresh replaces the entire checked-in note at that fixed path; it does not append historical entries or create sibling note variants for the retained sample bundle."
+    new = "Any non-editorial refresh may append history to the checked-in note if the retained sample bundle stays adjacent."
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
 def mutate_break_track_c_provenance_note_file(root: pathlib.Path):
@@ -2899,7 +3083,12 @@ def get_self_test_cases():
         (
             "decision register export drift",
             mutate_break_decision_register_export,
-            [DECISION_REGISTER_EXPORT_REL, "decision"],
+            [DECISION_REGISTER_EXPORT_REL, "content drifted"],
+        ),
+        (
+            "decision record detail drift",
+            mutate_break_decision_record_detail,
+            ["DECISION_REGISTER.md: decision record DR-040 missing field 'Evidence references'"],
         ),
         (
             "open questions export drift",
@@ -2910,6 +3099,16 @@ def get_self_test_cases():
             "execution queue drift",
             mutate_break_execution_queue_export,
             [EXECUTION_QUEUE_EXPORT_REL, "synchronization check failed"],
+        ),
+        (
+            "checkpoint closeout export drift",
+            mutate_break_checkpoint_closeout_export,
+            [CHECKPOINT_CLOSEOUT_EXPORT_REL, "synchronization check failed"],
+        ),
+        (
+            "queue re-entry rule drift",
+            mutate_remove_queue_reentry_rules,
+            ["QUEUE RE-ENTRY RULES section"],
         ),
         (
             "python executable proof-loop drift",
@@ -3027,6 +3226,11 @@ def get_self_test_cases():
             ["benchmarks/tracks.md: Track C non-editorial sample refresh provenance note location expected"],
         ),
         (
+            "track c provenance note overwrite drift",
+            mutate_break_track_c_provenance_note_overwrite_list,
+            ["benchmarks/tracks.md: Track C non-editorial sample refresh provenance note overwrite semantics expected"],
+        ),
+        (
             "track c benchmark readme provenance drift",
             mutate_break_track_c_benchmark_readme_provenance,
             ["benchmarks/README.md: Track C non-editorial sample refresh provenance rule must remain explicit"],
@@ -3035,6 +3239,11 @@ def get_self_test_cases():
             "track c benchmark readme note location drift",
             mutate_break_track_c_benchmark_readme_note_location,
             ["benchmarks/README.md: Track C provenance note location must remain explicit"],
+        ),
+        (
+            "track c benchmark readme note overwrite drift",
+            mutate_break_track_c_benchmark_readme_note_overwrite,
+            ["benchmarks/README.md: Track C provenance note overwrite semantics must remain explicit"],
         ),
         (
             "track c benchmark readme note format drift",
@@ -3050,6 +3259,11 @@ def get_self_test_cases():
             "track c reports readme note location drift",
             mutate_break_track_c_reports_readme_note_location,
             ["reports/README.md: Track C provenance note location must remain explicit"],
+        ),
+        (
+            "track c reports readme note overwrite drift",
+            mutate_break_track_c_reports_readme_note_overwrite,
+            ["reports/README.md: Track C provenance note overwrite semantics must remain explicit"],
         ),
         (
             "track c reports readme note format drift",

@@ -37,6 +37,7 @@ Use this minimal provenance note format for any such non-editorial refresh:
 ```
 
 Store that note at `reports/examples/benchmark_track_c_refresh_provenance.example.md` so it stays adjacent to `benchmark_track_c_manifest.example.json` and `benchmark_track_c_result.example.json`.
+Each non-editorial refresh must replace the entire checked-in note at that path; do not append history into the note or create sibling variants for the retained checked-in sample bundle.
 
 ## Deferred
 

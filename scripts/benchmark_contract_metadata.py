@@ -54,6 +54,10 @@ TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_NOTE_LOCATION = [
     "store the note at reports/examples/benchmark_track_c_refresh_provenance.example.md",
     "keep the note adjacent to the checked-in Track C sample manifest and result",
 ]
+TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_NOTE_OVERWRITE = [
+    "overwrite the entire checked-in note at reports/examples/benchmark_track_c_refresh_provenance.example.md on every non-editorial refresh",
+    "do not append historical entries or create sibling variants for the retained checked-in note",
+]
 
 
 BENCHMARK_CONTRACT_METADATA = {
@@ -187,6 +191,7 @@ BENCHMARK_CONTRACT_METADATA = {
             "non_editorial_sample_refresh_provenance": list(TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_PROVENANCE),
             "non_editorial_sample_refresh_note_format": list(TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_NOTE_FORMAT),
             "non_editorial_sample_refresh_note_location": list(TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_NOTE_LOCATION),
+            "non_editorial_sample_refresh_note_overwrite": list(TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_NOTE_OVERWRITE),
             "opt_in_command": "python scripts/benchmark_contract_dry_run.py --include-track-c-pilot",
             "opt_in_validation_command": "python scripts/run_repo_validation.py --include-track-c-pilot",
             "sample_manifest_path": "reports/examples/benchmark_track_c_manifest.example.json",
@@ -352,6 +357,8 @@ def _validate_benchmark_contract_metadata():
         raise ValueError("BENCHMARK_CONTRACT_METADATA Track C non-editorial sample refresh note format drifted")
     if track_c_contract["non_editorial_sample_refresh_note_location"] != TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_NOTE_LOCATION:
         raise ValueError("BENCHMARK_CONTRACT_METADATA Track C non-editorial sample refresh note location drifted")
+    if track_c_contract["non_editorial_sample_refresh_note_overwrite"] != TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_NOTE_OVERWRITE:
+        raise ValueError("BENCHMARK_CONTRACT_METADATA Track C non-editorial sample refresh note overwrite semantics drifted")
     if track_c_contract["opt_in_command"] != "python scripts/benchmark_contract_dry_run.py --include-track-c-pilot":
         raise ValueError("BENCHMARK_CONTRACT_METADATA Track C opt-in benchmark command drifted")
     if track_c_contract["opt_in_validation_command"] != "python scripts/run_repo_validation.py --include-track-c-pilot":

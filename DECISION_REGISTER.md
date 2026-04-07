@@ -43,6 +43,36 @@ This register records repository-level architecture decisions. Add a new entry f
 | DR-036 | accepted | Expanding execution-backed Wasm validation beyond the current helper-free subset requires explicit promotion criteria, and the Python translation-validation lane remains experimental only. | No new Wasm surface may enter execution-backed validation without subset-classifier support, bounded oracle support, adversarial plus mutation tests, updated example reports, and validator-doctrine plus decision-register updates; the Python execution-backed lane may run only through explicit opt-in commands and does not change the default Wasm-first contract. | yes | `python scripts/run_repo_validation.py --include-experimental-python-translation` |
 | DR-037 | accepted | Non-editorial Track `C` sample refreshes must use one minimal provenance-note format. | Any non-editorial Track `C` sample refresh that still fits the retained pilot contract must publish a markdown note headed `# Track C Sample Refresh Provenance` with explicit `regeneration_command`, `validation_command`, `manifest_corpus_hash`, `result_run_id`, and `system_under_test` bullets; otherwise the refresh is not discoverable or auditable enough to land. | yes | `python scripts/benchmark_contract_dry_run.py --include-track-c-pilot` |
 | DR-038 | accepted | Non-editorial Track `C` sample refresh provenance notes must live at one deterministic checked-in path. | The retained Track `C` sample bundle must keep its provenance note at `reports/examples/benchmark_track_c_refresh_provenance.example.md`, adjacent to the checked-in sample manifest and result, and that note must stay generator-backed from the same Track `C` sample outputs instead of living in ad hoc locations. | yes | `python scripts/sync_python_proof_loop_artifacts.py --mode check` |
+| DR-039 | accepted | Non-editorial Track `C` sample refreshes must overwrite the one checked-in provenance note in place. | Any non-editorial Track `C` sample refresh that remains within the retained pilot contract must replace the entire contents of `reports/examples/benchmark_track_c_refresh_provenance.example.md`; it must not append historical entries into that file or create sibling variants that would make the retained checked-in note ambiguous. | yes | `python scripts/validate_repo_contracts.py --mode validate` |
+| DR-040 | accepted | The `Q-06-011` `ready -> complete` closeout transition must be backed by explicit checkpoint decision evidence. | Marking `Q-06-011` complete now requires a recorded transition basis, evidence references, and reproducibility-bound checkpoint context rather than a markdown status flip alone. | yes | `python scripts/build_execution_queue.py --mode check` |
+| DR-041 | accepted | An empty execution queue must be recorded explicitly as `EMPTY BY DESIGN`. | A queue with no ready items must also record the empty-state decision, the no-successor rationale, and the re-entry rules that govern any future return to `ready`. | yes | `python scripts/build_execution_queue.py --mode check` |
+| DR-042 | accepted | No successor queue item may be created after the current closeout without an authoritative roadmap-derived follow-on and regenerated governance exports. | The queue must remain empty after `Q-06-012` unless roadmap selection is complete, a bounded next item is defined, validator and export impact are assessed, and the queue plus checkpoint exports are regenerated consistently. | yes | `python scripts/validate_repo_contracts.py --mode validate` |
+
+## Detailed decision records
+
+### DR-040
+
+- Transition: `Q-06-011 READY -> COMPLETE`
+- Justification: `The bounded overwrite-semantics slice is complete, the relevant dated plans now carry CLOSEOUT evidence, and the queue closeout is no longer treated as an implicit markdown-only status flip.`
+- Evidence references: `EXECUTION_QUEUE.md#Q-06-011`; `plans/2026-04-07-q-06-011-lock-track-c-provenance-note-overwrite-semantics.md#CLOSEOUT`; `plans/2026-04-01-mvp-narrowing-and-contract-hardening.md#CLOSEOUT`; `reports/exports/execution_queue.export.json`; `reports/exports/checkpoint_closeout.export.json`
+- Reversibility: `yes; reopen only if the closeout evidence, queue export, or checkpoint reproducibility context is shown incomplete or inconsistent`
+- Residual risk: `Later operators could still misread Q-06-011 as a standalone markdown closeout if the checkpoint artifact and decision export drift apart.`
+
+### DR-041
+
+- Transition: `QUEUE STATE READY -> EMPTY BY DESIGN`
+- Justification: `After the bounded Q-06-012 governance-hardening slice, no ready item remains and the queue now records that empty state as an explicit governance decision instead of an inferred absence of work.`
+- Evidence references: `EXECUTION_QUEUE.md#CURRENT-QUEUE-STATE`; `EXECUTION_QUEUE.md#QUEUE-RE-ENTRY-RULES`; `reports/exports/execution_queue.export.json`; `reports/exports/checkpoint_closeout.export.json`
+- Reversibility: `yes; the queue may return to ready only by satisfying the published re-entry rules and regenerating the queue plus checkpoint exports`
+- Residual risk: `Hand-edited queue or export surfaces could still drift unless queue/export validation remains part of the blocking checkpoint gate.`
+
+### DR-042
+
+- Transition: `SUCCESSOR ITEM CREATED -> NONE`
+- Justification: `No authoritative roadmap-derived follow-on is currently selected beyond the bounded Q-06-012 governance hardening slice, so the queue must not invent a substantive successor item at this checkpoint.`
+- Evidence references: `IMPLEMENTATION_PLAN.md`; `plans/2026-04-01-mvp-narrowing-and-contract-hardening.md#CLOSEOUT`; `plans/2026-04-07-q-06-012-checkpoint-integrity-and-governance-evidence-binding.md#CLOSEOUT`; `EXECUTION_QUEUE.md#CURRENT-QUEUE-STATE`; `reports/exports/checkpoint_closeout.export.json`
+- Reversibility: `yes; create a successor only after authoritative roadmap selection is complete, a bounded item is defined, validator and export impact are assessed, and the queue plus checkpoint exports are regenerated consistently`
+- Residual risk: `A future operator could still try to resume work ad hoc unless the re-entry rules stay fail-closed and checkpoint evidence remains current.`
 
 ## Entry template
 

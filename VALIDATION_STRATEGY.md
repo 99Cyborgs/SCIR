@@ -53,7 +53,7 @@ The validator stack must make unsupported, deferred, or downgraded behavior expl
 | Python reconstruction change | `reconstruction_report`, `preservation_report` |
 | Wasm-contract change | emitted WAT contract, `translation_validation_report`, path-qualified `preservation_report`, and backend docs |
 | benchmark change | `benchmark_manifest`, `benchmark_result`, `comparison_summary`, `contamination_report`, `benchmark_report` |
-| queue, decision, or open-question change | derived export regeneration |
+| queue, decision, or open-question change | derived export regeneration, including explicit empty-by-design queue state when no ready item remains, bound checkpoint decision records, and `checkpoint_closeout.export.json` |
 
 Schemas live in `schemas/`.
 
@@ -69,6 +69,7 @@ A change must not merge when any of the following is true:
 - an active preservation report omits `path`, `profile`, `preservation_level`, `downgrades`, or `boundary_annotations`,
 - active corpus preservation ceilings or per-stage expectations drift from observed behavior without explicit downgrade evidence,
 - benchmark reports leak `SCIR-Hc` evidence across `claim_class` / `evidence_class` boundaries,
+- a completed queue closeout lacks explicit decision binding, evidence references, validation context, queue re-entry rules, preserved superseded dirty-checkpoint provenance, or the canonical `checkpoint_closeout.export.json` artifact,
 - Python reconstruction claims a stronger profile or preservation level than the executable proof loop supports,
 - Rust importer evidence silently widens into active Rust reconstruction or benchmark claims,
 - an admitted helper-free Wasm case stops emitting stable WAT or starts requiring helper imports or runtime shims,
@@ -264,7 +265,8 @@ At minimum it must:
 - verify required docs, specs, schemas, and scripts exist,
 - parse all JSON artifacts,
 - validate checked-in example artifacts against their schemas,
-- validate `DECISION_REGISTER.md`, `OPEN_QUESTIONS.md`, and `EXECUTION_QUEUE.md` against their checked-in exports,
+- validate `DECISION_REGISTER.md`, `OPEN_QUESTIONS.md`, and `EXECUTION_QUEUE.md` against their checked-in exports, including the explicit empty-by-design queue state when no ready item remains,
+- validate `reports/exports/checkpoint_closeout.export.json` against the current queue, decision, plan-closeout, reproducibility, and checkpoint-lineage context,
 - validate active proof-loop corpus manifests, negative-fixture manifests, and sweep manifests,
 - validate the Python importer fixture corpus,
 - validate the Rust importer fixture corpus,
@@ -309,4 +311,5 @@ A validation-sensitive task is not done unless:
 - active example artifacts are schema-valid,
 - invalid canonical `SCIR-H` fixtures still fail,
 - derived exports remain synchronized,
+- completed queue closeouts remain synchronized with `reports/exports/checkpoint_closeout.export.json`,
 - `make validate` passes.

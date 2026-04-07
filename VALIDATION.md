@@ -39,6 +39,8 @@ python scripts/benchmark_contract_dry_run.py --claim-run
 python scripts/benchmark_repro.py --run-id <run-id>
 ```
 
+`python scripts/build_execution_queue.py --mode check` now validates either the first ready queue item or an explicit empty-by-design queue state with no ready items, one recorded last-completed item, a no-successor rationale, published queue re-entry rules, and a synchronized `reports/exports/checkpoint_closeout.export.json` artifact with decision refs, reproducibility context, clean-baseline parent-commit binding, and preserved superseded dirty-checkpoint provenance.
+
 ## Generated artifact synchronization
 
 When Python proof-loop metadata or bounded Track `C` sample-producing logic changes, refresh the checked-in generated artifacts before rerunning validation:

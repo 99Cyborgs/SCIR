@@ -123,6 +123,8 @@ def render_benchmark_tracks_doc() -> str:
         f"{_bullet_list(track_c['non_editorial_sample_refresh_note_format'])}\n\n"
         "## Track C non-editorial sample refresh provenance note location\n\n"
         f"{_bullet_list(track_c['non_editorial_sample_refresh_note_location'])}\n\n"
+        "## Track C non-editorial sample refresh provenance note overwrite semantics\n\n"
+        f"{_bullet_list(track_c['non_editorial_sample_refresh_note_overwrite'])}\n\n"
         "## Rule\n\n"
         "Track `C` may not become active until the earlier proof loop remains stable.\n"
         "Track `D` is outside the active MVP.\n"

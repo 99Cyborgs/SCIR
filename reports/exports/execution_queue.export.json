@@ -1,10 +1,11 @@
 {
-  "generation_timestamp": "2026-04-02T12:10:00-05:00",
+  "generation_timestamp": "2026-04-07T11:43:37.2228492-05:00",
   "active_milestone": "MVP Kernel Hardening",
   "autonomy_mode": "high",
   "source_documents": [
     "IMPLEMENTATION_PLAN.md",
     "plans/2026-04-01-mvp-narrowing-and-contract-hardening.md",
+    "plans/2026-04-07-q-06-012-checkpoint-integrity-and-governance-evidence-binding.md",
     "OPEN_QUESTIONS.md",
     "STATUS.md"
   ],
@@ -855,7 +856,7 @@
       "queue_id": "Q-06-011",
       "title": "Require deterministic overwrite semantics for the fixed Track C provenance note",
       "source_milestone_or_phase": "Optional Track C pilot",
-      "status": "ready",
+      "status": "done",
       "why_now": "The note path is now fixed, so the next credible step is to define how future non-editorial Track C sample refreshes replace the existing checked-in note without leaving ambiguous historical residue at that path.",
       "prerequisites": [
         "Q-06-010"
@@ -877,6 +878,41 @@
         "non-editorial Track C provenance-note replacement semantics are explicit",
         "path, format, and runner-derived provenance remain mandatory",
         "Track A and Track B remain the only default executable benchmark tracks"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-06-012",
+      "title": "Checkpoint integrity and governance evidence binding",
+      "source_milestone_or_phase": "Optional Track C pilot",
+      "status": "done",
+      "why_now": "Q-06-011 is already closed and the queue is empty by design, but the current closeout checkpoint still needs explicit decision binding, reproducibility context, and re-entry rules before it is auditable enough to serve as a stable handoff boundary.",
+      "prerequisites": [
+        "Q-06-011"
+      ],
+      "work_instructions": "Bind the Q-06-011 closeout, the empty-by-design queue decision, and the no-successor posture to explicit governance evidence, emit one canonical checkpoint snapshot, and keep queue re-entry fail-closed until roadmap selection and export regeneration are explicit.",
+      "touched_surfaces": [
+        "DECISION_REGISTER.md",
+        "EXECUTION_QUEUE.md",
+        "reports/exports/",
+        "schemas/",
+        "scripts/build_execution_queue.py",
+        "scripts/validate_repo_contracts.py",
+        "VALIDATION.md",
+        "VALIDATION_STRATEGY.md",
+        "plans/"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/validate_repo_contracts.py --mode validate",
+        "python scripts/validate_repo_contracts.py --mode test",
+        "python scripts/run_repo_validation.py"
+      ],
+      "escalate_only_if": "hardening the checkpoint would require inventing a substantive roadmap successor, weakening empty-queue fail-closed behavior, or changing technical architecture",
+      "done_evidence": [
+        "explicit decision records bind the Q-06-011 closeout, empty queue, and no-successor posture",
+        "reports/exports/checkpoint_closeout.export.json captures exact checkpoint context",
+        "queue re-entry remains fail-closed until authoritative roadmap selection and export regeneration are explicit"
       ],
       "blocking_open_questions": []
     },
@@ -938,10 +974,26 @@
       "blocking_open_questions": []
     }
   ],
-  "blocking_open_questions": [],
-  "next_action": {
-    "queue_id": "Q-06-011",
-    "title": "Require deterministic overwrite semantics for the fixed Track C provenance note"
+  "current_queue_state": {
+    "queue_state": "EMPTY_BY_DESIGN",
+    "ready_items": [],
+    "last_completed": {
+      "queue_id": "Q-06-012",
+      "label": "Checkpoint integrity + governance evidence binding"
+    },
+    "no_successor_item_reason": "No authoritative roadmap-derived follow-on is currently selected beyond the bounded Q-06-012 governance hardening slice.",
+    "queue_status": {
+      "synchronized_with_working_tree": true,
+      "validation_state": "PASSED"
+    }
   },
+  "reentry_conditions": [
+    "roadmap selection is complete in an authoritative roadmap or active-plan source before the queue leaves EMPTY BY DESIGN",
+    "a bounded next item is defined with queue ID, scope, touched surfaces, validation, and done evidence",
+    "validator and export impact are assessed before any new item is marked ready",
+    "EXECUTION_QUEUE.md, reports/exports/execution_queue.export.json, and reports/exports/checkpoint_closeout.export.json are regenerated consistently before re-entry is recorded"
+  ],
+  "blocking_open_questions": [],
+  "next_action": null,
   "escalation_threshold": "doctrine conflict; missing source authority; sequencing violation"
 }

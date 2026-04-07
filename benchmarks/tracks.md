@@ -76,6 +76,11 @@ Status: Normative
 - `store the note at reports/examples/benchmark_track_c_refresh_provenance.example.md`
 - `keep the note adjacent to the checked-in Track C sample manifest and result`
 
+## Track C non-editorial sample refresh provenance note overwrite semantics
+
+- `overwrite the entire checked-in note at reports/examples/benchmark_track_c_refresh_provenance.example.md on every non-editorial refresh`
+- `do not append historical entries or create sibling variants for the retained checked-in note`
+
 ## Rule
 
 Track `C` may not become active until the earlier proof loop remains stable.

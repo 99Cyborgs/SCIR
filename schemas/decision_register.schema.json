@@ -4,7 +4,8 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "decisions"
+    "decisions",
+    "decision_records"
   ],
   "properties": {
     "decisions": {
@@ -51,6 +52,52 @@
             ]
           },
           "first_validation": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "decision_records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "transition",
+          "justification",
+          "evidence_references",
+          "reversibility",
+          "residual_risk"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^DR-[0-9]{3}$"
+          },
+          "transition": {
+            "type": "string",
+            "minLength": 1
+          },
+          "justification": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_references": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "reversibility": {
+            "type": "string",
+            "minLength": 1
+          },
+          "residual_risk": {
             "type": "string",
             "minLength": 1
           }

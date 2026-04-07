@@ -201,6 +201,11 @@ It remains non-default, and the checked-in sample artifacts stay outside the def
 - `store the note at reports/examples/benchmark_track_c_refresh_provenance.example.md`
 - `keep the note adjacent to the checked-in Track C sample manifest and result`
 
+### Conditional Track C non-editorial sample refresh provenance note overwrite semantics
+
+- `overwrite the entire checked-in note at reports/examples/benchmark_track_c_refresh_provenance.example.md on every non-editorial refresh`
+- `do not append historical entries or create sibling variants for the retained checked-in note`
+
 ## Deferred Track `D`
 
 Runtime and backend performance claims are not active MVP evidence.
