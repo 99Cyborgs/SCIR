@@ -24,6 +24,7 @@ Example artifacts are illustrative fixtures, not proof of implementation breadth
 
 - `benchmark_track_c_manifest.example.json`
 - `benchmark_track_c_result.example.json`
+- `benchmark_track_c_refresh_provenance.example.md`
 
 ## Corpus and sweep examples
 
@@ -41,3 +42,16 @@ Example artifacts are illustrative fixtures, not proof of implementation breadth
 Track `C` benchmark samples are illustrative only and do not belong to the default executable benchmark gate.
 They mirror the bounded output of the non-default executable pilot, remain outside the default benchmark bundle, and support a retained diagnostic posture rather than a promotion claim.
 Any non-editorial refresh to those Track `C` samples must cite the opt-in regeneration command, the matching opt-in validation command, the regenerated corpus hash, and the regenerated `run_id` plus `system_under_test`.
+
+Use this exact minimal note shape when recording that provenance:
+
+```md
+# Track C Sample Refresh Provenance
+- regeneration_command: `python scripts/benchmark_contract_dry_run.py --include-track-c-pilot`
+- validation_command: `python scripts/run_repo_validation.py --include-track-c-pilot`
+- manifest_corpus_hash: `sha256:<regenerated-corpus-hash>`
+- result_run_id: `<regenerated-run-id>`
+- system_under_test: `<regenerated-system-under-test>`
+```
+
+The checked-in note for the retained sample bundle lives at `reports/examples/benchmark_track_c_refresh_provenance.example.md` so it remains adjacent to the Track `C` sample manifest and result.

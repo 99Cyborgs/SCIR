@@ -62,6 +62,20 @@ Status: Normative
 - `cite the regenerated manifest corpus hash`
 - `cite the regenerated result run_id and system_under_test`
 
+## Track C non-editorial sample refresh provenance note format
+
+- `begin with the markdown heading # Track C Sample Refresh Provenance`
+- `include a bullet - regeneration_command: python scripts/benchmark_contract_dry_run.py --include-track-c-pilot`
+- `include a bullet - validation_command: python scripts/run_repo_validation.py --include-track-c-pilot`
+- `include a bullet - manifest_corpus_hash: <regenerated manifest corpus hash>`
+- `include a bullet - result_run_id: <regenerated result run_id>`
+- `include a bullet - system_under_test: <regenerated result system_under_test>`
+
+## Track C non-editorial sample refresh provenance note location
+
+- `store the note at reports/examples/benchmark_track_c_refresh_provenance.example.md`
+- `keep the note adjacent to the checked-in Track C sample manifest and result`
+
 ## Rule
 
 Track `C` may not become active until the earlier proof loop remains stable.

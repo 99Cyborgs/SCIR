@@ -42,6 +42,18 @@ TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_PROVENANCE = [
     "cite the regenerated manifest corpus hash",
     "cite the regenerated result run_id and system_under_test",
 ]
+TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_NOTE_FORMAT = [
+    "begin with the markdown heading # Track C Sample Refresh Provenance",
+    "include a bullet - regeneration_command: python scripts/benchmark_contract_dry_run.py --include-track-c-pilot",
+    "include a bullet - validation_command: python scripts/run_repo_validation.py --include-track-c-pilot",
+    "include a bullet - manifest_corpus_hash: <regenerated manifest corpus hash>",
+    "include a bullet - result_run_id: <regenerated result run_id>",
+    "include a bullet - system_under_test: <regenerated result system_under_test>",
+]
+TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_NOTE_LOCATION = [
+    "store the note at reports/examples/benchmark_track_c_refresh_provenance.example.md",
+    "keep the note adjacent to the checked-in Track C sample manifest and result",
+]
 
 
 BENCHMARK_CONTRACT_METADATA = {
@@ -173,10 +185,13 @@ BENCHMARK_CONTRACT_METADATA = {
             "sample_posture_redecision_triggers": list(TRACK_C_SAMPLE_POSTURE_REDECISION_TRIGGERS),
             "editorial_only_sample_refreshes": list(TRACK_C_EDITORIAL_ONLY_SAMPLE_REFRESHES),
             "non_editorial_sample_refresh_provenance": list(TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_PROVENANCE),
+            "non_editorial_sample_refresh_note_format": list(TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_NOTE_FORMAT),
+            "non_editorial_sample_refresh_note_location": list(TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_NOTE_LOCATION),
             "opt_in_command": "python scripts/benchmark_contract_dry_run.py --include-track-c-pilot",
             "opt_in_validation_command": "python scripts/run_repo_validation.py --include-track-c-pilot",
             "sample_manifest_path": "reports/examples/benchmark_track_c_manifest.example.json",
             "sample_result_path": "reports/examples/benchmark_track_c_result.example.json",
+            "sample_provenance_note_path": "reports/examples/benchmark_track_c_refresh_provenance.example.md",
             "sample_manifest_hash": "sha256:41592f102f5fd852200de007698774508f9ffeebd8fb5b4d9d01c85c812873e6",
             "sample_run_id": "example-track-c-pilot-run-2026-04-01",
             "sample_system_under_test": "scir-bootstrap-non-default-track-c-pilot",
@@ -216,6 +231,22 @@ def benchmark_track_baselines(track: str) -> list[str]:
 
 def benchmark_track_compile_cases() -> list[str]:
     return list(TRACK_C_EXECUTABLE_CASES)
+
+
+def render_track_c_sample_refresh_note(track_c_manifest: dict, track_c_result: dict) -> str:
+    """Render the canonical checked-in provenance note for the retained Track C sample bundle."""
+
+    corpus_hash = track_c_manifest.get("corpus_manifest_hash") or track_c_manifest.get("corpus", {}).get("hash")
+    run_id = track_c_result.get("run_id")
+    system_under_test = track_c_result.get("system_under_test")
+    return (
+        "# Track C Sample Refresh Provenance\n"
+        f"- regeneration_command: `{benchmark_track_contract('C')['opt_in_command']}`\n"
+        f"- validation_command: `{benchmark_track_contract('C')['opt_in_validation_command']}`\n"
+        f"- manifest_corpus_hash: `{corpus_hash}`\n"
+        f"- result_run_id: `{run_id}`\n"
+        f"- system_under_test: `{system_under_test}`\n"
+    )
 
 
 def _validate_benchmark_contract_metadata():
@@ -317,10 +348,16 @@ def _validate_benchmark_contract_metadata():
         raise ValueError("BENCHMARK_CONTRACT_METADATA Track C editorial-only sample refresh allowances drifted")
     if track_c_contract["non_editorial_sample_refresh_provenance"] != TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_PROVENANCE:
         raise ValueError("BENCHMARK_CONTRACT_METADATA Track C non-editorial sample refresh provenance requirements drifted")
+    if track_c_contract["non_editorial_sample_refresh_note_format"] != TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_NOTE_FORMAT:
+        raise ValueError("BENCHMARK_CONTRACT_METADATA Track C non-editorial sample refresh note format drifted")
+    if track_c_contract["non_editorial_sample_refresh_note_location"] != TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_NOTE_LOCATION:
+        raise ValueError("BENCHMARK_CONTRACT_METADATA Track C non-editorial sample refresh note location drifted")
     if track_c_contract["opt_in_command"] != "python scripts/benchmark_contract_dry_run.py --include-track-c-pilot":
         raise ValueError("BENCHMARK_CONTRACT_METADATA Track C opt-in benchmark command drifted")
     if track_c_contract["opt_in_validation_command"] != "python scripts/run_repo_validation.py --include-track-c-pilot":
         raise ValueError("BENCHMARK_CONTRACT_METADATA Track C opt-in validation command drifted")
+    if track_c_contract["sample_provenance_note_path"] != "reports/examples/benchmark_track_c_refresh_provenance.example.md":
+        raise ValueError("BENCHMARK_CONTRACT_METADATA Track C provenance note path drifted")
 
 
 _validate_benchmark_contract_metadata()

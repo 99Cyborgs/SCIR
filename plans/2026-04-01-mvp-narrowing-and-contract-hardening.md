@@ -165,6 +165,12 @@ Revert the MVP-narrowing patch set as a unit if validation cannot be brought bac
 - `DR-029` records the bounded record-cell implementation, `OQ-008` is resolved into the narrower future-widening question `OQ-009`, and `Q-04-008` plus `Q-04-009` are closed with `Q-04-010` queued next as the next post-scalar Wasm decision boundary
 - the active Wasm record-cell ABI is now explicitly frozen to the fixed Rust `a_struct_field_borrow_mut` slice rather than treated as a stepping stone toward broader record or Python field-place support
 - `DR-030` records that freeze decision, `OQ-009` is resolved and removed, and `Q-04-010` is closed with any future Wasm widening treated as a deliberate reopen decision rather than an implied next step
+- the retained Track `C` pilot now has an explicit minimal provenance-note format with one required markdown heading plus fixed runner, hash, and result-identifier field bullets for any future non-editorial sample refresh
+- benchmark and repository validation now fail if the Track `C` provenance-note format drifts or if the benchmark and reports readmes stop publishing the required operator template
+- `DR-037` records the provenance-note format boundary, `Q-06-009` is closed, and the execution queue now advances to `Q-06-010`
+- the retained Track `C` pilot now has one deterministic checked-in provenance-note path at `reports/examples/benchmark_track_c_refresh_provenance.example.md`, and the note content is generator-backed from the same Track `C` sample manifest and result as the retained sample bundle
+- benchmark and repository validation now fail if the Track `C` provenance-note location doctrine drifts or if the checked-in note content no longer matches the generator-backed sample bundle
+- `DR-038` records the provenance-note storage boundary, `Q-06-010` is closed, and the execution queue now advances to `Q-06-011`
 - derived exports for the decision register, open questions, and execution queue were regenerated from their markdown sources
 - TypeScript and broad tooling surfaces were kept in-place but downgraded to deferred status rather than active MVP claims
 - passed `python scripts/validate_repo_contracts.py --mode validate`

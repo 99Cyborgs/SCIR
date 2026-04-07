@@ -7,8 +7,6 @@
     "scope": "Fixed executable Python proof-loop cases reframed as single-function repair tasks",
     "hash": "sha256:41592f102f5fd852200de007698774508f9ffeebd8fb5b4d9d01c85c812873e6"
   },
-  "corpus_manifest": "tests/corpora/python_proof_loop_corpus.json",
-  "corpus_manifest_hash": "sha256:41592f102f5fd852200de007698774508f9ffeebd8fb5b4d9d01c85c812873e6",
   "baselines": [
     "direct source",
     "typed-AST",
@@ -29,5 +27,7 @@
     "separate development, tuning, and held-out evaluation slices",
     "record prompt templates and baseline adapters",
     "do not claim generalization from a contaminated or untracked dataset"
-  ]
+  ],
+  "corpus_manifest": "tests/corpora/python_proof_loop_corpus.json",
+  "corpus_manifest_hash": "sha256:41592f102f5fd852200de007698774508f9ffeebd8fb5b4d9d01c85c812873e6"
 }

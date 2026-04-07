@@ -25,6 +25,19 @@ Track `A` report surfaces separate canonical `SCIR-H` metrics from compressed `S
 - editorial-only Track `C` sample refreshes are limited to JSON-equivalent formatting changes such as whitespace, indentation, trailing-newline, or key-order normalization
 - any non-editorial Track `C` sample refresh that remains within the retained pilot contract must cite `python scripts/benchmark_contract_dry_run.py --include-track-c-pilot`, `python scripts/run_repo_validation.py --include-track-c-pilot`, the regenerated corpus hash, and the regenerated `run_id` plus `system_under_test`
 
+Use this minimal provenance note format for any such non-editorial refresh:
+
+```md
+# Track C Sample Refresh Provenance
+- regeneration_command: `python scripts/benchmark_contract_dry_run.py --include-track-c-pilot`
+- validation_command: `python scripts/run_repo_validation.py --include-track-c-pilot`
+- manifest_corpus_hash: `sha256:<regenerated-corpus-hash>`
+- result_run_id: `<regenerated-run-id>`
+- system_under_test: `<regenerated-system-under-test>`
+```
+
+Store that note at `reports/examples/benchmark_track_c_refresh_provenance.example.md` so it stays adjacent to `benchmark_track_c_manifest.example.json` and `benchmark_track_c_result.example.json`.
+
 ## Deferred
 
 - Track `D`

@@ -797,7 +797,7 @@
       "queue_id": "Q-06-009",
       "title": "Lock a minimal provenance-note format for non-editorial Track C sample refreshes",
       "source_milestone_or_phase": "Optional Track C pilot",
-      "status": "ready",
+      "status": "done",
       "why_now": "The required Track C regeneration provenance fields are now explicit, so the next credible step is to lock the minimal note format for any future non-editorial refresh that still remains within the retained non-default pilot.",
       "prerequisites": [
         "Q-06-008"
@@ -818,6 +818,64 @@
       "done_evidence": [
         "non-editorial Track C provenance-note format is explicit",
         "runner-derived provenance remains mandatory",
+        "Track A and Track B remain the only default executable benchmark tracks"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-06-010",
+      "title": "Require a deterministic storage location for non-editorial Track C provenance notes",
+      "source_milestone_or_phase": "Optional Track C pilot",
+      "status": "done",
+      "why_now": "The required provenance-note fields and minimal note shape are now explicit, so the next credible step is to fix where any future non-editorial Track C provenance note must live so operators can discover it without guesswork.",
+      "prerequisites": [
+        "Q-06-009"
+      ],
+      "work_instructions": "Codify a deterministic storage location for any non-editorial Track C provenance note, keep the retained pilot's note format and runner-derived provenance explicit, and do not promote Track C into the default executable benchmark gate.",
+      "touched_surfaces": [
+        "BENCHMARK_STRATEGY.md",
+        "benchmarks/",
+        "reports/README.md",
+        "plans/"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/benchmark_contract_dry_run.py --include-track-c-pilot",
+        "python scripts/run_repo_validation.py --include-track-c-pilot"
+      ],
+      "escalate_only_if": "locking provenance-note storage would need broader corpus, weaker criteria, or any change that turns Track C into the default executable benchmark gate",
+      "done_evidence": [
+        "non-editorial Track C provenance-note storage is explicit",
+        "note-format and runner-derived provenance remain mandatory",
+        "Track A and Track B remain the only default executable benchmark tracks"
+      ],
+      "blocking_open_questions": []
+    },
+    {
+      "queue_id": "Q-06-011",
+      "title": "Require deterministic overwrite semantics for the fixed Track C provenance note",
+      "source_milestone_or_phase": "Optional Track C pilot",
+      "status": "ready",
+      "why_now": "The note path is now fixed, so the next credible step is to define how future non-editorial Track C sample refreshes replace the existing checked-in note without leaving ambiguous historical residue at that path.",
+      "prerequisites": [
+        "Q-06-010"
+      ],
+      "work_instructions": "Codify deterministic overwrite semantics for the fixed Track C provenance note, keep the retained pilot's path, note format, and runner-derived provenance explicit, and do not promote Track C into the default executable benchmark gate.",
+      "touched_surfaces": [
+        "BENCHMARK_STRATEGY.md",
+        "benchmarks/",
+        "reports/README.md",
+        "plans/"
+      ],
+      "validation": [
+        "python scripts/build_execution_queue.py --mode check",
+        "python scripts/benchmark_contract_dry_run.py --include-track-c-pilot",
+        "python scripts/run_repo_validation.py --include-track-c-pilot"
+      ],
+      "escalate_only_if": "locking provenance-note overwrite semantics would need broader corpus, weaker criteria, or any change that turns Track C into the default executable benchmark gate",
+      "done_evidence": [
+        "non-editorial Track C provenance-note replacement semantics are explicit",
+        "path, format, and runner-derived provenance remain mandatory",
         "Track A and Track B remain the only default executable benchmark tracks"
       ],
       "blocking_open_questions": []
@@ -882,8 +940,8 @@
   ],
   "blocking_open_questions": [],
   "next_action": {
-    "queue_id": "Q-06-009",
-    "title": "Lock a minimal provenance-note format for non-editorial Track C sample refreshes"
+    "queue_id": "Q-06-011",
+    "title": "Require deterministic overwrite semantics for the fixed Track C provenance note"
   },
   "escalation_threshold": "doctrine conflict; missing source authority; sequencing violation"
 }

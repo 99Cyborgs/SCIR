@@ -287,6 +287,22 @@
       "constraint_imposed": "No new Wasm surface may enter execution-backed validation without subset-classifier support, bounded oracle support, adversarial plus mutation tests, updated example reports, and validator-doctrine plus decision-register updates; the Python execution-backed lane may run only through explicit opt-in commands and does not change the default Wasm-first contract.",
       "reversible": "yes",
       "first_validation": "`python scripts/run_repo_validation.py --include-experimental-python-translation`"
+    },
+    {
+      "id": "DR-037",
+      "status": "accepted",
+      "decision": "Non-editorial Track `C` sample refreshes must use one minimal provenance-note format.",
+      "constraint_imposed": "Any non-editorial Track `C` sample refresh that still fits the retained pilot contract must publish a markdown note headed `# Track C Sample Refresh Provenance` with explicit `regeneration_command`, `validation_command`, `manifest_corpus_hash`, `result_run_id`, and `system_under_test` bullets; otherwise the refresh is not discoverable or auditable enough to land.",
+      "reversible": "yes",
+      "first_validation": "`python scripts/benchmark_contract_dry_run.py --include-track-c-pilot`"
+    },
+    {
+      "id": "DR-038",
+      "status": "accepted",
+      "decision": "Non-editorial Track `C` sample refresh provenance notes must live at one deterministic checked-in path.",
+      "constraint_imposed": "The retained Track `C` sample bundle must keep its provenance note at `reports/examples/benchmark_track_c_refresh_provenance.example.md`, adjacent to the checked-in sample manifest and result, and that note must stay generator-backed from the same Track `C` sample outputs instead of living in ad hoc locations.",
+      "reversible": "yes",
+      "first_validation": "`python scripts/sync_python_proof_loop_artifacts.py --mode check`"
     }
   ]
 }

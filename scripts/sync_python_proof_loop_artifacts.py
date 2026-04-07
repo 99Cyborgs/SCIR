@@ -5,6 +5,8 @@ import argparse
 import json
 from pathlib import Path
 
+from benchmark_contract_dry_run import augment_track_c_pilot_outputs
+from benchmark_contract_metadata import render_track_c_sample_refresh_note
 from scir_bootstrap_pipeline import run_track_c_pilot
 from scir_python_bootstrap import PYTHON_PROOF_LOOP_METADATA, build_bundle
 
@@ -13,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_ROOT = ROOT / "tests" / "python_importer" / "cases"
 TRACK_C_MANIFEST_PATH = ROOT / "reports" / "examples" / "benchmark_track_c_manifest.example.json"
 TRACK_C_RESULT_PATH = ROOT / "reports" / "examples" / "benchmark_track_c_result.example.json"
+TRACK_C_PROVENANCE_NOTE_PATH = ROOT / "reports" / "examples" / "benchmark_track_c_refresh_provenance.example.md"
 
 
 class SyncError(Exception):
@@ -28,16 +31,18 @@ def expected_fixture_artifacts(root: Path) -> dict[str, dict[str, str]]:
     return artifacts
 
 
-def expected_track_c_samples(root: Path) -> tuple[str, str]:
+def expected_track_c_samples(root: Path) -> tuple[str, str, str]:
     failures, manifest, result = run_track_c_pilot(root)
     if failures:
         raise SyncError(
             "Track C sample generation failed before synchronization:\n"
             + "\n".join(f" - {item}" for item in failures)
         )
+    augment_track_c_pilot_outputs(root, manifest, result)
     return (
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
         json.dumps(result, indent=2, ensure_ascii=False) + "\n",
+        render_track_c_sample_refresh_note(manifest, result),
     )
 
 
@@ -57,11 +62,13 @@ def collect_drift(root: Path) -> list[str]:
             if actual_text != expected_text:
                 drifts.append(f"tests/python_importer/cases/{case_name}/{name}: content drifted from generated bundle")
 
-    expected_manifest, expected_result = expected_track_c_samples(root)
+    expected_manifest, expected_result, expected_note = expected_track_c_samples(root)
     if TRACK_C_MANIFEST_PATH.read_text(encoding="utf-8") != expected_manifest:
         drifts.append("reports/examples/benchmark_track_c_manifest.example.json: content drifted from generated Track C sample manifest")
     if TRACK_C_RESULT_PATH.read_text(encoding="utf-8") != expected_result:
         drifts.append("reports/examples/benchmark_track_c_result.example.json: content drifted from generated Track C sample result")
+    if TRACK_C_PROVENANCE_NOTE_PATH.read_text(encoding="utf-8") != expected_note:
+        drifts.append("reports/examples/benchmark_track_c_refresh_provenance.example.md: content drifted from generated Track C provenance note")
     return drifts
 
 
@@ -75,13 +82,16 @@ def write_synced_artifacts(root: Path) -> list[str]:
                 path.write_text(expected_text, encoding="utf-8")
                 updated.append(path.relative_to(root).as_posix())
 
-    expected_manifest, expected_result = expected_track_c_samples(root)
+    expected_manifest, expected_result, expected_note = expected_track_c_samples(root)
     if TRACK_C_MANIFEST_PATH.read_text(encoding="utf-8") != expected_manifest:
         TRACK_C_MANIFEST_PATH.write_text(expected_manifest, encoding="utf-8")
         updated.append(TRACK_C_MANIFEST_PATH.relative_to(root).as_posix())
     if TRACK_C_RESULT_PATH.read_text(encoding="utf-8") != expected_result:
         TRACK_C_RESULT_PATH.write_text(expected_result, encoding="utf-8")
         updated.append(TRACK_C_RESULT_PATH.relative_to(root).as_posix())
+    if TRACK_C_PROVENANCE_NOTE_PATH.read_text(encoding="utf-8") != expected_note:
+        TRACK_C_PROVENANCE_NOTE_PATH.write_text(expected_note, encoding="utf-8")
+        updated.append(TRACK_C_PROVENANCE_NOTE_PATH.relative_to(root).as_posix())
     return updated
 
 
@@ -108,7 +118,7 @@ def main() -> int:
                 return 1
             print("[check] python proof-loop artifacts are synchronized")
             print(
-                "Checked generated Python importer bundles and checked-in Track C sample artifacts against the current authoritative generators."
+                "Checked generated Python importer bundles and checked-in Track C sample artifacts plus provenance note against the current authoritative generators."
             )
             return 0
 

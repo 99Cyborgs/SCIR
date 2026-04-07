@@ -1,14 +1,9 @@
 {
   "benchmark_id": "example-benchmark-track-c-python-repair-001",
   "run_id": "example-track-c-pilot-run-2026-04-01",
-  "commit_sha": "example-commit-sha",
-  "spec_version": "v0.1-draft",
-  "tool_version": "scir-benchmark-audit-v1",
   "system_under_test": "scir-bootstrap-non-default-track-c-pilot",
   "track": "C",
-  "baseline_name": "scir",
   "profile": "R",
-  "corpus_manifest_hash": "sha256:41592f102f5fd852200de007698774508f9ffeebd8fb5b4d9d01c85c812873e6",
   "metrics": {
     "repair_task_count": 4,
     "accepted_case_count": 3,
@@ -32,6 +27,18 @@
     "typed-AST": 0.8931,
     "lightweight regularized core or s-expression": -0.4808
   },
+  "status": "mixed",
+  "evidence": [
+    "non-default executable pilot over fixed Python repair cases",
+    "seeded single-edit repairs restore original behavior for executable non-opaque cases",
+    "c_opaque_call remains boundary-accounting-only",
+    "retained as a bounded diagnostic pilot rather than a promotion claim"
+  ],
+  "commit_sha": "example-commit-sha",
+  "spec_version": "v0.1-draft",
+  "tool_version": "scir-benchmark-audit-v1",
+  "baseline_name": "scir",
+  "corpus_manifest_hash": "sha256:41592f102f5fd852200de007698774508f9ffeebd8fb5b4d9d01c85c812873e6",
   "artifact_rows": [
     {
       "run_id": "example-track-c-pilot-run-2026-04-01",
@@ -79,12 +86,5 @@
     },
     "seed": 0,
     "timestamp": "2026-04-01T00:00:00+00:00"
-  },
-  "status": "mixed",
-  "evidence": [
-    "non-default executable pilot over fixed Python repair cases",
-    "seeded single-edit repairs restore original behavior for executable non-opaque cases",
-    "c_opaque_call remains boundary-accounting-only",
-    "retained as a bounded diagnostic pilot rather than a promotion claim"
-  ]
+  }
 }

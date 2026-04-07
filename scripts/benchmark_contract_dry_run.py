@@ -29,6 +29,7 @@ from benchmark_contract_metadata import (
     BENCHMARK_CONTRACT_METADATA,
     benchmark_track_baselines,
     benchmark_track_contract,
+    render_track_c_sample_refresh_note,
 )
 from _internal.scirhc_transform import (
     build_scirhc_generation_context,
@@ -83,6 +84,7 @@ REQUIRED_FILES = [
     "reports/examples/scirhc_diff_audit.example.json",
     "reports/examples/benchmark_track_c_manifest.example.json",
     "reports/examples/benchmark_track_c_result.example.json",
+    "reports/examples/benchmark_track_c_refresh_provenance.example.md",
 ]
 
 REQUIRED_TRACK_MARKERS = ["Track `A`", "Track `B`", "Track `C`", "Track `D`"]
@@ -128,6 +130,10 @@ STRATEGY_TRACK_C_EDITORIAL_REFRESH_HEADING = "### Conditional Track C editorial-
 TRACKS_TRACK_C_EDITORIAL_REFRESH_HEADING = "## Track C editorial-only sample refreshes"
 STRATEGY_TRACK_C_PROVENANCE_HEADING = "### Conditional Track C non-editorial sample refresh provenance"
 TRACKS_TRACK_C_PROVENANCE_HEADING = "## Track C non-editorial sample refresh provenance"
+STRATEGY_TRACK_C_PROVENANCE_NOTE_FORMAT_HEADING = "### Conditional Track C non-editorial sample refresh provenance note format"
+TRACKS_TRACK_C_PROVENANCE_NOTE_FORMAT_HEADING = "## Track C non-editorial sample refresh provenance note format"
+STRATEGY_TRACK_C_PROVENANCE_NOTE_LOCATION_HEADING = "### Conditional Track C non-editorial sample refresh provenance note location"
+TRACKS_TRACK_C_PROVENANCE_NOTE_LOCATION_HEADING = "## Track C non-editorial sample refresh provenance note location"
 
 TRACK_EXPECTATIONS = {
     "track_a": {
@@ -239,6 +245,16 @@ def validate_track_c_sample_posture(track_c_contract: dict, manifest: dict, resu
     ):
         failures.append(f"{result_label}: sample case or boundary posture change requires explicit Track C re-decision")
     return failures
+
+
+def validate_track_c_provenance_note(root: pathlib.Path, manifest: dict, result: dict):
+    track_c_contract = benchmark_track_contract("C")
+    note_path = root / track_c_contract["sample_provenance_note_path"]
+    expected_text = render_track_c_sample_refresh_note(manifest, result)
+    actual_text = note_path.read_text(encoding="utf-8")
+    if actual_text != expected_text:
+        return [f"{track_c_contract['sample_provenance_note_path']}: content drifted from generated Track C provenance note"]
+    return []
 
 
 def check_required_files(root: pathlib.Path):
@@ -382,6 +398,18 @@ def check_benchmark_doc_contract(root: pathlib.Path):
         STRATEGY_TRACK_C_PROVENANCE_HEADING,
     )
     failures.extend(parse_failures)
+    strategy_track_c_provenance_note_format, parse_failures = parse_markdown_bullet_list_section(
+        root,
+        "BENCHMARK_STRATEGY.md",
+        STRATEGY_TRACK_C_PROVENANCE_NOTE_FORMAT_HEADING,
+    )
+    failures.extend(parse_failures)
+    strategy_track_c_provenance_note_location, parse_failures = parse_markdown_bullet_list_section(
+        root,
+        "BENCHMARK_STRATEGY.md",
+        STRATEGY_TRACK_C_PROVENANCE_NOTE_LOCATION_HEADING,
+    )
+    failures.extend(parse_failures)
     track_c_task_family, parse_failures = parse_markdown_bullet_list_section(
         root,
         "benchmarks/tracks.md",
@@ -422,6 +450,18 @@ def check_benchmark_doc_contract(root: pathlib.Path):
         root,
         "benchmarks/tracks.md",
         TRACKS_TRACK_C_PROVENANCE_HEADING,
+    )
+    failures.extend(parse_failures)
+    track_c_provenance_note_format, parse_failures = parse_markdown_bullet_list_section(
+        root,
+        "benchmarks/tracks.md",
+        TRACKS_TRACK_C_PROVENANCE_NOTE_FORMAT_HEADING,
+    )
+    failures.extend(parse_failures)
+    track_c_provenance_note_location, parse_failures = parse_markdown_bullet_list_section(
+        root,
+        "benchmarks/tracks.md",
+        TRACKS_TRACK_C_PROVENANCE_NOTE_LOCATION_HEADING,
     )
     failures.extend(parse_failures)
     corpora_track_c_cases, parse_failures = parse_markdown_bullet_list_section(
@@ -592,6 +632,22 @@ def check_benchmark_doc_contract(root: pathlib.Path):
             "BENCHMARK_STRATEGY.md: conditional Track C non-editorial sample refresh provenance expected "
             + repr(track_c_contract["non_editorial_sample_refresh_provenance"])
         )
+    if (
+        strategy_track_c_provenance_note_format is not None
+        and strategy_track_c_provenance_note_format != track_c_contract["non_editorial_sample_refresh_note_format"]
+    ):
+        failures.append(
+            "BENCHMARK_STRATEGY.md: conditional Track C non-editorial sample refresh provenance note format expected "
+            + repr(track_c_contract["non_editorial_sample_refresh_note_format"])
+        )
+    if (
+        strategy_track_c_provenance_note_location is not None
+        and strategy_track_c_provenance_note_location != track_c_contract["non_editorial_sample_refresh_note_location"]
+    ):
+        failures.append(
+            "BENCHMARK_STRATEGY.md: conditional Track C non-editorial sample refresh provenance note location expected "
+            + repr(track_c_contract["non_editorial_sample_refresh_note_location"])
+        )
     if track_c_task_family is not None and track_c_task_family != [track_c_contract["task_family"]]:
         failures.append(
             "benchmarks/tracks.md: Track C pilot task family expected "
@@ -626,6 +682,22 @@ def check_benchmark_doc_contract(root: pathlib.Path):
         failures.append(
             "benchmarks/tracks.md: Track C non-editorial sample refresh provenance expected "
             + repr(track_c_contract["non_editorial_sample_refresh_provenance"])
+        )
+    if (
+        track_c_provenance_note_format is not None
+        and track_c_provenance_note_format != track_c_contract["non_editorial_sample_refresh_note_format"]
+    ):
+        failures.append(
+            "benchmarks/tracks.md: Track C non-editorial sample refresh provenance note format expected "
+            + repr(track_c_contract["non_editorial_sample_refresh_note_format"])
+        )
+    if (
+        track_c_provenance_note_location is not None
+        and track_c_provenance_note_location != track_c_contract["non_editorial_sample_refresh_note_location"]
+    ):
+        failures.append(
+            "benchmarks/tracks.md: Track C non-editorial sample refresh provenance note location expected "
+            + repr(track_c_contract["non_editorial_sample_refresh_note_location"])
         )
     if corpora_track_c_cases is not None and corpora_track_c_cases != track_c_contract["pilot_cases"]:
         failures.append(
@@ -736,6 +808,20 @@ def check_benchmark_doc_contract(root: pathlib.Path):
         failures.append("benchmarks/README.md: Track C non-editorial sample refresh validation command must remain explicit")
     if "the regenerated corpus hash, and the regenerated `run_id` plus `system_under_test`" not in benchmark_readme:
         failures.append("benchmarks/README.md: Track C non-editorial sample refresh provenance fields must remain explicit")
+    if "# Track C Sample Refresh Provenance" not in benchmark_readme:
+        failures.append("benchmarks/README.md: Track C provenance note heading must remain explicit")
+    if "- regeneration_command: `python scripts/benchmark_contract_dry_run.py --include-track-c-pilot`" not in benchmark_readme:
+        failures.append("benchmarks/README.md: Track C provenance note regeneration_command field must remain explicit")
+    if "- validation_command: `python scripts/run_repo_validation.py --include-track-c-pilot`" not in benchmark_readme:
+        failures.append("benchmarks/README.md: Track C provenance note validation_command field must remain explicit")
+    if "- manifest_corpus_hash: `sha256:<regenerated-corpus-hash>`" not in benchmark_readme:
+        failures.append("benchmarks/README.md: Track C provenance note manifest_corpus_hash field must remain explicit")
+    if "- result_run_id: `<regenerated-run-id>`" not in benchmark_readme:
+        failures.append("benchmarks/README.md: Track C provenance note result_run_id field must remain explicit")
+    if "- system_under_test: `<regenerated-system-under-test>`" not in benchmark_readme:
+        failures.append("benchmarks/README.md: Track C provenance note system_under_test field must remain explicit")
+    if "`reports/examples/benchmark_track_c_refresh_provenance.example.md`" not in benchmark_readme:
+        failures.append("benchmarks/README.md: Track C provenance note location must remain explicit")
     if track_c_contract["opt_in_command"] not in benchmark_strategy:
         failures.append("BENCHMARK_STRATEGY.md: Track C opt-in benchmark command must remain explicit")
     if "python scripts/benchmark_contract_dry_run.py --claim-run" not in benchmark_strategy:
@@ -748,6 +834,20 @@ def check_benchmark_doc_contract(root: pathlib.Path):
         failures.append("reports/README.md: Track C retained diagnostic posture must remain explicit")
     if "Any non-editorial refresh to those Track `C` samples must cite the opt-in regeneration command, the matching opt-in validation command, the regenerated corpus hash, and the regenerated `run_id` plus `system_under_test`." not in reports_readme:
         failures.append("reports/README.md: Track C non-editorial sample refresh provenance rule must remain explicit")
+    if "# Track C Sample Refresh Provenance" not in reports_readme:
+        failures.append("reports/README.md: Track C provenance note heading must remain explicit")
+    if "- regeneration_command: `python scripts/benchmark_contract_dry_run.py --include-track-c-pilot`" not in reports_readme:
+        failures.append("reports/README.md: Track C provenance note regeneration_command field must remain explicit")
+    if "- validation_command: `python scripts/run_repo_validation.py --include-track-c-pilot`" not in reports_readme:
+        failures.append("reports/README.md: Track C provenance note validation_command field must remain explicit")
+    if "- manifest_corpus_hash: `sha256:<regenerated-corpus-hash>`" not in reports_readme:
+        failures.append("reports/README.md: Track C provenance note manifest_corpus_hash field must remain explicit")
+    if "- result_run_id: `<regenerated-run-id>`" not in reports_readme:
+        failures.append("reports/README.md: Track C provenance note result_run_id field must remain explicit")
+    if "- system_under_test: `<regenerated-system-under-test>`" not in reports_readme:
+        failures.append("reports/README.md: Track C provenance note system_under_test field must remain explicit")
+    if "`benchmark_track_c_refresh_provenance.example.md`" not in reports_readme:
+        failures.append("reports/README.md: Track C provenance note location must remain explicit")
     if "`benchmark_report.example.json`" not in reports_readme:
         failures.append("reports/README.md: benchmark report example must remain explicit")
     if "`comparison_summary.example.json`" not in reports_readme:
@@ -820,6 +920,7 @@ def check_track_c_pilot_samples(root: pathlib.Path):
     if result.get("evidence") != track_c_contract["sample_evidence"]:
         failures.append(f"{result_rel}: expected evidence {track_c_contract['sample_evidence']}")
     failures.extend(validate_track_c_result_lock_criteria(track_c_contract, result, result_rel))
+    failures.extend(validate_track_c_provenance_note(root, manifest, result))
     return failures
 
 
@@ -832,6 +933,7 @@ def validate_track_c_pilot_outputs(root: pathlib.Path, manifest: dict, result: d
         failures.append("track_c manifest: generated output drifted from reports/examples/benchmark_track_c_manifest.example.json")
     if result != sample_result:
         failures.append("track_c result: generated output drifted from reports/examples/benchmark_track_c_result.example.json")
+    failures.extend(validate_track_c_provenance_note(root, manifest, result))
     failures.extend(
         validate_track_c_sample_posture(
             track_c_contract,
@@ -1651,6 +1753,46 @@ def mutate_break_track_c_provenance_list(root: pathlib.Path):
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
+def mutate_break_track_c_provenance_note_format_list(root: pathlib.Path):
+    path = root / "benchmarks" / "tracks.md"
+    text = path.read_text(encoding="utf-8")
+    old = (
+        "## Track C non-editorial sample refresh provenance note format\n\n"
+        "- `begin with the markdown heading # Track C Sample Refresh Provenance`\n"
+        "- `include a bullet - regeneration_command: python scripts/benchmark_contract_dry_run.py --include-track-c-pilot`\n"
+        "- `include a bullet - validation_command: python scripts/run_repo_validation.py --include-track-c-pilot`\n"
+        "- `include a bullet - manifest_corpus_hash: <regenerated manifest corpus hash>`\n"
+        "- `include a bullet - result_run_id: <regenerated result run_id>`\n"
+        "- `include a bullet - system_under_test: <regenerated result system_under_test>`"
+    )
+    new = (
+        "## Track C non-editorial sample refresh provenance note format\n\n"
+        "- `begin with the markdown heading # Track C Sample Refresh Provenance`\n"
+        "- `include a free-form summary paragraph`\n"
+        "- `include a bullet - validation_command: python scripts/run_repo_validation.py --include-track-c-pilot`\n"
+        "- `include a bullet - manifest_corpus_hash: <regenerated manifest corpus hash>`\n"
+        "- `include a bullet - result_run_id: <regenerated result run_id>`\n"
+        "- `include a bullet - system_under_test: <regenerated result system_under_test>`"
+    )
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
+def mutate_break_track_c_provenance_note_location_list(root: pathlib.Path):
+    path = root / "benchmarks" / "tracks.md"
+    text = path.read_text(encoding="utf-8")
+    old = (
+        "## Track C non-editorial sample refresh provenance note location\n\n"
+        "- `store the note at reports/examples/benchmark_track_c_refresh_provenance.example.md`\n"
+        "- `keep the note adjacent to the checked-in Track C sample manifest and result`"
+    )
+    new = (
+        "## Track C non-editorial sample refresh provenance note location\n\n"
+        "- `store the note under artifacts/benchmark_runs/<run_id>/track_c_refresh_note.md`\n"
+        "- `keep the note adjacent to the checked-in Track C sample manifest and result`"
+    )
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
 def mutate_break_track_c_benchmark_readme_provenance(root: pathlib.Path):
     path = root / "benchmarks" / "README.md"
     text = path.read_text(encoding="utf-8")
@@ -1667,6 +1809,22 @@ def mutate_break_track_c_benchmark_readme_provenance(root: pathlib.Path):
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
+def mutate_break_track_c_benchmark_readme_note_format(root: pathlib.Path):
+    path = root / "benchmarks" / "README.md"
+    text = path.read_text(encoding="utf-8")
+    old = "- result_run_id: `<regenerated-run-id>`\n- system_under_test: `<regenerated-system-under-test>`"
+    new = "- run_id: `<regenerated-run-id>`\n- system_under_test: `<regenerated-system-under-test>`"
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
+def mutate_break_track_c_benchmark_readme_note_location(root: pathlib.Path):
+    path = root / "benchmarks" / "README.md"
+    text = path.read_text(encoding="utf-8")
+    old = "Store that note at `reports/examples/benchmark_track_c_refresh_provenance.example.md` so it stays adjacent to `benchmark_track_c_manifest.example.json` and `benchmark_track_c_result.example.json`."
+    new = "Store that note wherever the operator prefers."
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
 def mutate_break_track_c_reports_readme_provenance(root: pathlib.Path):
     path = root / "reports" / "README.md"
     text = path.read_text(encoding="utf-8")
@@ -1680,6 +1838,26 @@ def mutate_break_track_c_reports_readme_provenance(root: pathlib.Path):
         "opt-in regeneration provenance."
     )
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
+def mutate_break_track_c_reports_readme_note_format(root: pathlib.Path):
+    path = root / "reports" / "README.md"
+    text = path.read_text(encoding="utf-8")
+    old = "# Track C Sample Refresh Provenance"
+    new = "# Track C Refresh Note"
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
+def mutate_break_track_c_reports_readme_note_location(root: pathlib.Path):
+    path = root / "reports" / "README.md"
+    text = path.read_text(encoding="utf-8")
+    path.write_text(text.replace("benchmark_track_c_refresh_provenance.example.md", "track_c_note.md", 1), encoding="utf-8")
+
+
+def mutate_break_track_c_provenance_note_file(root: pathlib.Path):
+    path = root / "reports" / "examples" / "benchmark_track_c_refresh_provenance.example.md"
+    text = path.read_text(encoding="utf-8")
+    path.write_text(text.replace("result_run_id", "run_id", 1), encoding="utf-8")
 
 
 def mutate_add_track_d_result(benchmark_items: dict):
@@ -1776,8 +1954,14 @@ def run_self_tests(root: pathlib.Path):
         ("track c sample posture re-decision drift", mutate_break_track_c_sample_redecision_list, ["benchmarks/tracks.md: Track C sample posture re-decision triggers expected"]),
         ("track c editorial-only refresh drift", mutate_break_track_c_editorial_refresh_list, ["benchmarks/tracks.md: Track C editorial-only sample refreshes expected"]),
         ("track c provenance drift", mutate_break_track_c_provenance_list, ["benchmarks/tracks.md: Track C non-editorial sample refresh provenance expected"]),
+        ("track c provenance note format drift", mutate_break_track_c_provenance_note_format_list, ["benchmarks/tracks.md: Track C non-editorial sample refresh provenance note format expected"]),
+        ("track c provenance note location drift", mutate_break_track_c_provenance_note_location_list, ["benchmarks/tracks.md: Track C non-editorial sample refresh provenance note location expected"]),
         ("track c benchmark readme provenance drift", mutate_break_track_c_benchmark_readme_provenance, ["benchmarks/README.md: Track C non-editorial sample refresh provenance rule must remain explicit"]),
+        ("track c benchmark readme note format drift", mutate_break_track_c_benchmark_readme_note_format, ["benchmarks/README.md: Track C provenance note result_run_id field must remain explicit"]),
+        ("track c benchmark readme note location drift", mutate_break_track_c_benchmark_readme_note_location, ["benchmarks/README.md: Track C provenance note location must remain explicit"]),
         ("track c reports readme provenance drift", mutate_break_track_c_reports_readme_provenance, ["reports/README.md: Track C non-editorial sample refresh provenance rule must remain explicit"]),
+        ("track c reports readme note format drift", mutate_break_track_c_reports_readme_note_format, ["reports/README.md: Track C provenance note heading must remain explicit"]),
+        ("track c reports readme note location drift", mutate_break_track_c_reports_readme_note_location, ["reports/README.md: Track C provenance note location must remain explicit"]),
     ]:
         count += 1
         failures.extend(run_negative_fixture(root, name, mutate, expected_markers))
@@ -1851,6 +2035,16 @@ def run_self_tests(root: pathlib.Path):
     ]:
         count += 1
         failures.extend(run_negative_track_c_sample_sync_fixture(root, name, mutate, expected_markers))
+
+    count += 1
+    failures.extend(
+        run_negative_fixture(
+            root,
+            "track c provenance note file drift",
+            mutate_break_track_c_provenance_note_file,
+            ["reports/examples/benchmark_track_c_refresh_provenance.example.md: content drifted from generated Track C provenance note"],
+        )
+    )
 
     return failures, count
 
@@ -2082,6 +2276,12 @@ def main():
         if track_c_bundle_failures:
             print("[benchmark] conditional Track C pilot bundle validation failed")
             for item in track_c_bundle_failures:
+                print(f" - {item}")
+            sys.exit(1)
+        note_failures = validate_track_c_provenance_note(root, track_c_manifest, track_c_result)
+        if note_failures:
+            print("[benchmark] conditional Track C provenance note validation failed")
+            for item in note_failures:
                 print(f" - {item}")
             sys.exit(1)
         print_track_c_success(track_c_result)
