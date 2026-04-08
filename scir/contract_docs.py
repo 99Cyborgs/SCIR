@@ -54,6 +54,9 @@ def render_rust_import_scope() -> str:
         for case_name, contract in RUST_IMPORTER_METADATA["case_contracts"].items()
         if contract["wasm_emittable"]
     ]
+    await_cases = list(RUST_IMPORTER_METADATA["await_cases"])
+    ownership_cases = list(RUST_IMPORTER_METADATA["ownership_boundary_cases"])
+    unsafe_capability = RUST_IMPORTER_METADATA["case_contracts"]["c_unsafe_call"]["required_capabilities"][0]
     return (
         "# Rust Import Scope\n"
         "Status: Normative\n\n"
@@ -66,6 +69,10 @@ def render_rust_import_scope() -> str:
         f"{_bullet_list(list(RUST_IMPORTER_METADATA['tier_a_cases']))}\n\n"
         "### Helper-free Wasm-emittable case\n\n"
         f"{_bullet_list(wasm_cases)}\n\n"
+        "### Await-bearing cases\n\n"
+        f"{_bullet_list(await_cases)}\n\n"
+        "### Ownership-bearing and boundary-accounted cases\n\n"
+        f"{_bullet_list(ownership_cases)}\n\n"
         "### Rejected cases\n\n"
         f"{_bullet_list(list(RUST_IMPORTER_METADATA['rejected_cases']))}\n\n"
         "## Supported shapes\n\n"
@@ -78,6 +85,11 @@ def render_rust_import_scope() -> str:
         "- simple async functions with explicit `await`\n\n"
         "### Tier C active importer shape\n\n"
         "- explicit unsafe call boundary imported as an opaque boundary\n\n"
+        "## Async contract\n\n"
+        "- `a_async_await` is the admitted Tier `A` await-bearing Rust case. Its importer bundle must keep `async fn load_once -> int !await` explicit in canonical `SCIR-H`, keep `return await fetch_value()` visible, and keep the optional Rust `H -> L` validation lane preserving the await boundary without implying helper-free Wasm emission, Rust reconstruction, or broader backend claims.\n\n"
+        "## Ownership and boundary contract\n\n"
+        "- `a_struct_field_borrow_mut` is the admitted Tier `A` ownership-bearing Rust case. Its importer bundle must keep `borrow_mut<Counter>` explicit in canonical `SCIR-H`, keep `counter.value` field-place mutation visible, and keep the same contract through the optional Rust `H -> L` validation lane.\n"
+        f"- `c_unsafe_call` is the admitted Tier `C` unsafe-boundary Rust case. Its importer bundle must keep the boundary explicit, keep `{unsafe_capability}` mirrored between `module_manifest.dependencies` and `opaque_boundary_contract.capabilities`, and keep the optional Rust `H -> L` validation lane boundary-accounting-only rather than implying Rust reconstruction, Wasm emission, or broader backend claims.\n\n"
         "### Tier D rejected shape classes\n\n"
         "- proc macros\n"
         "- build scripts\n"
@@ -250,6 +262,12 @@ def render_wasm_backend_readme() -> str:
     admitted_rust = [
         f"fixture.rust_importer.{case}" for case in WASM_BACKEND_METADATA["emittable_rust_cases"]
     ]
+    blocked_python = [
+        contract["module_id"] for contract in WASM_BACKEND_METADATA["non_emittable_python_cases"].values()
+    ]
+    blocked_rust = [
+        contract["module_id"] for contract in WASM_BACKEND_METADATA["non_emittable_rust_cases"].values()
+    ]
     return (
         "# Wasm Backend MVP\n"
         "Status: Normative\n\n"
@@ -272,12 +290,18 @@ def render_wasm_backend_readme() -> str:
         f"{_bullet_list(admitted_python)}\n\n"
         "### Admitted Rust emitted modules\n\n"
         f"{_bullet_list(admitted_rust)}\n\n"
+        "### Supported but non-emittable Python modules\n\n"
+        f"{_bullet_list(blocked_python)}\n\n"
+        "### Supported but non-emittable Rust modules\n\n"
+        f"{_bullet_list(blocked_rust)}\n\n"
         "### Admitted lowering rules\n\n"
         f"{_bullet_list(list(WASM_BACKEND_METADATA['admitted_lowering_rules']))}\n\n"
         "### Non-emittable lowering rules\n\n"
         f"{_bullet_list(list(WASM_BACKEND_METADATA['non_emittable_lowering_rules']))}\n\n"
         "### Additional non-emittable backend shapes\n\n"
         "Not emittable in this slice:\n\n"
+        "- supported await-bearing modules that lower through `H_AWAIT_RESUME`\n"
+        "- supported opaque or unsafe boundary modules that lower through `H_OPAQUE_CALL`\n"
         "- `field.addr` outside the bounded record-cell ABI\n"
         "- imported, indirect, recursive, or broader direct-call shapes\n"
         "- `async.resume`\n"

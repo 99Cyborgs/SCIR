@@ -338,6 +338,8 @@ PYTHON_RECONSTRUCTION_CASES_HEADING = "## Active reconstruction cases"
 RUST_IMPORT_SCOPE_SUPPORTED_HEADING = "### Importer-first evidence cases"
 RUST_IMPORT_SCOPE_TIER_A_HEADING = "### Tier A importer-evidence cases"
 RUST_IMPORT_SCOPE_WASM_HEADING = "### Helper-free Wasm-emittable case"
+RUST_IMPORT_SCOPE_AWAIT_HEADING = "### Await-bearing cases"
+RUST_IMPORT_SCOPE_OWNERSHIP_HEADING = "### Ownership-bearing and boundary-accounted cases"
 RUST_IMPORT_SCOPE_REJECTED_HEADING = "### Rejected cases"
 BENCHMARK_STRATEGY_CASES_HEADING = "### Active executable benchmark cases"
 BENCHMARK_TRACKS_ACTIVE_HEADING = "## Active executable tracks"
@@ -383,11 +385,15 @@ BENCHMARK_TRACKS_TRACK_C_PROVENANCE_NOTE_LOCATION_HEADING = "## Track C non-edit
 BENCHMARK_TRACKS_TRACK_C_PROVENANCE_NOTE_OVERWRITE_HEADING = "## Track C non-editorial sample refresh provenance note overwrite semantics"
 WASM_README_PYTHON_HEADING = "### Admitted Python emitted modules"
 WASM_README_RUST_HEADING = "### Admitted Rust emitted modules"
+WASM_README_PYTHON_NON_EMITTABLE_HEADING = "### Supported but non-emittable Python modules"
+WASM_README_RUST_NON_EMITTABLE_HEADING = "### Supported but non-emittable Rust modules"
 WASM_README_ADMITTED_RULES_HEADING = "### Admitted lowering rules"
 WASM_README_NON_EMITTABLE_RULES_HEADING = "### Non-emittable lowering rules"
 LOWERING_CONTRACT_WASM_ADMITTED_HEADING = "### Wasm-admitted lowering rules"
 LOWERING_CONTRACT_WASM_NON_EMITTABLE_HEADING = "### Wasm-non-emittable lowering rules"
+LOWERING_CONTRACT_WASM_NON_EMITTABLE_MODULES_HEADING = "### Wasm supported-but-non-emittable modules"
 VALIDATION_STRATEGY_WASM_MODULES_HEADING = "### Admitted helper-free Wasm-emission modules"
+VALIDATION_STRATEGY_WASM_NON_EMITTABLE_MODULES_HEADING = "### Supported but non-emittable helper-free Wasm modules"
 PRESERVATION_STAGE_NAMES = [
     "source_to_h",
     "scir_h_validation",
@@ -1383,6 +1389,7 @@ def check_python_proof_loop_contract(root: pathlib.Path):
 
 def check_rust_importer_contract(root: pathlib.Path):
     failures = []
+    import_scope_text = (root / "frontend" / "rust" / "IMPORT_SCOPE.md").read_text(encoding="utf-8")
     supported_cases, parse_failures = parse_markdown_bullet_list_section(
         root,
         "frontend/rust/IMPORT_SCOPE.md",
@@ -1401,6 +1408,18 @@ def check_rust_importer_contract(root: pathlib.Path):
         RUST_IMPORT_SCOPE_WASM_HEADING,
     )
     failures.extend(parse_failures)
+    await_cases, parse_failures = parse_markdown_bullet_list_section(
+        root,
+        "frontend/rust/IMPORT_SCOPE.md",
+        RUST_IMPORT_SCOPE_AWAIT_HEADING,
+    )
+    failures.extend(parse_failures)
+    ownership_cases, parse_failures = parse_markdown_bullet_list_section(
+        root,
+        "frontend/rust/IMPORT_SCOPE.md",
+        RUST_IMPORT_SCOPE_OWNERSHIP_HEADING,
+    )
+    failures.extend(parse_failures)
     rejected_cases, parse_failures = parse_markdown_bullet_list_section(
         root,
         "frontend/rust/IMPORT_SCOPE.md",
@@ -1410,6 +1429,8 @@ def check_rust_importer_contract(root: pathlib.Path):
 
     expected_supported = list(RUST_IMPORTER_METADATA["supported_cases"])
     expected_tier_a = list(RUST_IMPORTER_METADATA["tier_a_cases"])
+    expected_await = list(RUST_IMPORTER_METADATA["await_cases"])
+    expected_ownership = list(RUST_IMPORTER_METADATA["ownership_boundary_cases"])
     expected_rejected = list(RUST_IMPORTER_METADATA["rejected_cases"])
     expected_wasm = [
         case_name
@@ -1432,11 +1453,41 @@ def check_rust_importer_contract(root: pathlib.Path):
             "frontend/rust/IMPORT_SCOPE.md: Wasm-emittable Rust cases expected "
             + repr(expected_wasm)
         )
+    if await_cases is not None and await_cases != expected_await:
+        failures.append(
+            "frontend/rust/IMPORT_SCOPE.md: await-bearing Rust cases expected "
+            + repr(expected_await)
+        )
+    if ownership_cases is not None and ownership_cases != expected_ownership:
+        failures.append(
+            "frontend/rust/IMPORT_SCOPE.md: ownership/boundary Rust cases expected "
+            + repr(expected_ownership)
+        )
     if rejected_cases is not None and rejected_cases != expected_rejected:
         failures.append(
             "frontend/rust/IMPORT_SCOPE.md: rejected Rust importer cases expected "
             + repr(expected_rejected)
         )
+    required_markers = [
+        "`async fn load_once -> int !await`",
+        "`return await fetch_value()`",
+        "await boundary",
+        "helper-free Wasm emission",
+        "`borrow_mut<Counter>`",
+        "`counter.value`",
+        "`capability:unsafe_ping`",
+        "optional Rust `H -> L` validation lane",
+        "boundary-accounting-only",
+    ]
+    for marker in required_markers:
+        if marker not in import_scope_text:
+            failures.append(f"frontend/rust/IMPORT_SCOPE.md: missing Rust contract marker {marker}")
+    for case_name in expected_supported:
+        profile = RUST_IMPORTER_METADATA["case_contracts"][case_name]["profile"]
+        if profile == "N":
+            failures.append(
+                f"scripts/scir_rust_bootstrap.py: supported Rust importer case {case_name} must not use deferred profile 'N'"
+            )
     failures.extend(check_rendered_contract_documents(root, "frontend/rust/IMPORT_SCOPE.md"))
     return failures
 
@@ -2315,7 +2366,19 @@ def check_wasm_emitter_contract(root: pathlib.Path):
         f"fixture.rust_importer.{case_name}"
         for case_name in WASM_BACKEND_METADATA["emittable_rust_cases"]
     ]
+    expected_python_non_emittable_modules = [
+        contract["module_id"]
+        for contract in WASM_BACKEND_METADATA["non_emittable_python_cases"].values()
+    ]
+    expected_rust_non_emittable_modules = [
+        contract["module_id"]
+        for contract in WASM_BACKEND_METADATA["non_emittable_rust_cases"].values()
+    ]
     expected_module_ids = wasm_emittable_module_ids()
+    expected_non_emittable_module_ids = [
+        *expected_python_non_emittable_modules,
+        *expected_rust_non_emittable_modules,
+    ]
     expected_admitted_rules = list(WASM_BACKEND_METADATA["admitted_lowering_rules"])
     expected_non_emittable_rules = list(WASM_BACKEND_METADATA["non_emittable_lowering_rules"])
 
@@ -2329,6 +2392,18 @@ def check_wasm_emitter_contract(root: pathlib.Path):
         root,
         "backends/wasm/README.md",
         WASM_README_RUST_HEADING,
+    )
+    failures.extend(parse_failures)
+    python_non_emittable_modules, parse_failures = parse_markdown_bullet_list_section(
+        root,
+        "backends/wasm/README.md",
+        WASM_README_PYTHON_NON_EMITTABLE_HEADING,
+    )
+    failures.extend(parse_failures)
+    rust_non_emittable_modules, parse_failures = parse_markdown_bullet_list_section(
+        root,
+        "backends/wasm/README.md",
+        WASM_README_RUST_NON_EMITTABLE_HEADING,
     )
     failures.extend(parse_failures)
     readme_admitted_rules, parse_failures = parse_markdown_bullet_list_section(
@@ -2355,10 +2430,22 @@ def check_wasm_emitter_contract(root: pathlib.Path):
         LOWERING_CONTRACT_WASM_NON_EMITTABLE_HEADING,
     )
     failures.extend(parse_failures)
+    contract_non_emittable_modules, parse_failures = parse_markdown_bullet_list_section(
+        root,
+        "LOWERING_CONTRACT.md",
+        LOWERING_CONTRACT_WASM_NON_EMITTABLE_MODULES_HEADING,
+    )
+    failures.extend(parse_failures)
     strategy_modules, parse_failures = parse_markdown_bullet_list_section(
         root,
         "VALIDATION_STRATEGY.md",
         VALIDATION_STRATEGY_WASM_MODULES_HEADING,
+    )
+    failures.extend(parse_failures)
+    strategy_non_emittable_modules, parse_failures = parse_markdown_bullet_list_section(
+        root,
+        "VALIDATION_STRATEGY.md",
+        VALIDATION_STRATEGY_WASM_NON_EMITTABLE_MODULES_HEADING,
     )
     failures.extend(parse_failures)
 
@@ -2371,6 +2458,16 @@ def check_wasm_emitter_contract(root: pathlib.Path):
         failures.append(
             "backends/wasm/README.md: admitted Rust emitted modules expected "
             + repr(expected_rust_modules)
+        )
+    if python_non_emittable_modules is not None and python_non_emittable_modules != expected_python_non_emittable_modules:
+        failures.append(
+            "backends/wasm/README.md: supported-but-non-emittable Python modules expected "
+            + repr(expected_python_non_emittable_modules)
+        )
+    if rust_non_emittable_modules is not None and rust_non_emittable_modules != expected_rust_non_emittable_modules:
+        failures.append(
+            "backends/wasm/README.md: supported-but-non-emittable Rust modules expected "
+            + repr(expected_rust_non_emittable_modules)
         )
     if readme_admitted_rules is not None and readme_admitted_rules != expected_admitted_rules:
         failures.append(
@@ -2392,20 +2489,38 @@ def check_wasm_emitter_contract(root: pathlib.Path):
             "LOWERING_CONTRACT.md: Wasm-non-emittable lowering rules expected "
             + repr(expected_non_emittable_rules)
         )
+    if contract_non_emittable_modules is not None and contract_non_emittable_modules != expected_non_emittable_module_ids:
+        failures.append(
+            "LOWERING_CONTRACT.md: Wasm supported-but-non-emittable modules expected "
+            + repr(expected_non_emittable_module_ids)
+        )
     if strategy_modules is not None and strategy_modules != expected_module_ids:
         failures.append(
             "VALIDATION_STRATEGY.md: admitted helper-free Wasm-emission modules expected "
             + repr(expected_module_ids)
         )
+    if strategy_non_emittable_modules is not None and strategy_non_emittable_modules != expected_non_emittable_module_ids:
+        failures.append(
+            "VALIDATION_STRATEGY.md: supported-but-non-emittable helper-free Wasm modules expected "
+            + repr(expected_non_emittable_module_ids)
+        )
 
     if "profile `P`" not in wasm_readme or "`P2` ceiling" not in wasm_readme:
         failures.append("backends/wasm/README.md: expected explicit profile P and P2 ceiling markers")
+    if "supported await-bearing modules that lower through `H_AWAIT_RESUME`" not in wasm_readme:
+        failures.append("backends/wasm/README.md: expected explicit await-bearing non-emittable marker")
+    if "supported opaque or unsafe boundary modules that lower through `H_OPAQUE_CALL`" not in wasm_readme:
+        failures.append("backends/wasm/README.md: expected explicit boundary non-emittable marker")
     if "profile `P` with a `P2` contract ceiling" not in lowering_contract:
         failures.append("LOWERING_CONTRACT.md: expected explicit Wasm profile P and P2 ceiling marker")
+    if "supported-but-non-emittable modules above remain explicit backend exclusions" not in lowering_contract:
+        failures.append("LOWERING_CONTRACT.md: expected explicit supported-but-non-emittable exclusion marker")
     if "module-owned linear memory" not in lowering_contract or "shared-handle callers only" not in lowering_contract:
         failures.append("LOWERING_CONTRACT.md: expected explicit bounded record-cell ABI markers")
     if "path-qualified `l_to_wasm` evidence" not in validation_strategy:
         failures.append("VALIDATION_STRATEGY.md: Wasm validation must mention path-qualified l_to_wasm evidence")
+    if "Supported but non-emittable helper-free Wasm modules" not in validation_strategy:
+        failures.append("VALIDATION_STRATEGY.md: Wasm validation must publish supported-but-non-emittable helper-free modules")
     if "field-place lowering is normalized into imported memory, hidden host layout, or non-shared-handle callers" not in validation_strategy:
         failures.append("VALIDATION_STRATEGY.md: Wasm validation must reject non-candidate field-place normalization")
 
@@ -3022,11 +3137,55 @@ def mutate_break_wasm_python_module_list(root: pathlib.Path):
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
+def mutate_break_wasm_python_non_emittable_module_list(root: pathlib.Path):
+    path = root / "backends" / "wasm" / "README.md"
+    text = path.read_text(encoding="utf-8")
+    old = "### Supported but non-emittable Python modules\n\n- `fixture.python_importer.a_async_await`\n- `fixture.python_importer.c_opaque_call`"
+    new = "### Supported but non-emittable Python modules\n\n- `fixture.python_importer.a_async_await`\n- `fixture.python_importer.b_direct_call`"
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
+def mutate_break_wasm_rust_non_emittable_module_list(root: pathlib.Path):
+    path = root / "backends" / "wasm" / "README.md"
+    text = path.read_text(encoding="utf-8")
+    old = "### Supported but non-emittable Rust modules\n\n- `fixture.rust_importer.a_async_await`\n- `fixture.rust_importer.c_unsafe_call`"
+    new = "### Supported but non-emittable Rust modules\n\n- `fixture.rust_importer.a_async_await`\n- `fixture.rust_importer.a_mut_local`"
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
 def mutate_break_wasm_non_emittable_rule_list(root: pathlib.Path):
     path = root / "LOWERING_CONTRACT.md"
     text = path.read_text(encoding="utf-8")
     old = "### Wasm-non-emittable lowering rules\n\n- `H_AWAIT_RESUME`\n- `H_OPAQUE_CALL`"
     new = "### Wasm-non-emittable lowering rules\n\n- `H_AWAIT_RESUME`\n- `H_BRANCH_JOIN`"
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
+def mutate_break_wasm_non_emittable_module_list(root: pathlib.Path):
+    path = root / "LOWERING_CONTRACT.md"
+    text = path.read_text(encoding="utf-8")
+    old = (
+        "### Wasm supported-but-non-emittable modules\n\n"
+        "- `fixture.python_importer.a_async_await`\n"
+        "- `fixture.python_importer.c_opaque_call`\n"
+        "- `fixture.rust_importer.a_async_await`\n"
+        "- `fixture.rust_importer.c_unsafe_call`"
+    )
+    new = (
+        "### Wasm supported-but-non-emittable modules\n\n"
+        "- `fixture.python_importer.a_async_await`\n"
+        "- `fixture.python_importer.c_opaque_call`\n"
+        "- `fixture.rust_importer.a_mut_local`\n"
+        "- `fixture.rust_importer.c_unsafe_call`"
+    )
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
+def mutate_remove_wasm_non_emittable_exclusion_marker(root: pathlib.Path):
+    path = root / "LOWERING_CONTRACT.md"
+    text = path.read_text(encoding="utf-8")
+    old = "The supported-but-non-emittable modules above remain explicit backend exclusions rather than implicit future support.\n"
+    new = ""
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
@@ -3043,6 +3202,26 @@ def mutate_break_wasm_validation_module_list(root: pathlib.Path):
     text = path.read_text(encoding="utf-8")
     old = "### Admitted helper-free Wasm-emission modules\n\n- `fixture.python_importer.a_basic_function`\n- `fixture.python_importer.b_direct_call`\n- `fixture.rust_importer.a_mut_local`\n- `fixture.rust_importer.a_struct_field_borrow_mut`"
     new = "### Admitted helper-free Wasm-emission modules\n\n- `fixture.python_importer.a_basic_function`\n- `fixture.python_importer.a_async_await`\n- `fixture.rust_importer.a_mut_local`\n- `fixture.rust_importer.a_struct_field_borrow_mut`"
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
+def mutate_break_wasm_validation_non_emittable_module_list(root: pathlib.Path):
+    path = root / "VALIDATION_STRATEGY.md"
+    text = path.read_text(encoding="utf-8")
+    old = (
+        "### Supported but non-emittable helper-free Wasm modules\n\n"
+        "- `fixture.python_importer.a_async_await`\n"
+        "- `fixture.python_importer.c_opaque_call`\n"
+        "- `fixture.rust_importer.a_async_await`\n"
+        "- `fixture.rust_importer.c_unsafe_call`"
+    )
+    new = (
+        "### Supported but non-emittable helper-free Wasm modules\n\n"
+        "- `fixture.python_importer.a_async_await`\n"
+        "- `fixture.python_importer.c_opaque_call`\n"
+        "- `fixture.rust_importer.a_mut_local`\n"
+        "- `fixture.rust_importer.c_unsafe_call`"
+    )
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
@@ -3350,9 +3529,29 @@ def get_self_test_cases():
             ["backends/wasm/README.md: admitted Python emitted modules expected"],
         ),
         (
+            "wasm python non-emittable module drift",
+            mutate_break_wasm_python_non_emittable_module_list,
+            ["backends/wasm/README.md: supported-but-non-emittable Python modules expected"],
+        ),
+        (
+            "wasm rust non-emittable module drift",
+            mutate_break_wasm_rust_non_emittable_module_list,
+            ["backends/wasm/README.md: supported-but-non-emittable Rust modules expected"],
+        ),
+        (
             "wasm non-emittable lowering-rule drift",
             mutate_break_wasm_non_emittable_rule_list,
             ["LOWERING_CONTRACT.md: Wasm-non-emittable lowering rules expected"],
+        ),
+        (
+            "wasm non-emittable module drift",
+            mutate_break_wasm_non_emittable_module_list,
+            ["LOWERING_CONTRACT.md: Wasm supported-but-non-emittable modules expected"],
+        ),
+        (
+            "wasm non-emittable exclusion marker drift",
+            mutate_remove_wasm_non_emittable_exclusion_marker,
+            ["LOWERING_CONTRACT.md: expected explicit supported-but-non-emittable exclusion marker"],
         ),
         (
             "wasm record-cell ABI drift",
@@ -3363,6 +3562,11 @@ def get_self_test_cases():
             "wasm validation emitted-module drift",
             mutate_break_wasm_validation_module_list,
             ["VALIDATION_STRATEGY.md: admitted helper-free Wasm-emission modules expected"],
+        ),
+        (
+            "wasm validation non-emittable module drift",
+            mutate_break_wasm_validation_non_emittable_module_list,
+            ["VALIDATION_STRATEGY.md: supported-but-non-emittable helper-free Wasm modules expected"],
         ),
         (
             "typescript reactivation",

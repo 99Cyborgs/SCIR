@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-04-07T11:43:37.2228492-05:00",
+  "generated_at": "2026-04-08T10:36:04.0061843-05:00",
   "queue_state": {
     "status": "EMPTY_BY_DESIGN",
     "ready_items": [],
-    "no_successor_item_reason": "No authoritative roadmap-derived follow-on is currently selected beyond the bounded Q-06-012 governance hardening slice."
+    "no_successor_item_reason": "The bounded 2026-04-08 Wasm self-test-hardening slice is complete, and no stronger roadmap-derived successor is selected after the explicit non-emittable contract drift coverage closed, so the queue returns to EMPTY BY DESIGN until a later authoritative follow-on plus regenerated exports exists."
   },
   "last_completed": {
-    "queue_id": "Q-06-012",
-    "label": "Checkpoint integrity + governance evidence binding",
-    "title": "Checkpoint integrity and governance evidence binding"
+    "queue_id": "Q-04-013",
+    "label": "Wasm non-emittable contract self-test hardening",
+    "title": "Add self-test coverage for helper-free Wasm non-emittable contract drift"
   },
   "next_action": null,
   "validation_state": {
@@ -52,18 +52,18 @@
   "evidence_refs": {
     "queue_markdown": {
       "path": "EXECUTION_QUEUE.md",
-      "sha256": "sha256:a77536d8d69a2063f24cf27f6247064828aa8835ce0aa403df3fffdd9289b3a5"
+      "sha256": "sha256:ddb6e7cf85b0fc91df7799f766f7088d1f363d87cd1283d9b2c1b9445de32c20"
     },
     "queue_export": {
       "path": "reports/exports/execution_queue.export.json",
-      "generated_at": "2026-04-07T11:43:37.2228492-05:00",
-      "sha256": "sha256:8981a8d4f804a4b77c1ba3bfd9b7ea6d3f41adc61465d3f67f252894272ae0d4"
+      "generated_at": "2026-04-08T10:36:04.0061843-05:00",
+      "sha256": "sha256:21fa2f602127ad41b7d34942ddc15831f89333af0762a19af93b0f833102df21"
     },
     "relevant_plan_closeouts": [
       {
         "path": "plans/2026-04-01-mvp-narrowing-and-contract-hardening.md",
         "section": "CLOSEOUT",
-        "sha256": "sha256:dfb7851278367f69f38f093516996a8253397a0c2ead2dbd5c06b2c0ac8322d9"
+        "sha256": "sha256:bfab6d49a912a7ce978e5b4e7b6279adc7a3e39ea62af9122504333e7c9da22a"
       },
       {
         "path": "plans/2026-04-07-q-06-011-lock-track-c-provenance-note-overwrite-semantics.md",
@@ -78,7 +78,7 @@
     ],
     "validation_outputs": [
       {
-        "command": "python scripts/build_execution_queue.py --mode check",
+        "command": "python scripts/validate_repo_contracts.py --mode test",
         "status": "passed"
       },
       {
@@ -86,18 +86,18 @@
         "status": "passed"
       },
       {
-        "command": "python scripts/validate_repo_contracts.py --mode test",
+        "command": "python scripts/build_execution_queue.py --mode check",
         "status": "passed"
       },
       {
-        "command": "python scripts/run_repo_validation.py",
+        "command": "python scripts/run_repo_validation.py --require-rust",
         "status": "passed"
       }
     ],
     "schema_or_contract_surfaces": [
       {
         "path": "EXECUTION_QUEUE.md",
-        "sha256": "sha256:a77536d8d69a2063f24cf27f6247064828aa8835ce0aa403df3fffdd9289b3a5"
+        "sha256": "sha256:ddb6e7cf85b0fc91df7799f766f7088d1f363d87cd1283d9b2c1b9445de32c20"
       },
       {
         "path": "DECISION_REGISTER.md",
@@ -121,7 +121,7 @@
       },
       {
         "path": "VALIDATION_STRATEGY.md",
-        "sha256": "sha256:a02d1bf71b197f47d6468faeffbe96ae2b0ce81d45ea81d4f800350aac907f10"
+        "sha256": "sha256:de6eb6813cf1910c900eb2d81e3a44f01c06141598114d0caae2025308a9209e"
       },
       {
         "path": "scripts/build_execution_queue.py",
@@ -129,21 +129,45 @@
       },
       {
         "path": "scripts/validate_repo_contracts.py",
-        "sha256": "sha256:8a3eb82ee74c643a05ef8d9b2434a944233d2f14080fdd93762cf96083a1d1a3"
+        "sha256": "sha256:c2d2663974fa2f8b348246dd29f73507c5ff7cdd55a4abb546af7a5df6daefa4"
       }
     ]
   },
   "validation_context": {
-    "queue_snapshot": "2026-04-07T11:43:37.2228492-05:00",
-    "head_commit_hash": "ca3a1ca03aa57f8f3c332077a8b7de38e93242aa",
-    "commit_hash_basis": "baseline_parent",
-    "working_tree_dirty": false,
-    "working_tree_status": [],
+    "queue_snapshot": "2026-04-08T10:36:04.0061843-05:00",
+    "head_commit_hash": "c653eb533a76d6bcc0957d2e3d2cc1b994649e99",
+    "commit_hash_basis": "current_head",
+    "working_tree_dirty": true,
+    "working_tree_status": [
+      "M EXECUTION_QUEUE.md",
+      "M LOWERING_CONTRACT.md",
+      "M VALIDATION_STRATEGY.md",
+      "M backends/wasm/README.md",
+      "M frontend/rust/IMPORT_SCOPE.md",
+      "M plans/2026-04-01-mvp-narrowing-and-contract-hardening.md",
+      "M reports/exports/checkpoint_closeout.export.json",
+      "M reports/exports/execution_queue.export.json",
+      "M scir/contract_docs.py",
+      "M scripts/rust_importer_conformance.py",
+      "M scripts/scir_bootstrap_pipeline.py",
+      "M scripts/scir_rust_bootstrap.py",
+      "M scripts/validate_repo_contracts.py",
+      "M scripts/wasm_backend_metadata.py",
+      "M tests/rust_importer/cases/c_unsafe_call/feature_tier_report.json",
+      "M tests/rust_importer/cases/c_unsafe_call/module_manifest.json",
+      "M tests/rust_importer/cases/c_unsafe_call/opaque_boundary_contract.json",
+      "M tests/rust_importer/cases/c_unsafe_call/validation_report.json",
+      "?? plans/2026-04-08-governed-reentry-and-next-slice-selection.md",
+      "?? plans/2026-04-08-q-03-002-rust-ownership-mode-alignment.md",
+      "?? plans/2026-04-08-q-03-003-rust-async-await-contract-alignment.md",
+      "?? plans/2026-04-08-q-04-012-lock-wasm-non-emittable-case-contract.md",
+      "?? plans/2026-04-08-q-04-013-harden-wasm-non-emittable-self-tests.md"
+    ],
     "validation_commands": [
-      "python scripts/build_execution_queue.py --mode check",
-      "python scripts/validate_repo_contracts.py --mode validate",
       "python scripts/validate_repo_contracts.py --mode test",
-      "python scripts/run_repo_validation.py"
+      "python scripts/validate_repo_contracts.py --mode validate",
+      "python scripts/build_execution_queue.py --mode check",
+      "python scripts/run_repo_validation.py --require-rust"
     ],
     "schema_versions": [
       {
@@ -165,8 +189,8 @@
     "exported_artifacts": [
       {
         "path": "reports/exports/execution_queue.export.json",
-        "generated_at": "2026-04-07T11:43:37.2228492-05:00",
-        "sha256": "sha256:8981a8d4f804a4b77c1ba3bfd9b7ea6d3f41adc61465d3f67f252894272ae0d4"
+        "generated_at": "2026-04-08T10:36:04.0061843-05:00",
+        "sha256": "sha256:21fa2f602127ad41b7d34942ddc15831f89333af0762a19af93b0f833102df21"
       },
       {
         "path": "reports/exports/decision_register.export.json",

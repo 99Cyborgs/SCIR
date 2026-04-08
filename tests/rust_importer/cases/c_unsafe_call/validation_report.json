@@ -9,7 +9,7 @@
     {
       "code": "RS-C001",
       "severity": "warn",
-      "message": "unsafe_ping remains an explicit Tier C opaque boundary in the Rust bootstrap slice.",
+      "message": "unsafe_ping remains an explicit Tier C unsafe boundary with capability accounting in the Rust bootstrap slice.",
       "location": "input/src/lib.rs:6"
     }
   ]

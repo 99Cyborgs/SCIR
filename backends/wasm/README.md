@@ -31,6 +31,16 @@ The active Wasm backend is limited to helper-free stable WAT emission for the sm
 - `fixture.rust_importer.a_mut_local`
 - `fixture.rust_importer.a_struct_field_borrow_mut`
 
+### Supported but non-emittable Python modules
+
+- `fixture.python_importer.a_async_await`
+- `fixture.python_importer.c_opaque_call`
+
+### Supported but non-emittable Rust modules
+
+- `fixture.rust_importer.a_async_await`
+- `fixture.rust_importer.c_unsafe_call`
+
 ### Admitted lowering rules
 
 - `H_CONST_RET`
@@ -53,6 +63,8 @@ The active Wasm backend is limited to helper-free stable WAT emission for the sm
 
 Not emittable in this slice:
 
+- supported await-bearing modules that lower through `H_AWAIT_RESUME`
+- supported opaque or unsafe boundary modules that lower through `H_OPAQUE_CALL`
 - `field.addr` outside the bounded record-cell ABI
 - imported, indirect, recursive, or broader direct-call shapes
 - `async.resume`

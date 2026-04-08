@@ -90,6 +90,21 @@ Revert the MVP-narrowing patch set as a unit if validation cannot be brought bac
 - derived exports match updated markdown sources
 - exact deferred and archived surfaces are documented
 
+## Re-entry continuation
+
+- Re-opened on 2026-04-08 after the validator-clean `CHECKPOINT: Q-06-012 closeout — governance-bound baseline` commit.
+- Re-entry justification: the next bounded non-hardening roadmap advance is Phase 3 Rust importer alignment; Python proof-loop and Track `A` / Track `B` options collapse back into hardening, while broader Wasm widening would reopen higher-risk backend scope.
+- Active exclusions: no Rust reconstruction, no benchmark widening, no new Wasm-emittable surface, and no change to `SCIR-H` or `SCIR-L` semantics.
+- `Q-03-002` implementation is now complete in the working tree: the generated Rust import-scope doc, `RUST_IMPORTER_METADATA`, Rust importer conformance checks, and the optional Rust `H -> L` validation lane now share one explicit ownership/boundary contract for `a_struct_field_borrow_mut` and `c_unsafe_call`.
+- The Rust unsafe-boundary case `c_unsafe_call` now uses active importer-first profile `R` instead of deferred profile `N`, and repo validation now fails if a supported Rust importer case reintroduces deferred profile `N`.
+- Validation for the `Q-03-002` patch set passed via `python scripts/rust_importer_conformance.py --mode validate-fixtures`, `python scripts/scir_bootstrap_pipeline.py --language rust --mode validate`, `python scripts/validate_repo_contracts.py --mode validate`, and `python scripts/run_repo_validation.py --require-rust`.
+- `Q-03-003` then closed the remaining bounded Phase 3 governance gap by making `a_async_await` an explicit await-bearing contract across generated Rust import scope, bootstrap metadata, repo drift checks, and the optional Rust `H -> L` validation lane while keeping the case non-Wasm-emittable and importer-first.
+- `Q-04-012` then reopened the queue for one bounded Phase 4 backend-contract slice: the supported-but-non-emittable helper-free Wasm cases are now explicit across backend metadata, backend docs, validation doctrine, and pipeline validation rather than being left to scattered prose and generic exclusion failures.
+- `Q-04-013` then reopened the queue for one narrower Phase 4 hardening slice: repo-checker self-tests now include explicit negative fixtures for helper-free Wasm supported-but-non-emittable module-list and exclusion-marker drift instead of relying on normal validation alone to cover those headings.
+- With that bounded Wasm backend-contract slice complete and no further roadmap-derived successor selected, the execution queue returns again to `EMPTY BY DESIGN` until a later authoritative follow-on plus regenerated exports exist.
+- Validation for the final 2026-04-08 Wasm re-entry closeout passed via `python scripts/build_execution_queue.py --mode check`, `python scripts/scir_bootstrap_pipeline.py --mode validate`, `python scripts/scir_bootstrap_pipeline.py --language rust --mode validate`, `python scripts/validate_repo_contracts.py --mode validate`, and `python scripts/run_repo_validation.py --require-rust`.
+- Validation for the final 2026-04-08 Wasm self-test-hardening closeout passed via `python scripts/validate_repo_contracts.py --mode test`, `python scripts/validate_repo_contracts.py --mode validate`, `python scripts/build_execution_queue.py --mode check`, and `python scripts/run_repo_validation.py --require-rust`.
+
 ## Completion evidence for this execution slice
 
 - root boundary docs, specs, benchmark doctrine, validation doctrine, and roadmap surfaces were rewritten around the narrowed MVP

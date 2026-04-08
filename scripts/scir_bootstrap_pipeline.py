@@ -104,7 +104,7 @@ from validators.execution_context_guard import (
     TrustedScirhcCaller,
     register_trusted_scirhc_caller,
 )
-from wasm_backend_metadata import WASM_BACKEND_METADATA
+from wasm_backend_metadata import WASM_BACKEND_METADATA, wasm_non_emittable_module_contracts
 
 
 ALL_CASES = list(PYTHON_PROOF_LOOP_METADATA["case_order"])
@@ -121,6 +121,9 @@ RECONSTRUCTION_VALIDATOR_NAME = "reconstruction-bootstrap-validator"
 WASM_EMITTER_VALIDATOR_NAME = "wasm-emitter-bootstrap-validator"
 WASM_EMITTABLE_CASES = [
     *WASM_BACKEND_METADATA["emittable_python_cases"]
+]
+WASM_NON_EMITTABLE_CASES = [
+    *WASM_BACKEND_METADATA["non_emittable_python_cases"]
 ]
 
 RECONSTRUCTION_EXPECTATIONS = {
@@ -142,12 +145,22 @@ RUST_TRANSLATION_EXPECTATIONS = {
         "profile": contract["profile"],
         "preservation_level": contract["preservation_level"],
         "requires_opaque": contract["requires_opaque_boundary"],
+        "contract_label": contract["contract_label"],
+        "await_boundary_case": contract["await_boundary_case"],
+        "ownership_boundary_case": contract["ownership_boundary_case"],
+        "preserved": list(contract["translation_preserved"]),
+        "boundary_annotations": list(contract["translation_boundary_annotations"]),
+        "downgrades": json.loads(json.dumps(contract["translation_downgrades"])),
     }
     for case_name, contract in RUST_IMPORTER_METADATA["case_contracts"].items()
 }
 RUST_WASM_EMITTABLE_CASES = [
     *WASM_BACKEND_METADATA["emittable_rust_cases"]
 ]
+RUST_WASM_NON_EMITTABLE_CASES = [
+    *WASM_BACKEND_METADATA["non_emittable_rust_cases"]
+]
+WASM_NON_EMITTABLE_MODULE_CONTRACTS = wasm_non_emittable_module_contracts()
 INVALID_SCIRH_MANIFEST_REL = "tests/invalid_scir_h/manifest.json"
 INVALID_SCIRL_MANIFEST_REL = "tests/invalid_scir_l/manifest.json"
 ACTIVE_TIER_A_CORPUS_REL = "tests/corpora/python_tier_a_micro_corpus.json"
@@ -2733,10 +2746,30 @@ def validate_wasm_translation(
 
 
 def validate_wasm_not_emittable(module: Module, lowered: dict):
+    contract = WASM_NON_EMITTABLE_MODULE_CONTRACTS.get(module.module_id)
+    if contract is not None:
+        lowering_rules = {
+            item.get("lowering_rule")
+            for function in lowered.get("functions", [])
+            for block in function.get("blocks", [])
+            for item in [*block.get("instructions", []), block.get("terminator", {})]
+            if isinstance(item, dict) and item.get("lowering_rule")
+        }
+        missing_rules = [
+            rule for rule in contract["blocking_lowering_rules"] if rule not in lowering_rules
+        ]
+        if missing_rules:
+            return [
+                f"{module.module_id}: expected helper-free Wasm blocker rules {missing_rules!r} for supported-but-non-emittable case"
+            ]
     try:
         emit_wasm_module(module, lowered)
     except PipelineError:
         return []
+    if contract is not None:
+        return [
+            f"{module.module_id}: supported-but-non-emittable Wasm case unexpectedly emitted output despite blocker {contract['blocking_lowering_rules']!r} ({contract['reason']})"
+        ]
     return [f"{module.module_id}: unsupported lowered module unexpectedly emitted Wasm output"]
 
 
@@ -3103,7 +3136,7 @@ def validate_executable_output_set(outputs: dict):
             failures.append(f"{case_name}: Wasm-emittable case must emit a Wasm output")
         elif "translation_validation_report" not in output_groups["wasm_reports"][case_name]:
             failures.append(f"{case_name}: Wasm-emittable case must emit a translation-validation report")
-    for case_name in sorted(set(SUPPORTED_CASES) - set(WASM_EMITTABLE_CASES)):
+    for case_name in WASM_NON_EMITTABLE_CASES:
         if case_name in output_groups["wasm_reports"]:
             failures.append(f"{case_name}: non-emittable supported case must not emit a Wasm output")
     for case_name in SCIRH_ONLY_CASES:
@@ -4454,25 +4487,11 @@ def validate_rust_lowering_alignment(case_name: str, lowered: dict):
 
 
 def rust_translation_report(case_name: str):
-    preserved = {
-        "a_mut_local": ["function boundaries", "mutable local semantics", "branch behavior"],
-        "a_struct_field_borrow_mut": ["function boundaries", "borrowed field mutation semantics"],
-        "a_async_await": ["function boundaries", "await boundary"],
-        "c_unsafe_call": [],
-    }
-    profile = RUST_TRANSLATION_EXPECTATIONS[case_name]["profile"]
-    preservation_level = RUST_TRANSLATION_EXPECTATIONS[case_name]["preservation_level"]
-    boundary_annotations = ["unsafe boundary"] if case_name == "c_unsafe_call" else []
-    downgrades = (
-        [
-            {
-                "reason": "unsafe boundary is preserved as explicit boundary annotation only",
-                "preservation_level": "P3",
-            }
-        ]
-        if case_name == "c_unsafe_call"
-        else []
-    )
+    contract = RUST_TRANSLATION_EXPECTATIONS[case_name]
+    profile = contract["profile"]
+    preservation_level = contract["preservation_level"]
+    boundary_annotations = list(contract["boundary_annotations"])
+    downgrades = json.loads(json.dumps(contract["downgrades"]))
     return {
         "report_id": f"rust-lowering-preservation-{slug(case_name)}",
         "subject": f"fixture.rust_importer.{case_name}",
@@ -4485,7 +4504,7 @@ def rust_translation_report(case_name: str):
         "downgrades": downgrades,
         "boundary_annotations": boundary_annotations,
         "observables": {
-            "preserved": preserved[case_name],
+            "preserved": list(contract["preserved"]),
             "normalized": [],
             "contract_bounded": [],
             "opaque": boundary_annotations,
@@ -4494,6 +4513,7 @@ def rust_translation_report(case_name: str):
         "evidence": [
             TRANSLATION_VALIDATOR_NAME,
             "Rust bootstrap lowering and provenance validated",
+            f"contract:{contract['contract_label']}",
         ],
     }
 
@@ -4509,16 +4529,25 @@ def validate_rust_translation_report(case_name: str, report: dict):
         failures.append(
             f"{case_name}: expected translation preservation level {expected['preservation_level']}"
         )
+    if report.get("observables", {}).get("preserved", []) != expected["preserved"]:
+        failures.append(
+            f"{case_name}: expected preserved observables {expected['preserved']!r}"
+        )
+    if expected["await_boundary_case"] and "await boundary" not in report.get("observables", {}).get("preserved", []):
+        failures.append(f"{case_name}: Rust translation must preserve the await boundary explicitly")
     opaque_items = report["boundary_annotations"]
     if expected["requires_opaque"]:
-        if "unsafe boundary" not in opaque_items:
+        if opaque_items != expected["boundary_annotations"]:
             failures.append(f"{case_name}: Rust translation must preserve unsafe boundary accounting")
-        if not report["downgrades"]:
+        if report["downgrades"] != expected["downgrades"]:
             failures.append(f"{case_name}: unsafe Rust translation must record an explicit downgrade")
     elif opaque_items:
         failures.append(f"{case_name}: Tier A Rust translation must not introduce opaque accounting")
     elif report["downgrades"]:
         failures.append(f"{case_name}: Tier A Rust translation must not record downgrades")
+    evidence = report.get("evidence", [])
+    if f"contract:{expected['contract_label']}" not in evidence:
+        failures.append(f"{case_name}: translation evidence must name contract {expected['contract_label']!r}")
     return failures
 
 
@@ -4538,7 +4567,7 @@ def validate_rust_output_set(outputs: dict):
             failures.append(f"{case_name}: Wasm-emittable Rust case must emit a Wasm output")
         elif "translation_validation_report" not in outputs["wasm_reports"][case_name]:
             failures.append(f"{case_name}: Wasm-emittable Rust case must emit a translation-validation report")
-    for case_name in sorted(set(RUST_SUPPORTED_CASES) - set(RUST_WASM_EMITTABLE_CASES)):
+    for case_name in RUST_WASM_NON_EMITTABLE_CASES:
         if case_name in outputs["wasm_reports"]:
             failures.append(f"{case_name}: non-emittable Rust case must not emit a Wasm output")
     for case_name in RUST_REJECTED_CASES:
@@ -4678,9 +4707,9 @@ def run_rust_self_tests(root: pathlib.Path):
         failures.append("self-test Rust field.addr Wasm emission: unexpected failure")
 
     mutated_report = rust_translation_report("c_unsafe_call")
-    mutated_report["profile"] = "R"
+    mutated_report["profile"] = "P"
     translation_failures = validate_rust_translation_report("c_unsafe_call", mutated_report)
-    if not any("expected translation profile N" in item for item in translation_failures):
+    if not any("expected translation profile R" in item for item in translation_failures):
         failures.append("self-test Rust unsafe overclaim profile: expected failure")
 
     mutated_report = rust_translation_report("c_unsafe_call")
@@ -4689,6 +4718,12 @@ def run_rust_self_tests(root: pathlib.Path):
     translation_failures = validate_rust_translation_report("c_unsafe_call", mutated_report)
     if not any("preserve unsafe boundary accounting" in item for item in translation_failures):
         failures.append("self-test Rust unsafe accounting: expected failure")
+
+    mutated_report = rust_translation_report("a_async_await")
+    mutated_report["observables"]["preserved"] = ["function boundaries"]
+    translation_failures = validate_rust_translation_report("a_async_await", mutated_report)
+    if not any("preserve the await boundary explicitly" in item for item in translation_failures):
+        failures.append("self-test Rust await-boundary preservation: expected failure")
 
     output_failures = validate_rust_output_set(
         {

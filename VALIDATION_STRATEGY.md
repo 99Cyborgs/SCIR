@@ -229,6 +229,13 @@ No new Wasm surface may enter execution-backed validation unless all promotion c
 - `fixture.rust_importer.a_mut_local`
 - `fixture.rust_importer.a_struct_field_borrow_mut`
 
+### Supported but non-emittable helper-free Wasm modules
+
+- `fixture.python_importer.a_async_await`
+- `fixture.python_importer.c_opaque_call`
+- `fixture.rust_importer.a_async_await`
+- `fixture.rust_importer.c_unsafe_call`
+
 ### Reconstruction validation
 
 Active reconstruction validation applies only to Python reconstruction from validated `SCIR-H`.

@@ -16,5 +16,5 @@
     "capability:unsafe_ping"
   ],
   "determinism": "unknown",
-  "audit_note": "unsafe_ping is treated as a Tier C unsafe boundary rather than modeled Rust semantics in Phase 6A."
+  "audit_note": "unsafe_ping is treated as an explicit Tier C unsafe boundary with capability accounting rather than modeled Rust semantics in the importer-first slice."
 }

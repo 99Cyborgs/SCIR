@@ -246,7 +246,7 @@ CASE_CONFIG = {
         "opaque_boundary_contract": None,
     },
     "c_unsafe_call": {
-        "profiles": ["N"],
+        "profiles": ["R"],
         "tier": "C",
         "dependencies": ["rust:std", "capability:unsafe_ping"],
         "exports": ["call_unsafe_ping"],
@@ -260,7 +260,7 @@ CASE_CONFIG = {
             {
                 "feature": "explicit unsafe call boundary",
                 "tier": "C",
-                "rationale": "The call into unsafe_ping remains bounded only by an explicit unsafe opaque boundary contract.",
+                "rationale": "The call into unsafe_ping remains bounded only by an explicit Tier C unsafe boundary contract with capability accounting.",
                 "fallback": "opaque_call",
             },
         ],
@@ -268,7 +268,7 @@ CASE_CONFIG = {
             {
                 "code": "RS-C001",
                 "severity": "warn",
-                "message": "unsafe_ping remains an explicit Tier C opaque boundary in the Rust bootstrap slice.",
+                "message": "unsafe_ping remains an explicit Tier C unsafe boundary with capability accounting in the Rust bootstrap slice.",
                 "location": "input/src/lib.rs:6",
             }
         ],
@@ -283,7 +283,7 @@ CASE_CONFIG = {
             },
             "capabilities": ["capability:unsafe_ping"],
             "determinism": "unknown",
-            "audit_note": "unsafe_ping is treated as a Tier C unsafe boundary rather than modeled Rust semantics in Phase 6A.",
+            "audit_note": "unsafe_ping is treated as an explicit Tier C unsafe boundary with capability accounting rather than modeled Rust semantics in the importer-first slice.",
         },
     },
     "d_proc_macro": {
@@ -356,6 +356,13 @@ RUST_IMPORTER_METADATA = {
         "a_struct_field_borrow_mut",
         "a_async_await",
     ],
+    "await_cases": [
+        "a_async_await",
+    ],
+    "ownership_boundary_cases": [
+        "a_struct_field_borrow_mut",
+        "c_unsafe_call",
+    ],
     "rejected_cases": [
         "d_proc_macro",
         "d_self_ref_pin",
@@ -367,6 +374,23 @@ RUST_IMPORTER_METADATA = {
             "requires_opaque_boundary": False,
             "require_smoke_test": True,
             "wasm_emittable": True,
+            "await_boundary_case": False,
+            "ownership_boundary_case": False,
+            "contract_label": "plain_mut_local",
+            "required_capabilities": [],
+            "scirh_markers": [
+                "module fixture.rust_importer.a_mut_local",
+                "fn clamp_nonneg x int -> int !write",
+                "var y int x",
+                "if lt y 0",
+            ],
+            "translation_preserved": [
+                "function boundaries",
+                "mutable local semantics",
+                "branch behavior",
+            ],
+            "translation_boundary_annotations": [],
+            "translation_downgrades": [],
         },
         "a_struct_field_borrow_mut": {
             "profile": "R",
@@ -374,6 +398,22 @@ RUST_IMPORTER_METADATA = {
             "requires_opaque_boundary": False,
             "require_smoke_test": True,
             "wasm_emittable": True,
+            "await_boundary_case": False,
+            "ownership_boundary_case": True,
+            "contract_label": "borrow_mut_record_field",
+            "required_capabilities": [],
+            "scirh_markers": [
+                "module fixture.rust_importer.a_struct_field_borrow_mut",
+                "type Counter record { value int }",
+                "fn clamp_counter counter borrow_mut<Counter> -> int !write",
+                "set counter.value 0",
+            ],
+            "translation_preserved": [
+                "function boundaries",
+                "borrowed field mutation semantics",
+            ],
+            "translation_boundary_annotations": [],
+            "translation_downgrades": [],
         },
         "a_async_await": {
             "profile": "R",
@@ -381,13 +421,46 @@ RUST_IMPORTER_METADATA = {
             "requires_opaque_boundary": False,
             "require_smoke_test": True,
             "wasm_emittable": False,
+            "await_boundary_case": True,
+            "ownership_boundary_case": False,
+            "contract_label": "async_await",
+            "required_capabilities": [],
+            "scirh_markers": [
+                "module fixture.rust_importer.a_async_await",
+                "async fn fetch_value -> int !",
+                "async fn load_once -> int !await",
+                "return await fetch_value()",
+            ],
+            "translation_preserved": [
+                "function boundaries",
+                "await boundary",
+            ],
+            "translation_boundary_annotations": [],
+            "translation_downgrades": [],
         },
         "c_unsafe_call": {
-            "profile": "N",
+            "profile": "R",
             "preservation_level": "P3",
             "requires_opaque_boundary": True,
             "require_smoke_test": False,
             "wasm_emittable": False,
+            "await_boundary_case": False,
+            "ownership_boundary_case": True,
+            "contract_label": "unsafe_boundary_call",
+            "required_capabilities": ["capability:unsafe_ping"],
+            "scirh_markers": [
+                "module fixture.rust_importer.c_unsafe_call",
+                "import sym unsafe_ping rust:unsafe_ping",
+                "!opaque,unsafe",
+            ],
+            "translation_preserved": [],
+            "translation_boundary_annotations": ["unsafe boundary"],
+            "translation_downgrades": [
+                {
+                    "reason": "unsafe boundary is preserved as explicit boundary annotation only",
+                    "preservation_level": "P3",
+                }
+            ],
         },
     },
 }
@@ -399,6 +472,8 @@ def _validate_rust_importer_metadata():
     case_order = RUST_IMPORTER_METADATA["case_order"]
     supported_cases = RUST_IMPORTER_METADATA["supported_cases"]
     tier_a_cases = RUST_IMPORTER_METADATA["tier_a_cases"]
+    await_cases = RUST_IMPORTER_METADATA["await_cases"]
+    ownership_boundary_cases = RUST_IMPORTER_METADATA["ownership_boundary_cases"]
     rejected_cases = RUST_IMPORTER_METADATA["rejected_cases"]
     case_contracts = RUST_IMPORTER_METADATA["case_contracts"]
 
@@ -420,6 +495,14 @@ def _validate_rust_importer_metadata():
 
     if not set(tier_a_cases).issubset(supported_cases):
         raise ImporterError("RUST_IMPORTER_METADATA tier_a_cases must remain a subset of supported_cases")
+    if not set(await_cases).issubset(supported_cases):
+        raise ImporterError(
+            "RUST_IMPORTER_METADATA await_cases must remain a subset of supported_cases"
+        )
+    if not set(ownership_boundary_cases).issubset(supported_cases):
+        raise ImporterError(
+            "RUST_IMPORTER_METADATA ownership_boundary_cases must remain a subset of supported_cases"
+        )
 
     if set(case_contracts) != set(supported_cases):
         raise ImporterError(
@@ -441,10 +524,54 @@ def _validate_rust_importer_metadata():
             raise ImporterError(
                 f"{case_name}: Rust importer profile must remain declared by CASE_CONFIG"
             )
+        if contract["required_capabilities"]:
+            if sorted(contract["required_capabilities"]) != sorted(
+                capability
+                for capability in config["dependencies"]
+                if capability.startswith("capability:")
+            ):
+                raise ImporterError(
+                    f"{case_name}: Rust capability requirements must remain declared by CASE_CONFIG"
+                )
+        elif any(capability.startswith("capability:") for capability in config["dependencies"]):
+            raise ImporterError(
+                f"{case_name}: non-boundary Rust case must not declare capability dependencies"
+            )
+        if not contract["scirh_markers"]:
+            raise ImporterError(f"{case_name}: Rust case contract must publish SCIR-H markers")
+        if not isinstance(contract["translation_preserved"], list):
+            raise ImporterError(f"{case_name}: Rust translation_preserved must remain a list")
+        if not isinstance(contract["translation_boundary_annotations"], list):
+            raise ImporterError(
+                f"{case_name}: Rust translation_boundary_annotations must remain a list"
+            )
+        if not isinstance(contract["translation_downgrades"], list):
+            raise ImporterError(f"{case_name}: Rust translation_downgrades must remain a list")
         if contract["require_smoke_test"] and case_name not in TEST_TEXTS:
             raise ImporterError(f"{case_name}: supported Rust Tier A case must keep a smoke test")
         if not contract["require_smoke_test"] and case_name in TEST_TEXTS:
             raise ImporterError(f"{case_name}: non-round-trip Rust case must not keep a smoke test")
+        if contract["await_boundary_case"] != (case_name in await_cases):
+            raise ImporterError(
+                f"{case_name}: Rust await-case membership drifted from await_cases"
+            )
+        if contract["ownership_boundary_case"] != (case_name in ownership_boundary_cases):
+            raise ImporterError(
+                f"{case_name}: Rust ownership/boundary case membership drifted from ownership_boundary_cases"
+            )
+        if contract["await_boundary_case"]:
+            if contract["wasm_emittable"]:
+                raise ImporterError(
+                    f"{case_name}: await-bearing Rust case must remain non-emittable in the helper-free Wasm subset"
+                )
+            if "await boundary" not in contract["translation_preserved"]:
+                raise ImporterError(
+                    f"{case_name}: await-bearing Rust case must preserve the await boundary explicitly"
+                )
+            if not any("!await" in marker for marker in contract["scirh_markers"]):
+                raise ImporterError(
+                    f"{case_name}: await-bearing Rust case must publish an explicit !await SCIR-H marker"
+                )
 
     for case_name in tier_a_cases:
         if CASE_CONFIG[case_name]["tier"] != "A":

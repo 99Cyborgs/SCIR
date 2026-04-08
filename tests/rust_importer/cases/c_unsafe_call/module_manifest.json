@@ -4,7 +4,7 @@
   "source_language": "rust",
   "source_path": "tests/rust_importer/cases/c_unsafe_call/input/src/lib.rs",
   "declared_profiles": [
-    "N"
+    "R"
   ],
   "declared_tier": "C",
   "dependencies": [

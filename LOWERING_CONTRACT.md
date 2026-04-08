@@ -65,12 +65,22 @@ The active helper-free Wasm backend consumes only the subset of `SCIR-L` justifi
 - `H_AWAIT_RESUME`
 - `H_OPAQUE_CALL`
 
+### Wasm supported-but-non-emittable modules
+
+- `fixture.python_importer.a_async_await`
+- `fixture.python_importer.c_opaque_call`
+- `fixture.rust_importer.a_async_await`
+- `fixture.rust_importer.c_unsafe_call`
+
 ### Wasm backend contract notes
 
 The active helper-free Wasm backend does not emit:
 
 - `H_AWAIT_RESUME`
 - `H_OPAQUE_CALL`
+
+The supported-but-non-emittable modules above remain explicit backend exclusions rather than implicit future support.
+The await-bearing exclusions lower through `H_AWAIT_RESUME`; the opaque or unsafe boundary exclusions lower through `H_OPAQUE_CALL`.
 
 `alloc` is normalized into backend-local slot state rather than linear memory or helper-runtime semantics.
 `H_FIELD_ADDR` is now executable only inside the fixed record-cell ABI for `a_struct_field_borrow_mut`: module-owned linear memory, fixed `int` fields, offsets derived from canonical declaration order, and `borrow_mut<T>` record parameters represented as shared base-address handles.

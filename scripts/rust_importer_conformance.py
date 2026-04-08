@@ -36,32 +36,6 @@ from scir_rust_bootstrap import (
 
 FIXTURE_ROOT = pathlib.Path("tests") / "rust_importer" / "cases"
 
-RUST_SCIRH_MARKERS = {
-    "a_mut_local": [
-        "module fixture.rust_importer.a_mut_local",
-        "fn clamp_nonneg x int -> int !write",
-        "var y int x",
-        "if lt y 0",
-    ],
-    "a_struct_field_borrow_mut": [
-        "module fixture.rust_importer.a_struct_field_borrow_mut",
-        "type Counter record { value int }",
-        "fn clamp_counter counter borrow_mut<Counter> -> int !write",
-        "set counter.value 0",
-    ],
-    "a_async_await": [
-        "module fixture.rust_importer.a_async_await",
-        "async fn fetch_value -> int !",
-        "async fn load_once -> int !await",
-        "return await fetch_value()",
-    ],
-    "c_unsafe_call": [
-        "module fixture.rust_importer.c_unsafe_call",
-        "import sym unsafe_ping rust:unsafe_ping",
-        "!opaque,unsafe",
-    ],
-}
-
 
 def summarize_item_tiers(items):
     summary = {"A": 0, "B": 0, "C": 0, "D": 0}
@@ -77,6 +51,7 @@ def build_case_expectations():
     case_contracts = RUST_IMPORTER_METADATA["case_contracts"]
     for case_name in RUST_IMPORTER_METADATA["case_order"]:
         config = CASE_CONFIG[case_name]
+        contract = case_contracts.get(case_name, {})
         expectations[case_name] = {
             "tier": config["tier"],
             "status": config["status"],
@@ -88,11 +63,12 @@ def build_case_expectations():
             "summary": summarize_item_tiers(config["feature_items"]),
             "require_scirh": case_name in SCIRH_MODULES,
             "require_opaque_boundary": bool(config["opaque_boundary_contract"]),
-            "require_smoke_test": case_contracts.get(case_name, {}).get("require_smoke_test", False),
+            "require_smoke_test": contract.get("require_smoke_test", False),
             "diagnostic_severities": [
                 diagnostic.get("severity") for diagnostic in config["diagnostics"]
             ],
-            "scirh_markers": RUST_SCIRH_MARKERS.get(case_name, []),
+            "scirh_markers": contract.get("scirh_markers", []),
+            "required_capabilities": contract.get("required_capabilities", []),
         }
     return expectations
 
@@ -269,6 +245,12 @@ def check_case(root: pathlib.Path, case_name: str, expectation: dict):
         failures.extend(opaque_failures)
     if not expectation["require_opaque_boundary"] and opaque_path.exists():
         failures.append(f"{opaque_path.relative_to(root)}: unexpected opaque boundary contract")
+    if opaque_instance is not None:
+        actual_capabilities = opaque_instance.get("capabilities", [])
+        if actual_capabilities != expectation["required_capabilities"]:
+            failures.append(
+                f"{case_name} opaque_boundary_contract: expected capabilities {expectation['required_capabilities']!r}"
+            )
 
     failures.extend(
         validate_boundary_capability_contract(

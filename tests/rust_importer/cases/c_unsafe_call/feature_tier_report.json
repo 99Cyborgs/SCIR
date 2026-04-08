@@ -17,7 +17,7 @@
     {
       "feature": "explicit unsafe call boundary",
       "tier": "C",
-      "rationale": "The call into unsafe_ping remains bounded only by an explicit unsafe opaque boundary contract.",
+      "rationale": "The call into unsafe_ping remains bounded only by an explicit Tier C unsafe boundary contract with capability accounting.",
       "fallback": "opaque_call"
     }
   ]

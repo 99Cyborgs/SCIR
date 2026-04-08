@@ -15,7 +15,7 @@ It is derived from:
 
 ## Queue metadata
 
-- Queue snapshot: `2026-04-07T11:43:37.2228492-05:00`
+- Queue snapshot: `2026-04-08T10:36:04.0061843-05:00`
 - Active milestone: `MVP Kernel Hardening`
 - Autonomy mode: `high`
 - Escalation threshold: `doctrine conflict; missing source authority; sequencing violation`
@@ -275,6 +275,48 @@ It is derived from:
 - Escalate only if: `reopening Wasm widening would require new SCIR-L semantics, broader imported-memory or host-runtime commitments, or a phase-order change`
 - Done evidence: `the repository either records a new widening decision explicitly or keeps the frozen record-cell ABI unchanged`; `no incremental backend drift occurs`; `the Wasm scope boundary remains deliberate`
 
+### Q-04-012 - Lock helper-free Wasm non-emittable case mapping across backend metadata and validation
+
+- Queue ID: `Q-04-012`
+- Title: `Lock helper-free Wasm non-emittable case mapping across backend metadata and validation`
+- Source milestone or phase: `Wasm reference backend MVP`
+- Status: `done`
+- Why now: `The helper-free Wasm subset is frozen, but the supported async and opaque or unsafe cases that must remain non-emittable are still only partially encoded as prose and generic exclusions, which leaves the backend boundary looser than the rest of the MVP contract surfaces.`
+- Prerequisites: `Q-04-010`
+- Work instructions: `Make the supported-but-non-emittable helper-free Wasm cases use one explicit contract across backend metadata, backend docs, validation doctrine, and pipeline validation, while keeping the admitted Wasm-emittable set unchanged.`
+- Touched surfaces: `backends/wasm/README.md`; `LOWERING_CONTRACT.md`; `VALIDATION_STRATEGY.md`; `scripts/wasm_backend_metadata.py`; `scripts/scir_bootstrap_pipeline.py`; `scripts/validate_repo_contracts.py`
+- Validation: `python scripts/build_execution_queue.py --mode check`; `python scripts/scir_bootstrap_pipeline.py --mode validate`; `python scripts/scir_bootstrap_pipeline.py --language rust --mode validate`; `python scripts/validate_repo_contracts.py --mode validate`; `python scripts/run_repo_validation.py --require-rust`
+- Escalate only if: `locking the supported-but-non-emittable Wasm case map would require admitting async, opaque, unsafe, imported, or broader call shapes into helper-free Wasm execution rather than keeping them explicit exclusions`
+- Done evidence: `backend metadata, docs, and validation publish the same supported-but-non-emittable helper-free Wasm module set`; `async and opaque or unsafe cases remain explicit backend exclusions with declared blocking lowering rules`; `the admitted Wasm-emittable set stays unchanged`
+- Scope: `exact files touched are limited to Wasm backend doctrine docs, backend metadata, pipeline validation, repo drift checks, and the queue/plan closeout artifacts`; `subsystems affected are helper-free Wasm metadata, non-emittable-case validation, repo contract checks, and execution-queue governance closeout`; `explicit exclusions are any new Wasm-emittable module, any change to SCIR-H or SCIR-L semantics, any record-cell ABI widening, and any reconstruction or benchmark activation`
+- Inputs: `existing modules used are WASM_BACKEND_METADATA, PYTHON_PROOF_LOOP_METADATA, RUST_IMPORTER_METADATA, backends/wasm/README.md, LOWERING_CONTRACT.md, and VALIDATION_STRATEGY.md`; `assumption: helper-free Wasm remains bounded to the current scalar and fixed record-cell slices`
+- Outputs: `an explicit metadata-backed list of supported-but-non-emittable helper-free Wasm modules for Python and Rust`; `pipeline and repo-validation checks that fail if those exclusions drift or unexpectedly emit`; `updated queue and plan evidence returning the queue to EMPTY BY DESIGN after the bounded Phase 4 slice`
+- Done criteria: `observable completion requires backend docs and WASM_BACKEND_METADATA to agree on the supported-but-non-emittable helper-free Wasm modules`; `non-emittable async and opaque or unsafe cases keep explicit blocker rules and remain non-emittable in pipeline validation`; `all listed validation commands pass without widening active claims`
+- Evidence binding: `completion is proved by the exact touched file set plus passing outputs from build_execution_queue, both Python and Rust bootstrap validation lanes, repository contract validation, and the optional require-rust repo gate`
+- Reversibility: `rollback is a path-limited revert of the touched Wasm backend, validation, and queue/governance files; no schema or architecture rollback is required if the slice stays inside backend-contract alignment`
+- Risks: `backend docs could drift from the non-emittable case set if exclusions remain duplicated manually`; `generic pipeline failures could hide which supported modules are intentionally blocked`; `queue/export closeout could drift again if regenerated against a different working-tree state`
+
+### Q-04-013 - Add self-test coverage for helper-free Wasm non-emittable contract drift
+
+- Queue ID: `Q-04-013`
+- Title: `Add self-test coverage for helper-free Wasm non-emittable contract drift`
+- Source milestone or phase: `Wasm reference backend MVP`
+- Status: `done`
+- Why now: `The helper-free Wasm supported-but-non-emittable contract is now enforced in normal validation, but the repo checker still lacks explicit negative fixtures proving that the new module-list and exclusion-marker checks fail when those published surfaces drift.`
+- Prerequisites: `Q-04-012`
+- Work instructions: `Add repo-checker self-test coverage for helper-free Wasm supported-but-non-emittable module-list and exclusion-marker drift while keeping the admitted and non-emittable Wasm case sets unchanged.`
+- Touched surfaces: `scripts/validate_repo_contracts.py`; `EXECUTION_QUEUE.md`; `plans/`; `reports/exports/`
+- Validation: `python scripts/validate_repo_contracts.py --mode test`; `python scripts/validate_repo_contracts.py --mode validate`; `python scripts/build_execution_queue.py --mode check`; `python scripts/run_repo_validation.py --require-rust`
+- Escalate only if: `closing the Wasm self-test gap exposes underlying doctrine drift that would require changing the admitted or non-emittable Wasm case sets rather than strengthening fail-fast coverage`
+- Done evidence: `repo-checker self-tests now cover helper-free Wasm non-emittable Python and Rust module-list drift`; `repo-checker self-tests now cover LOWERING_CONTRACT supported-but-non-emittable module-list drift plus loss of the explicit backend-exclusion marker`; `VALIDATION_STRATEGY non-emittable helper-free Wasm module drift is now covered without changing backend behavior`
+- Scope: `exact files touched are limited to repo-checker self-test fixtures, queue and plan closeout artifacts, and regenerated queue/checkpoint exports`; `subsystems affected are repository contract checker self-tests and execution-queue governance closeout`; `explicit exclusions are any change to Wasm metadata, pipeline emission behavior, SCIR-H or SCIR-L semantics, record-cell ABI scope, or benchmark doctrine`
+- Inputs: `existing modules used are WASM_BACKEND_METADATA, backends/wasm/README.md, LOWERING_CONTRACT.md, VALIDATION_STRATEGY.md, and the repo-checker negative-fixture harness in scripts/validate_repo_contracts.py`; `assumption: the current helper-free Wasm admitted and supported-but-non-emittable module sets remain authoritative`
+- Outputs: `new negative-fixture mutations for helper-free Wasm supported-but-non-emittable drift surfaces`; `repo-checker self-test registrations that assert the existing Wasm drift messages`; `updated queue and plan evidence returning the queue to EMPTY BY DESIGN after the bounded self-test-hardening slice`
+- Done criteria: `observable completion requires scripts/validate_repo_contracts.py --mode test to fail on each targeted helper-free Wasm non-emittable drift fixture`; `normal repo validation must still pass on the untouched working tree`; `all listed validation commands pass without widening active claims`
+- Evidence binding: `completion is proved by the exact touched file set plus passing outputs from repo-checker self-tests, repository contract validation, queue export validation, and the optional require-rust repo gate`
+- Reversibility: `rollback is a path-limited revert of the touched repo-checker, queue, plan, and export files; no schema or architecture rollback is required if the slice stays inside validator hardening`
+- Risks: `negative fixtures could fail for incidental formatting drift instead of the intended contract check`; `queue/export closeout could drift again if regenerated against a different working-tree state`; `the self-test gap could reveal a narrower pre-existing Wasm doctrine mismatch that needs bounded repair before closeout`
+
 ### Q-05-001 - Keep the benchmark falsification loop aligned to the fixed Python proof loop
 
 - Queue ID: `Q-05-001`
@@ -485,6 +527,48 @@ It is derived from:
 - Escalate only if: `a construct cannot be categorized as supported, importer-only, deferred, or removed without changing normative semantics`
 - Done evidence: `construct-by-construct status stays explicit`; `invalid canonical examples fail`; `lineage and canonical/view separation stay checked`
 
+### Q-03-002 - Lock Rust ownership-mode mapping across importer evidence and optional `H -> L` validation
+
+- Queue ID: `Q-03-002`
+- Title: `Lock Rust ownership-mode mapping across importer evidence and optional H -> L validation`
+- Source milestone or phase: `Rust safe-subset importer`
+- Status: `done`
+- Why now: `The governance baseline is now clean, and the next bounded non-hardening roadmap advance is to keep Rust importer evidence aligned to the admitted ownership-bearing subset before reopening broader backend or benchmark work.`
+- Prerequisites: `Q-03-001`; `Q-06-012`
+- Work instructions: `Make the admitted Rust ownership-bearing cases use one explicit contract across importer scope, Rust bootstrap metadata, fixture bundles, and the optional Rust H -> L validation lane, while keeping Rust importer-first and subset-bound.`
+- Touched surfaces: `frontend/rust/IMPORT_SCOPE.md`; `scripts/scir_rust_bootstrap.py`; `scripts/rust_importer_conformance.py`; `scripts/scir_bootstrap_pipeline.py`; `scripts/validate_repo_contracts.py`; `tests/rust_importer/cases/a_struct_field_borrow_mut/module_manifest.json`; `tests/rust_importer/cases/a_struct_field_borrow_mut/feature_tier_report.json`; `tests/rust_importer/cases/a_struct_field_borrow_mut/validation_report.json`; `tests/rust_importer/cases/a_struct_field_borrow_mut/expected.scirh`; `tests/rust_importer/cases/c_unsafe_call/module_manifest.json`; `tests/rust_importer/cases/c_unsafe_call/feature_tier_report.json`; `tests/rust_importer/cases/c_unsafe_call/validation_report.json`; `tests/rust_importer/cases/c_unsafe_call/opaque_boundary_contract.json`
+- Validation: `python scripts/rust_importer_conformance.py --mode validate-fixtures`; `python scripts/scir_bootstrap_pipeline.py --language rust --mode validate`; `python scripts/validate_repo_contracts.py --mode validate`; `python scripts/run_repo_validation.py --require-rust`
+- Escalate only if: `aligning Rust ownership-mode mapping would require Rust reconstruction, new Wasm-emittable shapes, benchmark widening, or a change to the canonical ownership model rather than importer-surface alignment`
+- Done evidence: `Rust importer scope, metadata, fixture bundles, and optional Rust validation agree on the admitted ownership-bearing cases`; `borrow_mut and explicit unsafe boundary handling stay visible and subset-bound`; `no Rust importer evidence widens into round-trip, backend, or benchmark claims`
+- Scope: `exact files touched are limited to the Rust importer scope doc, Rust importer metadata and conformance scripts, the optional Rust validation lane, and the checked-in bundle files for a_struct_field_borrow_mut and c_unsafe_call`; `subsystems affected are Rust importer metadata, fixture conformance, and optional Rust H -> L validation`; `explicit exclusions are Rust reconstruction, new benchmark doctrine, Python proof-loop changes, new Wasm-emittable surface, and any change to SCIR-H or SCIR-L semantics`
+- Inputs: `existing modules used are RUST_IMPORTER_METADATA, CASE_CONFIG, frontend/rust/IMPORT_SCOPE.md, tests/rust_importer/cases/a_struct_field_borrow_mut/*, tests/rust_importer/cases/c_unsafe_call/*, scripts/scir_bootstrap_pipeline.py, specs/ownership_alias_model.md, and specs/interop_and_opaque_boundary_spec.md`; `assumption: the current Rust safe subset remains importer-first and the canonical ownership model does not change in this slice`
+- Outputs: `synchronized Rust importer metadata and checked-in fixture bundles for the ownership-bearing cases`; `repo-validation drift checks that fail if importer scope, emitted SCIR-H, or optional Rust validation diverge`; `updated plan evidence for the completed alignment slice`
+- Done criteria: `observable completion requires frontend/rust/IMPORT_SCOPE.md and RUST_IMPORTER_METADATA to agree on supported, Tier A, and Wasm-emittable Rust cases`; `a_struct_field_borrow_mut and c_unsafe_call keep explicit ownership and boundary signals in their checked-in bundles`; `all listed validation commands pass without widening active claims`
+- Evidence binding: `completion is proved by the exact touched file set plus passing outputs from rust_importer_conformance, Rust bootstrap validation, repository contract validation, and the optional require-rust repo gate`
+- Reversibility: `rollback is a path-limited revert of the touched Rust importer files and regenerated fixture bundles; no schema or architecture rollback is required if the slice stays inside importer-surface alignment`
+- Risks: `borrow semantics could drift between emitted SCIR-H and fixture doctrine`; `unsafe-boundary metadata could stop matching capability imports`; `the optional Rust validation lane could imply broader backend support if exclusions are not enforced`
+
+### Q-03-003 - Lock Rust async-await mapping across importer evidence and optional `H -> L` validation
+
+- Queue ID: `Q-03-003`
+- Title: `Lock Rust async-await mapping across importer evidence and optional H -> L validation`
+- Source milestone or phase: `Rust safe-subset importer`
+- Status: `done`
+- Why now: `The ownership and unsafe-boundary contract is now explicit, but the admitted Rust async case still lacks the same fail-fast cross-surface contract, which leaves the supported await-bearing slice looser than the rest of the active Rust subset.`
+- Prerequisites: `Q-03-002`
+- Work instructions: `Make the admitted Rust await-bearing case use one explicit contract across importer scope, Rust bootstrap metadata, repo drift checks, and the optional Rust H -> L validation lane, while keeping the async slice importer-first, non-Wasm-emittable, and subset-bound.`
+- Touched surfaces: `frontend/rust/IMPORT_SCOPE.md`; `scir/contract_docs.py`; `scripts/scir_rust_bootstrap.py`; `scripts/scir_bootstrap_pipeline.py`; `scripts/validate_repo_contracts.py`
+- Validation: `python scripts/build_execution_queue.py --mode check`; `python scripts/rust_importer_conformance.py --mode validate-fixtures`; `python scripts/scir_bootstrap_pipeline.py --language rust --mode validate`; `python scripts/validate_repo_contracts.py --mode validate`; `python scripts/run_repo_validation.py --require-rust`
+- Escalate only if: `aligning Rust async-await mapping would require helper-free Wasm emission for await, Rust reconstruction, benchmark widening, or a change to canonical async semantics rather than importer-surface alignment`
+- Done evidence: `Rust importer scope, metadata, and optional Rust validation agree on the admitted await-bearing case`; `a_async_await keeps explicit await semantics while remaining non-Wasm-emittable`; `no Rust importer evidence widens into round-trip, backend, or benchmark claims`
+- Scope: `exact files touched are limited to the generated Rust importer scope doc, shared Rust importer metadata, the optional Rust H -> L validation lane, repo drift checks, and the queue/plan closeout artifacts`; `subsystems affected are Rust importer metadata, generated contract docs, repo validation, optional Rust preservation reporting, and execution-queue governance closeout`; `explicit exclusions are helper-free Wasm emission for await, Rust reconstruction, new benchmark doctrine, Python proof-loop changes, and any change to SCIR-H or SCIR-L semantics`
+- Inputs: `existing modules used are RUST_IMPORTER_METADATA, frontend/rust/IMPORT_SCOPE.md, scir/contract_docs.py, scripts/scir_bootstrap_pipeline.py, and specs/concurrency_model.md`; `assumption: the current Rust async subset remains importer-first and helper-free Wasm still excludes await-bearing cases`
+- Outputs: `an explicit await-bearing Rust case list and async contract in the generated scope doc`; `repo-validation drift checks that fail if the await-bearing contract diverges`; `updated queue and plan evidence returning the queue to EMPTY BY DESIGN after the bounded Rust re-entry pass`
+- Done criteria: `observable completion requires frontend/rust/IMPORT_SCOPE.md and RUST_IMPORTER_METADATA to agree on the await-bearing case list and its explicit contract markers`; `a_async_await keeps explicit await-boundary preservation in the optional Rust H -> L lane without becoming Wasm-emittable`; `all listed validation commands pass without widening active claims`
+- Evidence binding: `completion is proved by the exact touched file set plus passing outputs from build_execution_queue, rust_importer_conformance, Rust bootstrap validation, repository contract validation, and the optional require-rust repo gate`
+- Reversibility: `rollback is a path-limited revert of the touched Rust importer, validation, and queue/governance files; no schema or architecture rollback is required if the slice stays inside importer-surface alignment`
+- Risks: `await-boundary wording could drift between generated docs and metadata`; `the optional Rust validation lane could imply backend support if the non-emittable async boundary stops being explicit`; `queue/export closeout could drift again if regenerated against a different working-tree state`
+
 ## CURRENT QUEUE STATE
 
 QUEUE STATE: `EMPTY BY DESIGN`
@@ -492,9 +576,9 @@ QUEUE STATE: `EMPTY BY DESIGN`
 READY ITEMS: NONE
 
 LAST COMPLETED:
-- Q-06-012 (Checkpoint integrity + governance evidence binding)
+- Q-04-013 (Wasm non-emittable contract self-test hardening)
 
-NO SUCCESSOR ITEM CREATED: `No authoritative roadmap-derived follow-on is currently selected beyond the bounded Q-06-012 governance hardening slice.`
+NO SUCCESSOR ITEM CREATED: `The bounded 2026-04-08 Wasm self-test-hardening slice is complete, and no stronger roadmap-derived successor is selected after the explicit non-emittable contract drift coverage closed, so the queue returns to EMPTY BY DESIGN until a later authoritative follow-on plus regenerated exports exists.`
 
 QUEUE STATUS:
 - SYNCHRONIZED WITH WORKING TREE: TRUE
