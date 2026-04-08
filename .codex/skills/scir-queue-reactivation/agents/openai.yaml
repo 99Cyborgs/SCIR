@@ -1,0 +1,6 @@
+interface:
+  display_name: "SCIR Queue Reactivation"
+  short_description: "Select one bounded next tranche"
+  default_prompt: "Use $scir-queue-reactivation to reconcile the queue, checkpoint export, and active plan state into one explicit next tranche or one explicit empty-by-design stop."
+policy:
+  allow_implicit_invocation: true

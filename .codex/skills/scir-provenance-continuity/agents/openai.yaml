@@ -1,0 +1,6 @@
+interface:
+  display_name: "SCIR Provenance Continuity"
+  short_description: "Harden H to L provenance continuity"
+  default_prompt: "Use $scir-provenance-continuity to harden source -> SCIR-H -> SCIR-L -> reconstruction provenance continuity with validator-backed, schema-aware, test-backed enforcement."
+policy:
+  allow_implicit_invocation: true

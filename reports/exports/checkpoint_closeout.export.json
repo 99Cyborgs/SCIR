@@ -135,10 +135,20 @@
   },
   "validation_context": {
     "queue_snapshot": "2026-04-08T10:36:04.0061843-05:00",
-    "head_commit_hash": "252536e3c3923e38eb3887948d3d52dc033d4f98",
-    "commit_hash_basis": "baseline_parent",
-    "working_tree_dirty": false,
-    "working_tree_status": [],
+    "head_commit_hash": "94db66edf846794d6bfc25bfb65bf6b416e24a21",
+    "commit_hash_basis": "current_head",
+    "working_tree_dirty": true,
+    "working_tree_status": [
+      "M reports/exports/checkpoint_closeout.export.json",
+      "?? .codex/README.md",
+      "?? .codex/skills/scir-provenance-continuity/",
+      "?? .codex/skills/scir-queue-reactivation/",
+      "?? .codex/skills/scir-repo-contract-audit/",
+      "?? .codex/templates/",
+      "?? artifacts/benchmark_runs/python-proof-loop-full-20260408T222141Z/",
+      "?? artifacts/sweeps/94db66edf846-20260408T222113Z/",
+      "?? plans/2026-04-08-scir-tranche-skill-pack.md"
+    ],
     "validation_commands": [
       "python scripts/validate_repo_contracts.py --mode test",
       "python scripts/validate_repo_contracts.py --mode validate",

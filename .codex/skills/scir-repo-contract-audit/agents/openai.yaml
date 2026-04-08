@@ -1,0 +1,6 @@
+interface:
+  display_name: "SCIR Repo Contract Audit"
+  short_description: "Restate the admitted SCIR tranche boundary"
+  default_prompt: "Use $scir-repo-contract-audit to restate the active SCIR MVP contract, allowed tranche surfaces, forbidden widening moves, and the smallest sufficient validation gate before implementation starts."
+policy:
+  allow_implicit_invocation: true
