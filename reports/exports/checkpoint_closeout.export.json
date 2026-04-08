@@ -136,11 +136,9 @@
   "validation_context": {
     "queue_snapshot": "2026-04-08T10:36:04.0061843-05:00",
     "head_commit_hash": "252536e3c3923e38eb3887948d3d52dc033d4f98",
-    "commit_hash_basis": "current_head",
-    "working_tree_dirty": true,
-    "working_tree_status": [
-      "M reports/exports/checkpoint_closeout.export.json"
-    ],
+    "commit_hash_basis": "baseline_parent",
+    "working_tree_dirty": false,
+    "working_tree_status": [],
     "validation_commands": [
       "python scripts/validate_repo_contracts.py --mode test",
       "python scripts/validate_repo_contracts.py --mode validate",
