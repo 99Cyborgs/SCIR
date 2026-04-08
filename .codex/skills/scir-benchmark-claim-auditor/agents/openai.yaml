@@ -1,0 +1,6 @@
+interface:
+  display_name: "SCIR Benchmark Claim Auditor"
+  short_description: "Audit SCIR benchmark credibility"
+  default_prompt: "Use $scir-benchmark-claim-auditor to verify SCIR benchmark claims, baseline strength, contamination controls, and SCIR-Hc evidence boundaries."
+policy:
+  allow_implicit_invocation: true

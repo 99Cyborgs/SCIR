@@ -1,6 +1,6 @@
 # 2026-04-07 Repo Maintainability And Validation Rebalance
 
-Status: in-progress
+Status: complete
 Owner: Codex
 Date: 2026-04-07
 
@@ -115,7 +115,21 @@ Revert the refactor in slices: first restore previous import paths and wrapper b
 - `python scripts/validate_repo_contracts.py --mode test` passed
 - `python scripts/run_repo_validation.py` passed
 - a throwaway virtual environment successfully ran `pip install -e .[dev]` and imported `scir.contract_docs`
+- `scripts/deferred_track_d.py` now owns the dormant Track `D` benchmark and optimization helpers outside the active proof-loop module
+- `scripts/scir_bootstrap_pipeline.py` now keeps only thin lazy wrappers for the deferred `run_python_track_d` and `run_rust_track_d` entrypoints
+- `scripts/validate_repo_contracts.py` now fails if deferred Track `D` logic drifts back into the active proof-loop module or if the deferred-module marker goes stale
+- `scripts/NOT_ACTIVE.md` now lists the deferred Track `D` helper module explicitly
+- `python scripts/validate_repo_contracts.py --mode validate` passed after regenerating the required queue/checkpoint exports
+- `python scripts/validate_repo_contracts.py --mode test` passed with 59 negative fixtures
+- `python scripts/run_repo_validation.py` passed after the deferred-module extraction
 
 ## Remaining work
 
-- move the dormant Track `D` helper block out of `scripts/scir_bootstrap_pipeline.py` into a deferred-only module without changing any active CLI surface
+- none
+
+## CLOSEOUT
+
+- Scope completed: the last deferred-surface isolation task is closed, with dormant Track `D` helpers moved out of `scripts/scir_bootstrap_pipeline.py` into `scripts/deferred_track_d.py` while preserving the historical entrypoints through thin wrappers only.
+- Invariants satisfied: `SCIR-H` remained the only semantic authority, the active MVP surface and default CLI entrypoints did not widen, and Track `D` stayed explicitly deferred and outside the default validation or benchmark gate.
+- Residual risks: the deferred module is still importable for historical/manual use, so any future attempt to reactivate Track `D` still requires explicit governance rather than only code movement.
+- Validation status: passed on 2026-04-07 and 2026-04-08 via `python scripts/scir_bootstrap_pipeline.py --mode test`, `python scripts/validate_repo_contracts.py --mode validate`, `python scripts/validate_repo_contracts.py --mode test`, and `python scripts/run_repo_validation.py`.

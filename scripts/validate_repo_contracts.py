@@ -1448,6 +1448,8 @@ def check_active_surface_contract(root: pathlib.Path):
         "pyproject.toml": root / "pyproject.toml",
         "VALIDATION.md": root / "VALIDATION.md",
         "Makefile": root / "Makefile",
+        "scripts/NOT_ACTIVE.md": root / "scripts" / "NOT_ACTIVE.md",
+        "scripts/scir_bootstrap_pipeline.py": root / "scripts" / "scir_bootstrap_pipeline.py",
         "scripts/render_contract_docs.py": root / "scripts" / "render_contract_docs.py",
         "scripts/run_repo_validation.py": root / "scripts" / "run_repo_validation.py",
         "scripts/sync_python_proof_loop_artifacts.py": root / "scripts" / "sync_python_proof_loop_artifacts.py",
@@ -1464,6 +1466,8 @@ def check_active_surface_contract(root: pathlib.Path):
     pyproject_toml = required_inputs["pyproject.toml"].read_text(encoding="utf-8")
     validation_doc = required_inputs["VALIDATION.md"].read_text(encoding="utf-8")
     makefile = required_inputs["Makefile"].read_text(encoding="utf-8")
+    scripts_not_active = required_inputs["scripts/NOT_ACTIVE.md"].read_text(encoding="utf-8")
+    scir_bootstrap_pipeline = required_inputs["scripts/scir_bootstrap_pipeline.py"].read_text(encoding="utf-8")
     render_contract_docs = required_inputs["scripts/render_contract_docs.py"].read_text(encoding="utf-8")
     run_repo_validation = required_inputs["scripts/run_repo_validation.py"].read_text(encoding="utf-8")
     sync_python_artifacts = required_inputs["scripts/sync_python_proof_loop_artifacts.py"].read_text(encoding="utf-8")
@@ -1472,6 +1476,7 @@ def check_active_surface_contract(root: pathlib.Path):
     open_questions = required_inputs["OPEN_QUESTIONS.md"].read_text(encoding="utf-8")
     execution_queue = required_inputs["EXECUTION_QUEUE.md"].read_text(encoding="utf-8")
     assumptions = required_inputs["ASSUMPTIONS.md"].read_text(encoding="utf-8")
+    deferred_track_d_path = root / "scripts" / "deferred_track_d.py"
 
     if "typescript_importer_conformance.py" in makefile:
         failures.append("Makefile: active commands must not invoke archived TypeScript conformance")
@@ -1557,6 +1562,35 @@ def check_active_surface_contract(root: pathlib.Path):
         failures.append("scripts/sync_python_proof_loop_artifacts.py: sync command must remain generator-backed")
     if "benchmark_track_c_refresh_provenance.example.md" not in sync_python_artifacts:
         failures.append("scripts/sync_python_proof_loop_artifacts.py: Track C provenance note path must remain synchronized")
+    if not deferred_track_d_path.exists():
+        failures.append(
+            "scripts/deferred_track_d.py: deferred Track D helpers must exist outside the active proof-loop module"
+        )
+    else:
+        deferred_track_d = deferred_track_d_path.read_text(encoding="utf-8")
+        if "Deferred Track D helpers retained outside the active MVP pipeline." not in deferred_track_d:
+            failures.append("scripts/deferred_track_d.py: deferred Track D module banner must remain explicit")
+        if "def run_python_track_d(" not in deferred_track_d or "def run_rust_track_d(" not in deferred_track_d:
+            failures.append("scripts/deferred_track_d.py: deferred Track D entrypoints must remain defined")
+    if "scripts/deferred_track_d.py" not in scripts_not_active:
+        failures.append("scripts/NOT_ACTIVE.md: deferred Track D helper module must remain listed")
+    if "Track `D`" not in scripts_not_active:
+        failures.append("scripts/NOT_ACTIVE.md: deferred Track D helper note must remain explicit")
+    if (
+        "TRACK_D_CONTROLS = [" in scir_bootstrap_pipeline
+        or "bootstrap-track-d-python-dpy-subset" in scir_bootstrap_pipeline
+        or "bootstrap-track-d-rust-n-subset" in scir_bootstrap_pipeline
+    ):
+        failures.append(
+            "scripts/scir_bootstrap_pipeline.py: deferred Track D benchmark logic must stay outside the active proof-loop module"
+        )
+    if (
+        "return deferred_track_d.run_python_track_d(" not in scir_bootstrap_pipeline
+        or "return deferred_track_d.run_rust_track_d(" not in scir_bootstrap_pipeline
+    ):
+        failures.append(
+            "scripts/scir_bootstrap_pipeline.py: Track D entrypoints must remain thin deferred-module wrappers"
+        )
     return failures
 
 

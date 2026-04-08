@@ -1,0 +1,6 @@
+interface:
+  display_name: "SCIR Lowering Provenance Check"
+  short_description: "Audit SCIR H to L provenance"
+  default_prompt: "Use $scir-lowering-provenance-check to verify SCIR-H to SCIR-L lowering keeps origin, lowering_rule, and derivative-only discipline intact."
+policy:
+  allow_implicit_invocation: true

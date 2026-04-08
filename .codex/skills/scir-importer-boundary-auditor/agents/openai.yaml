@@ -1,0 +1,6 @@
+interface:
+  display_name: "SCIR Importer Boundary Auditor"
+  short_description: "Keep importers inside the admitted subset"
+  default_prompt: "Use $scir-importer-boundary-auditor to check that SCIR importer changes stay inside the admitted subset and report tiered boundaries explicitly."
+policy:
+  allow_implicit_invocation: true

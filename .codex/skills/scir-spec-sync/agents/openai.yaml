@@ -1,0 +1,6 @@
+interface:
+  display_name: "SCIR Spec Sync"
+  short_description: "Synchronize SCIR authority docs"
+  default_prompt: "Use $scir-spec-sync to compute the required SCIR companion-file updates and keep normative and consuming surfaces synchronized."
+policy:
+  allow_implicit_invocation: true
