@@ -1,0 +1,133 @@
+{
+  "representation": "SCIR-Hc",
+  "modules": {
+    "fixture.python_importer.a_basic_function": {
+      "module_id": "fixture.python_importer.a_basic_function",
+      "lineage_references": {
+        "fixture.python_importer.a_basic_function": {
+          "semantic_lineage_id": "3c587f53a4b9d222de6d7d030596f12f8a39099043b9ac1a71676944527aeeb4",
+          "normalized_canonical_hash": "86137dfe16e2e3c3adcaa519a6e3e4dadb1278c15d6312dc7d133057b73d8e8a"
+        }
+      },
+      "structural_diff": {
+        "function_return_type_omissions": [
+          "functions.clamp_nonneg.return_type"
+        ],
+        "function_effect_row_omissions": [
+          "functions.clamp_nonneg.effects"
+        ],
+        "local_type_omissions": [
+          "functions.clamp_nonneg.body[0].type_name"
+        ]
+      },
+      "dropped_fields": [
+        "functions.clamp_nonneg.return_type",
+        "functions.clamp_nonneg.effects",
+        "functions.clamp_nonneg.body[0].type_name"
+      ],
+      "normalized_fields": [],
+      "compression_statistics": {
+        "effect_rows_deduplicated": 1,
+        "return_types_inferred": 1,
+        "ownership_markers_elided": 0,
+        "single_use_witnesses_inlined": 0,
+        "capabilities_hoisted": 0
+      }
+    },
+    "fixture.python_importer.a_async_await": {
+      "module_id": "fixture.python_importer.a_async_await",
+      "lineage_references": {
+        "fixture.python_importer.a_async_await": {
+          "semantic_lineage_id": "a98fe0c337795cf2ba3402bfbfa922b148e80c5523cb607e04b24d6ebc8c3621",
+          "normalized_canonical_hash": "6e8964fe70a9042ca8a380ae2368c8fb158f0d38961afecaeed7d9751f26a80d"
+        }
+      },
+      "structural_diff": {
+        "function_return_type_omissions": [
+          "functions.fetch_value.return_type",
+          "functions.load_once.return_type"
+        ],
+        "function_effect_row_omissions": [
+          "functions.fetch_value.effects",
+          "functions.load_once.effects"
+        ],
+        "local_type_omissions": []
+      },
+      "dropped_fields": [
+        "functions.fetch_value.return_type",
+        "functions.fetch_value.effects",
+        "functions.load_once.return_type",
+        "functions.load_once.effects"
+      ],
+      "normalized_fields": [],
+      "compression_statistics": {
+        "effect_rows_deduplicated": 2,
+        "return_types_inferred": 2,
+        "ownership_markers_elided": 0,
+        "single_use_witnesses_inlined": 0,
+        "capabilities_hoisted": 0
+      }
+    },
+    "fixture.python_importer.b_direct_call": {
+      "module_id": "fixture.python_importer.b_direct_call",
+      "lineage_references": {
+        "fixture.python_importer.b_direct_call": {
+          "semantic_lineage_id": "32009e343204bc239d85132dc1f12a65d5ea6a26142aea581aae370f373a1aa8",
+          "normalized_canonical_hash": "48439b8a2176c9799913384e0ec741f803c477532460174bea3b4c559098c7e2"
+        }
+      },
+      "structural_diff": {
+        "function_return_type_omissions": [
+          "functions.identity.return_type",
+          "functions.call_identity.return_type"
+        ],
+        "function_effect_row_omissions": [
+          "functions.identity.effects",
+          "functions.call_identity.effects"
+        ],
+        "local_type_omissions": []
+      },
+      "dropped_fields": [
+        "functions.identity.return_type",
+        "functions.identity.effects",
+        "functions.call_identity.return_type",
+        "functions.call_identity.effects"
+      ],
+      "normalized_fields": [],
+      "compression_statistics": {
+        "effect_rows_deduplicated": 2,
+        "return_types_inferred": 2,
+        "ownership_markers_elided": 0,
+        "single_use_witnesses_inlined": 0,
+        "capabilities_hoisted": 0
+      }
+    },
+    "fixture.python_importer.c_opaque_call": {
+      "module_id": "fixture.python_importer.c_opaque_call",
+      "lineage_references": {
+        "fixture.python_importer.c_opaque_call": {
+          "semantic_lineage_id": "5c5cd930bece6767ffe7f7c773154b77e4c2f1a95d3c577a5dae9f7d5855e9f3",
+          "normalized_canonical_hash": "4e6709db6556d10523eb0c0ba9f6b6cf511c6795219650605071a7e007ac40d1"
+        }
+      },
+      "structural_diff": {
+        "function_return_type_omissions": [],
+        "function_effect_row_omissions": [
+          "functions.ping.effects"
+        ],
+        "local_type_omissions": []
+      },
+      "dropped_fields": [
+        "functions.ping.effects"
+      ],
+      "normalized_fields": [],
+      "compression_statistics": {
+        "effect_rows_deduplicated": 1,
+        "return_types_inferred": 0,
+        "ownership_markers_elided": 0,
+        "single_use_witnesses_inlined": 0,
+        "capabilities_hoisted": 0
+      }
+    }
+  }
+}

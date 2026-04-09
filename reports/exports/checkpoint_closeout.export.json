@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-04-08T10:36:04.0061843-05:00",
+  "generated_at": "2026-04-09T10:54:15.2670642-05:00",
   "queue_state": {
     "status": "EMPTY_BY_DESIGN",
     "ready_items": [],
-    "no_successor_item_reason": "The bounded 2026-04-08 Wasm self-test-hardening slice is complete, and no stronger roadmap-derived successor is selected after the explicit non-emittable contract drift coverage closed, so the queue returns to EMPTY BY DESIGN until a later authoritative follow-on plus regenerated exports exists."
+    "no_successor_item_reason": "The bounded 2026-04-09 checkpoint-export-determinism slice is complete, queue and checkpoint writes now remain deterministic against their own managed export rewrites, and no stronger roadmap-derived successor is selected, so the queue returns to EMPTY BY DESIGN until a later authoritative follow-on plus regenerated exports exists."
   },
   "last_completed": {
-    "queue_id": "Q-04-013",
-    "label": "Wasm non-emittable contract self-test hardening",
-    "title": "Add self-test coverage for helper-free Wasm non-emittable contract drift"
+    "queue_id": "Q-00-004",
+    "label": "Checkpoint export determinism",
+    "title": "Stabilize checkpoint-export determinism against self-managed queue writes"
   },
   "next_action": null,
   "validation_state": {
@@ -52,18 +52,18 @@
   "evidence_refs": {
     "queue_markdown": {
       "path": "EXECUTION_QUEUE.md",
-      "sha256": "sha256:ddb6e7cf85b0fc91df7799f766f7088d1f363d87cd1283d9b2c1b9445de32c20"
+      "sha256": "sha256:8efd49970ab73e0660e87012d0941e22ed98485cd42258275df11ef00557be78"
     },
     "queue_export": {
       "path": "reports/exports/execution_queue.export.json",
-      "generated_at": "2026-04-08T10:36:04.0061843-05:00",
-      "sha256": "sha256:21fa2f602127ad41b7d34942ddc15831f89333af0762a19af93b0f833102df21"
+      "generated_at": "2026-04-09T10:54:15.2670642-05:00",
+      "sha256": "sha256:d3021cf58101866ed04e4cc9dcf28d3b845b75e45d79f73dd3e38bae2fc991c9"
     },
     "relevant_plan_closeouts": [
       {
         "path": "plans/2026-04-01-mvp-narrowing-and-contract-hardening.md",
         "section": "CLOSEOUT",
-        "sha256": "sha256:bfab6d49a912a7ce978e5b4e7b6279adc7a3e39ea62af9122504333e7c9da22a"
+        "sha256": "sha256:12ad445817ff92bf595049d5e39543a88fbb9ab5e7fa7de9d92ebee7a7c1415b"
       },
       {
         "path": "plans/2026-04-07-q-06-011-lock-track-c-provenance-note-overwrite-semantics.md",
@@ -78,11 +78,7 @@
     ],
     "validation_outputs": [
       {
-        "command": "python scripts/validate_repo_contracts.py --mode test",
-        "status": "passed"
-      },
-      {
-        "command": "python scripts/validate_repo_contracts.py --mode validate",
+        "command": "python -m unittest tests.test_build_execution_queue",
         "status": "passed"
       },
       {
@@ -90,14 +86,18 @@
         "status": "passed"
       },
       {
-        "command": "python scripts/run_repo_validation.py --require-rust",
+        "command": "python scripts/validate_repo_contracts.py --mode validate",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/run_repo_validation.py",
         "status": "passed"
       }
     ],
     "schema_or_contract_surfaces": [
       {
         "path": "EXECUTION_QUEUE.md",
-        "sha256": "sha256:ddb6e7cf85b0fc91df7799f766f7088d1f363d87cd1283d9b2c1b9445de32c20"
+        "sha256": "sha256:8efd49970ab73e0660e87012d0941e22ed98485cd42258275df11ef00557be78"
       },
       {
         "path": "DECISION_REGISTER.md",
@@ -125,7 +125,7 @@
       },
       {
         "path": "scripts/build_execution_queue.py",
-        "sha256": "sha256:4cc65dd47011c96beba7e5c60d8ae82cb51bad5d03a1f39fb24c87a20e5fe257"
+        "sha256": "sha256:142474ef9f5b883f61775e32a1b26925008462b96e4b9e5fb024e02ef53201a3"
       },
       {
         "path": "scripts/validate_repo_contracts.py",
@@ -134,26 +134,42 @@
     ]
   },
   "validation_context": {
-    "queue_snapshot": "2026-04-08T10:36:04.0061843-05:00",
-    "head_commit_hash": "94db66edf846794d6bfc25bfb65bf6b416e24a21",
+    "queue_snapshot": "2026-04-09T10:54:15.2670642-05:00",
+    "head_commit_hash": "73dbfdab42ccd9e9ee4e9d2ac4678ca22b394d1b",
     "commit_hash_basis": "current_head",
     "working_tree_dirty": true,
     "working_tree_status": [
-      "M reports/exports/checkpoint_closeout.export.json",
-      "?? .codex/README.md",
-      "?? .codex/skills/scir-provenance-continuity/",
-      "?? .codex/skills/scir-queue-reactivation/",
-      "?? .codex/skills/scir-repo-contract-audit/",
-      "?? .codex/templates/",
-      "?? artifacts/benchmark_runs/python-proof-loop-full-20260408T222141Z/",
-      "?? artifacts/sweeps/94db66edf846-20260408T222113Z/",
-      "?? plans/2026-04-08-scir-tranche-skill-pack.md"
+      "M EXECUTION_QUEUE.md",
+      "M README.md",
+      "M STATUS.md",
+      "M docs/project_overview.md",
+      "M plans/2026-04-01-mvp-narrowing-and-contract-hardening.md",
+      "M scripts/build_execution_queue.py",
+      "?? artifacts/benchmark_runs/python-proof-loop-full-20260408T224144Z/",
+      "?? artifacts/benchmark_runs/python-proof-loop-full-20260408T232025Z/",
+      "?? artifacts/benchmark_runs/python-proof-loop-full-20260408T232301Z/",
+      "?? artifacts/benchmark_runs/python-proof-loop-full-20260408T232505Z/",
+      "?? artifacts/benchmark_runs/python-proof-loop-full-20260408T233646Z/",
+      "?? artifacts/benchmark_runs/python-proof-loop-full-20260409T003646Z/",
+      "?? artifacts/benchmark_runs/python-proof-loop-full-20260409T155641Z/",
+      "?? artifacts/sweeps/73dbfdab42cc-20260408T224115Z/",
+      "?? artifacts/sweeps/73dbfdab42cc-20260408T232436Z/",
+      "?? artifacts/sweeps/73dbfdab42cc-20260408T233616Z/",
+      "?? artifacts/sweeps/73dbfdab42cc-20260409T003615Z/",
+      "?? artifacts/sweeps/73dbfdab42cc-20260409T155612Z/",
+      "?? plans/2026-04-08-automate-progress-report.md",
+      "?? plans/2026-04-08-checkpoint-export-determinism.md",
+      "?? plans/2026-04-08-q-05-002-claim-grade-benchmark-continuation-assessment.md",
+      "?? plans/2026-04-08-q-05-003-bind-bounded-continuation-result-into-status-surfaces.md",
+      "?? scripts/progress_report.py",
+      "?? tests/test_build_execution_queue.py",
+      "?? tests/test_progress_report.py"
     ],
     "validation_commands": [
-      "python scripts/validate_repo_contracts.py --mode test",
-      "python scripts/validate_repo_contracts.py --mode validate",
+      "python -m unittest tests.test_build_execution_queue",
       "python scripts/build_execution_queue.py --mode check",
-      "python scripts/run_repo_validation.py --require-rust"
+      "python scripts/validate_repo_contracts.py --mode validate",
+      "python scripts/run_repo_validation.py"
     ],
     "schema_versions": [
       {
@@ -175,8 +191,8 @@
     "exported_artifacts": [
       {
         "path": "reports/exports/execution_queue.export.json",
-        "generated_at": "2026-04-08T10:36:04.0061843-05:00",
-        "sha256": "sha256:21fa2f602127ad41b7d34942ddc15831f89333af0762a19af93b0f833102df21"
+        "generated_at": "2026-04-09T10:54:15.2670642-05:00",
+        "sha256": "sha256:d3021cf58101866ed04e4cc9dcf28d3b845b75e45d79f73dd3e38bae2fc991c9"
       },
       {
         "path": "reports/exports/decision_register.export.json",

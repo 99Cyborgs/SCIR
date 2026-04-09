@@ -6,8 +6,8 @@ SCIR is a semantic compression MVP with two explicit layers:
 - `SCIR-H`: canonical semantics
 - `SCIR-L`: derivative lowering
 
-The active product question is not "can SCIR replace mainstream languages?"
-It is "can SCIR keep a narrow proof loop honest enough to justify continuing?"
+The governing continuation question is not "can SCIR replace mainstream languages?"
+It is "can SCIR keep a narrow proof loop honest enough to justify continuing, and as of 2026-04-08 the bounded answer is yes for the fixed Python proof-loop corpus within the declared lexical-compression claim surface?"
 
 ## Built first
 
@@ -52,3 +52,4 @@ Unsupported or deferred:
 ## Success test
 
 SCIR continues only if the narrow proof loop remains useful against strong baselines.
+The 2026-04-08 claim-grade Track `A` / `B` assessment currently supports continuing the narrowed MVP on the fixed Python proof-loop corpus, bounded to lexical-compression evidence rather than broader semantic or backend claims.

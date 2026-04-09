@@ -2,16 +2,16 @@
 
 - class: `incubate`
 - activity: `active`
-- last reviewed: `2026-04-01`
+- last reviewed: `2026-04-08`
 - owner: `forre`
 - suggested promotion mode: `subset extraction`
 
 ## Summary
 
-SCIR remains interesting as a semantic-substrate MVP, but the credible path is narrower than the repository previously claimed. The active product question is whether the Python proof loop, derivative lowering discipline, and subset-bound benchmark harness are useful enough to justify continuing.
+SCIR remains interesting as a semantic-substrate MVP, and the 2026-04-08 claim-grade Track `A` / `B` continuation assessment supports continuing the narrowed MVP on the fixed Python proof-loop corpus. That support remains bounded to the declared lexical-compression evidence surface and does not widen language, backend, or semantic-authority claims.
 
 ## Current blockers
 
-- Wasm backend MVP is still contract-first rather than emitter-complete
-- persistent identity and canonical/view split were under-specified until this narrowing pass
-- the repository previously carried too much deferred TypeScript and tooling surface in active validation
+- continuation evidence is currently strong enough only for the fixed Python proof-loop corpus and only for the declared `LEXICAL_COMPRESSION_ONLY` / `scirhc_lcr_vs_ast` claim surface
+- broader Wasm work remains intentionally frozen beyond the admitted helper-free scalar subset and fixed Rust record-cell slice
+- Rust remains importer-first and may not widen into reconstruction or benchmark claims without a new roadmap decision

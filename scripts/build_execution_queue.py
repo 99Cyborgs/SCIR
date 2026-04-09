@@ -63,6 +63,10 @@ CHECKPOINT_PLAN_CLOSEOUTS = [
     TRACK_C_CLOSEOUT_PLAN_REL,
     CHECKPOINT_PLAN_REL,
 ]
+MANAGED_EXPORT_STATUS_PATHS = {
+    OUTPUT_REL.replace("\\", "/"),
+    CHECKPOINT_OUTPUT_REL.replace("\\", "/"),
+}
 CHECKPOINT_SCHEMA_OR_CONTRACT_SURFACES = [
     QUEUE_DOC_REL,
     "DECISION_REGISTER.md",
@@ -104,6 +108,28 @@ def run_git_stdout(root: pathlib.Path, *args: str) -> str:
         stderr = completed.stderr.strip()
         raise ValueError(f"git {' '.join(args)} failed: {stderr or completed.stdout.strip()}")
     return completed.stdout
+
+
+def normalize_git_status_path(path_text: str) -> str:
+    normalized = path_text.strip()
+    if " -> " in normalized:
+        normalized = normalized.split(" -> ", 1)[1]
+    return normalized.replace("\\", "/")
+
+
+def filtered_working_tree_status(root: pathlib.Path) -> list[str]:
+    lines = [
+        line.rstrip()
+        for line in run_git_stdout(root, "status", "--short").splitlines()
+        if line.strip()
+    ]
+    filtered = []
+    for line in lines:
+        candidate = normalize_git_status_path(line[3:] if len(line) > 3 else line)
+        if candidate in MANAGED_EXPORT_STATUS_PATHS:
+            continue
+        filtered.append(line.strip())
+    return filtered
 
 
 def load_recorded_git_context(root: pathlib.Path) -> tuple[str, str, list[str]] | None:
@@ -173,11 +199,7 @@ def resolve_checkpoint_git_context(root: pathlib.Path) -> tuple[str, str, list[s
     recorded_git_context = load_recorded_git_context(root)
     try:
         current_head = run_git_stdout(root, "rev-parse", "HEAD").strip()
-        working_tree_status = [
-            line.strip()
-            for line in run_git_stdout(root, "status", "--short").splitlines()
-            if line.strip()
-        ]
+        working_tree_status = filtered_working_tree_status(root)
     except ValueError:
         if recorded_git_context is None:
             raise

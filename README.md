@@ -26,12 +26,16 @@ python scripts/validate_translation.py
 python scripts/validate_translation.py --include-experimental-python
 python scripts/benchmark_contract_dry_run.py --claim-run
 python scripts/benchmark_repro.py --run-id <run-id>
+python scripts/progress_report.py --format markdown
+python scripts/progress_report.py --format json
 python scripts/sync_python_proof_loop_artifacts.py --mode check
 python scripts/sync_python_proof_loop_artifacts.py --mode write
 python scripts/benchmark_contract_dry_run.py --include-track-c-pilot
 python scripts/run_repo_validation.py --include-track-c-pilot
 python scripts/run_repo_validation.py --include-experimental-python-translation
 ```
+
+The progress-report command synthesizes the current portfolio summary, queue posture, checkpoint validation context, git dirtiness, and latest benchmark evidence into one operator-facing report without adding a new governed export surface.
 
 ## Install
 

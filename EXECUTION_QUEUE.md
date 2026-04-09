@@ -15,7 +15,7 @@ It is derived from:
 
 ## Queue metadata
 
-- Queue snapshot: `2026-04-08T10:36:04.0061843-05:00`
+- Queue snapshot: `2026-04-09T10:54:15.2670642-05:00`
 - Active milestone: `MVP Kernel Hardening`
 - Autonomy mode: `high`
 - Escalation threshold: `doctrine conflict; missing source authority; sequencing violation`
@@ -331,6 +331,34 @@ It is derived from:
 - Escalate only if: `keeping Track A and Track B executable would require reactivating Track D, repository-scale issue repair, or second-language execution evidence before the Python proof loop doctrine widens`
 - Done evidence: `Track A and Track B remain executable and bounded`; `benchmark baselines and kill gates remain explicit`; `Track C remains conditional and Track D remains deferred`
 
+### Q-05-002 - Execute a claim-grade Track `A` / `B` continuation assessment on the fixed Python proof loop
+
+- Queue ID: `Q-05-002`
+- Title: `Execute a claim-grade Track A / B continuation assessment on the fixed Python proof loop`
+- Source milestone or phase: `Benchmark falsification loop`
+- Status: `done`
+- Why now: `The queue is empty by design, but the active product question is whether the fixed Python proof loop and bounded benchmark harness are strong enough to justify continuing, and the next lowest-risk roadmap-derived answer is the explicit claim lane rather than more Rust or Wasm scope work.`
+- Prerequisites: `Q-05-001`; `Q-04-013`
+- Work instructions: `Run the dedicated Track A / B claim lane on the fixed Python proof-loop corpus, require strongest-baseline, contamination, reproducibility, and SCIR-Hc evidence-boundary compliance, record whether the bounded MVP continuation thesis is supported, and do not widen benchmark doctrine or activate Track C or D.`
+- Touched surfaces: `EXECUTION_QUEUE.md`; `plans/2026-04-01-mvp-narrowing-and-contract-hardening.md`; `plans/2026-04-08-q-05-002-claim-grade-benchmark-continuation-assessment.md`; `reports/exports/execution_queue.export.json`; `reports/exports/checkpoint_closeout.export.json`
+- Validation: `python scripts/build_execution_queue.py --mode check`; `python scripts/benchmark_contract_dry_run.py --claim-run`; `python scripts/validate_repo_contracts.py --mode validate`; `python scripts/run_repo_validation.py`
+- Escalate only if: `the claim lane fails because benchmark doctrine, strongest-baseline requirements, contamination controls, or SCIR-Hc evidence boundaries need normative changes rather than tranche-local evidence capture`
+- Done evidence: `a claim-grade benchmark bundle exists for the fixed Python proof-loop corpus`; `the continuation assessment is explicit and bounded to the declared claim class`; `queue and checkpoint exports are synchronized back to the final closeout state`
+
+### Q-05-003 - Bind the bounded continuation result into portfolio status surfaces
+
+- Queue ID: `Q-05-003`
+- Title: `Bind the bounded continuation result into portfolio status surfaces`
+- Source milestone or phase: `Benchmark falsification loop`
+- Status: `done`
+- Why now: `The claim-grade Track A / B continuation lane answered the active continue-or-stop question narrowly, but STATUS and project-overview surfaces still describe that question as unresolved and still misstate the Wasm MVP as contract-first rather than bounded emitter-backed evidence.`
+- Prerequisites: `Q-05-002`
+- Work instructions: `Synchronize informative portfolio-status surfaces to the bounded yes-to-continue result from the fixed Python proof-loop claim bundle, keep the continuation claim limited to the declared lexical-compression evidence class, and do not widen benchmark, Wasm, Rust, or semantic-authority scope.`
+- Touched surfaces: `STATUS.md`; `docs/project_overview.md`; `EXECUTION_QUEUE.md`; `plans/2026-04-01-mvp-narrowing-and-contract-hardening.md`; `plans/2026-04-08-q-05-003-bind-bounded-continuation-result-into-status-surfaces.md`; `reports/exports/execution_queue.export.json`; `reports/exports/checkpoint_closeout.export.json`
+- Validation: `python scripts/build_execution_queue.py --mode check`; `python scripts/validate_repo_contracts.py --mode validate`; `python scripts/run_repo_validation.py`
+- Escalate only if: `making the continuation posture explicit would require changing benchmark doctrine, reopening broader Wasm widening, or promoting Rust beyond importer-first evidence rather than synchronizing informative status language`
+- Done evidence: `informative status surfaces explicitly reflect the bounded continue decision from the 2026-04-08 claim-grade bundle`; `the Wasm MVP is no longer described as contract-only or unresolved where the admitted emitter-backed evidence already exists`; `queue and checkpoint exports are synchronized back to the final empty-by-design closeout state`
+
 ### Q-06-001 - Prepare a minimal conditional Track `C` pilot without widening the default gate
 
 - Queue ID: `Q-06-001`
@@ -569,6 +597,27 @@ It is derived from:
 - Reversibility: `rollback is a path-limited revert of the touched Rust importer, validation, and queue/governance files; no schema or architecture rollback is required if the slice stays inside importer-surface alignment`
 - Risks: `await-boundary wording could drift between generated docs and metadata`; `the optional Rust validation lane could imply backend support if the non-emittable async boundary stops being explicit`; `queue/export closeout could drift again if regenerated against a different working-tree state`
 
+### Q-00-004 - Stabilize checkpoint-export determinism against self-managed queue writes
+
+- Queue ID: `Q-00-004`
+- Title: `Stabilize checkpoint-export determinism against self-managed queue writes`
+- Source milestone or phase: `MVP Kernel Hardening`
+- Status: `done`
+- Why now: `The queue is empty by design, but python scripts/build_execution_queue.py --mode write still observes its own managed queue and checkpoint export rewrites as working-tree dirtiness, which makes the canonical checkpoint artifact drift even when no unrelated files changed.`
+- Prerequisites: `Q-05-003`
+- Work instructions: `Keep the queue empty by design, stabilize checkpoint git-context capture so build_execution_queue ignores only its own managed export rewrites, add regression coverage for write-then-check determinism, and do not change queue doctrine, semantic scope, or roadmap selection.`
+- Touched surfaces: `plans/2026-04-08-checkpoint-export-determinism.md`; `scripts/build_execution_queue.py`; `tests/test_build_execution_queue.py`; `EXECUTION_QUEUE.md`; `plans/2026-04-01-mvp-narrowing-and-contract-hardening.md`; `reports/exports/execution_queue.export.json`; `reports/exports/checkpoint_closeout.export.json`
+- Validation: `python -m unittest tests.test_build_execution_queue`; `python scripts/build_execution_queue.py --mode check`; `python scripts/validate_repo_contracts.py --mode validate`; `python scripts/run_repo_validation.py`
+- Escalate only if: `stabilizing write-then-check determinism would require hiding unrelated dirty files, changing queue or checkpoint schema semantics, or weakening empty-by-design governance instead of narrowly ignoring only the two managed export rewrites`
+- Done evidence: `write-then-check determinism is covered by an automated test`; `checkpoint exports still report unrelated dirty files while ignoring only the two managed export writes`; `queue and checkpoint exports are synchronized back to the final empty-by-design closeout state`
+- Scope: `exact files touched are limited to the queue-export builder, its regression test, the dated slice plan, active-plan closeout evidence, and regenerated queue/checkpoint exports`; `subsystems affected are checkpoint git-context capture, queue/export synchronization, and governance validation`; `explicit exclusions are any new roadmap successor, any queue-doctrine or schema change, any semantic or benchmark widening, and the separate progress-report utility work already present in the working tree`
+- Inputs: `existing modules used are scripts/build_execution_queue.py, reports/exports/execution_queue.export.json, reports/exports/checkpoint_closeout.export.json, and git status from the repository root`; `assumption: only the two queue-managed exports should be ignored when checkpoint git context is captured`
+- Outputs: `narrow managed-export filtering in checkpoint git-context capture`; `temp-repo regression coverage for write-then-check determinism and unrelated-dirt preservation`; `updated queue, plan, and export evidence returning the queue to EMPTY BY DESIGN after the bounded hardening slice`
+- Done criteria: `observable completion requires python scripts/build_execution_queue.py --mode write followed by --mode check to stay deterministic in the same clean baseline`; `checkpoint_closeout.export.json must still record unrelated dirty files explicitly`; `all listed validation commands pass without reopening the queue or widening active claims`
+- Evidence binding: `completion is proved by the exact touched file set plus passing outputs from tests.test_build_execution_queue, build_execution_queue check, repository contract validation, and the default repo validation runner`
+- Reversibility: `rollback is a path-limited revert of the queue-builder script, regression test, dated plan, active-plan evidence, and regenerated exports; no decision-register, schema, or architecture rollback is required if the slice stays inside checkpoint determinism`
+- Risks: `future managed queue exports could require updating the narrow ignore set`; `temp-repo regression coverage could miss a workspace-only drift mode`; `run_repo_validation.py may still require one final export rewrite so checkpoint artifacts describe the post-validation dirty tree exactly`
+
 ## CURRENT QUEUE STATE
 
 QUEUE STATE: `EMPTY BY DESIGN`
@@ -576,9 +625,9 @@ QUEUE STATE: `EMPTY BY DESIGN`
 READY ITEMS: NONE
 
 LAST COMPLETED:
-- Q-04-013 (Wasm non-emittable contract self-test hardening)
+- Q-00-004 (Checkpoint export determinism)
 
-NO SUCCESSOR ITEM CREATED: `The bounded 2026-04-08 Wasm self-test-hardening slice is complete, and no stronger roadmap-derived successor is selected after the explicit non-emittable contract drift coverage closed, so the queue returns to EMPTY BY DESIGN until a later authoritative follow-on plus regenerated exports exists.`
+NO SUCCESSOR ITEM CREATED: `The bounded 2026-04-09 checkpoint-export-determinism slice is complete, queue and checkpoint writes now remain deterministic against their own managed export rewrites, and no stronger roadmap-derived successor is selected, so the queue returns to EMPTY BY DESIGN until a later authoritative follow-on plus regenerated exports exists.`
 
 QUEUE STATUS:
 - SYNCHRONIZED WITH WORKING TREE: TRUE
