@@ -67,6 +67,7 @@ jobs:
             core.setOutput('run_id', baseline ? String(baseline.id) : '');
       - if: steps.baseline.outputs.run_id != ''
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: sweep-smoke
           path: artifacts/baseline-sweep-smoke

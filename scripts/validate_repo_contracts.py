@@ -209,7 +209,9 @@ def load_json(path: pathlib.Path):
 
 
 def sha256_file(path: pathlib.Path) -> str:
-    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+    # Hash text fixtures after LF normalization so corpus manifests are stable
+    # across Windows and Unix checkouts.
+    return "sha256:" + hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def is_number(value):

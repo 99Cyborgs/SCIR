@@ -51,7 +51,7 @@
         "local reassignment",
         "scalar comparison branch"
       ],
-      "hash": "sha256:d2e6ac761f971ce37e5fb1a1bef5fb0085b9fec4b26a44bcac7b899c26c6eb4e",
+      "hash": "sha256:76bbede61fee10a41d272db0103a2bf2a3f1c80321ce68d34f9517daa3444db9",
       "frontend": "python",
       "split": "test",
       "origin": "checked_in_fixture",
@@ -104,7 +104,7 @@
         "async function definition",
         "simple await"
       ],
-      "hash": "sha256:f531df1ce161619dd186709880a6257a03af39912d6a10f3bfd52723a6f58cf6",
+      "hash": "sha256:4839382e2fe849f7c9bb73f91b5ae5603f631f1a54ce42654fcffcc3e0b05a81",
       "frontend": "python",
       "split": "test",
       "origin": "checked_in_fixture",
@@ -159,7 +159,7 @@
       "features": [
         "direct local call preservation"
       ],
-      "hash": "sha256:1e5d106998a586aea007ff20f81c2d17c7ad172d78e8a9bea7133f2f64cdb2ec",
+      "hash": "sha256:7c8b1278249b744e952884d637f158e7c5f2ae69b594f4c5ec2386f811d6bd54",
       "frontend": "python",
       "split": "test",
       "origin": "checked_in_fixture",
@@ -211,7 +211,7 @@
       "features": [
         "opaque foreign module call"
       ],
-      "hash": "sha256:e84bdd675546d4ba8dd038d226285e04e0bc0f813b292b0f88423424664ef142",
+      "hash": "sha256:2be962a01c17836a323afe49d2b5ae80ea58a9c0b660f2049ae59ebf27c686cf",
       "frontend": "python",
       "split": "test",
       "origin": "checked_in_fixture",
