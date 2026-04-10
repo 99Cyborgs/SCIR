@@ -69,6 +69,14 @@ make ci
 ```
 
 Do not replace these commands without updating `README.md`, this file, and CI workflow docs.
+`make build` must produce a real package-build sanity artifact under `artifacts/build`.
+`make lint` must remain a real static check over tracked Python sources, not a repo-contract alias.
+
+Optional retained-surface audit:
+
+```bash
+python scripts/validate_repo_contracts.py --mode audit
+```
 
 ## When you must consult `IMPLEMENTATION_PLAN.md`
 

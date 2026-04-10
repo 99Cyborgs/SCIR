@@ -28,7 +28,7 @@ Validation keeps the Python-first MVP executable while preserving the retained d
 
 | Validator | Input | Output | Blocking |
 | --- | --- | --- | --- |
-| repository contract checker | root docs, schemas, examples, manifests | console report | yes |
+| repository contract checker | live root docs, active support docs, schemas, examples, manifests, and command surfaces | console report | yes |
 | importer conformance checker | fixed source subset plus checked-in bundle | `module_manifest`, `feature_tier_report`, `validation_report` | yes |
 | `SCIR-H` validator | canonical `SCIR-H` | `validation_report` | yes |
 | `SCIR-Hc` validator | derived `SCIR-Hc` plus canonical round-trip target | `validation_report` | yes |
@@ -67,12 +67,17 @@ At minimum it must:
 - validate canonical formatter round-trip and identity stability
 - validate the active Python proof loop and retained derivative surfaces
 - reject default-gate dependence on tracked run outputs
+- keep the blocking repository-contract check aligned to the live surface rather than placeholder or archival docs
 
 ## Optional deeper validation
+
+`python scripts/validate_repo_contracts.py --mode audit` remains the optional retained-surface audit for broader placeholder, tooling, CI, and archival docs kept on disk outside the default blocking surface.
 
 `python scripts/run_repo_validation.py --require-rust` remains the optional compatibility entrypoint for environments that require an explicit usable Rust toolchain before running the deeper Rust slice.
 
 `python scripts/benchmark_contract_dry_run.py --claim-run` remains an explicit opt-in claim lane.
+
+Default sweep and benchmark runs must overwrite stable ignored output directories unless an explicit `--output-dir` is supplied.
 
 ## Evidence for done
 

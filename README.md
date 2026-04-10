@@ -29,6 +29,7 @@ The default working set is:
 - `CURRENT_FOCUS.md`
 - `BACKLOG.md`
 - `DECISION_REGISTER.md`
+- `docs/`
 - `specs/`
 - `scir/`
 - `scripts/`
@@ -37,19 +38,24 @@ The default working set is:
 - `reports/examples/`
 
 Tracked generated run outputs are intentionally excluded from the live surface.
+The canonical gate still exercises retained Rust, Wasm, and benchmark support lanes, but broader placeholder, tooling, CI, and archival consistency checks now live behind `python scripts/validate_repo_contracts.py --mode audit`.
 
 ## Commands
 
 ```bash
 python scripts/run_repo_validation.py
 python scripts/run_repo_validation.py --require-rust
-python scripts/benchmark_contract_dry_run.py
-python scripts/benchmark_contract_dry_run.py --claim-run
+python scripts/validate_repo_contracts.py --mode audit
+make build
+make lint
+make test
 make validate
 make benchmark
+make benchmark-claim
 ```
 
 `python scripts/run_repo_validation.py` is the canonical default gate.
+Default validation and benchmark runs overwrite stable ignored output paths under `artifacts/validation/`, `artifacts/sweeps/latest`, and `artifacts/benchmark_runs/latest`; pass `--output-dir` when a run needs its own retained directory.
 
 ## Operating rules
 
@@ -65,3 +71,4 @@ make benchmark
 - [ARCHITECTURE.md](ARCHITECTURE.md) defines the stable system shape
 - [VALIDATION_STRATEGY.md](VALIDATION_STRATEGY.md) defines the default gate
 - [reports/repo_reset_report.md](reports/repo_reset_report.md) records the consolidation decisions for this reset
+- [reports/repo_reset_followthrough.md](reports/repo_reset_followthrough.md) records the post-reset cleanup that closed the remaining gaps

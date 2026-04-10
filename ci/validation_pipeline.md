@@ -32,3 +32,11 @@ The quick gate is split into:
 2. importer fixture conformance
 3. bootstrap pipeline validation
 4. sweep smoke plus regression, comparison, and contamination summaries
+
+## Optional audit
+
+Use this when validating broader retained surfaces that are kept on disk but do not belong to the default blocking gate:
+
+```bash
+python scripts/validate_repo_contracts.py --mode audit
+```

@@ -19,7 +19,7 @@ except ImportError:  # pragma: no cover
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
-REQUIRED_FILES = [
+LIVE_REQUIRED_FILES = [
     "README.md",
     "AGENTS.md",
     "SYSTEM_BOUNDARY.md",
@@ -36,18 +36,10 @@ REQUIRED_FILES = [
     "IDENTITY_MODEL.md",
     "Makefile",
     "pyproject.toml",
-    "plans/PLANS.md",
-    "plans/2026-04-10-repo-reset-consolidation.md",
     "docs/target_profiles.md",
     "docs/preservation_contract.md",
     "docs/feature_tiering.md",
     "docs/unsupported_cases.md",
-    "docs/project_overview.md",
-    "docs/reconstruction_policy.md",
-    "docs/scir_h_overview.md",
-    "docs/scir_l_overview.md",
-    "docs/runtime_doctrine.md",
-    "docs/repository_map.md",
     "specs/scir_h_spec.md",
     "specs/scir_hc_doctrine.md",
     "specs/scir_l_spec.md",
@@ -76,34 +68,13 @@ REQUIRED_FILES = [
     "schemas/regression_summary.schema.json",
     "schemas/decision_register.schema.json",
     "schemas/open_questions.schema.json",
-    "frontend/README.md",
-    "frontend/python/IMPORT_SCOPE.md",
-    "frontend/rust/IMPORT_SCOPE.md",
-    "frontend/typescript/IMPORT_SCOPE.md",
+    "scir/__init__.py",
     "frontend/typescript/NOT_ACTIVE.md",
-    "validators/README.md",
-    "validators/validator_contracts.md",
-    "backends/README.md",
-    "backends/wasm/README.md",
-    "benchmarks/README.md",
-    "benchmarks/tracks.md",
-    "benchmarks/baselines.md",
-    "benchmarks/corpora_policy.md",
-    "benchmarks/contamination_controls.md",
-    "benchmarks/success_failure_gates.md",
-    "tooling/README.md",
-    "tooling/NOT_ACTIVE.md",
-    "tooling/agent_api.md",
-    "tooling/formatter_contract.md",
-    "tooling/checker_contract.md",
-    "tooling/explorer_contract.md",
-    "ci/README.md",
-    "ci/validation_pipeline.md",
-    "ci/benchmark_pipeline.md",
-    ".github/workflows/validate.yml",
-    ".github/workflows/benchmarks.yml",
+    "tests/typescript_importer/NOT_ACTIVE.md",
     "scripts/validate_repo_contracts.py",
     "scripts/run_repo_validation.py",
+    "scripts/run_repo_build.py",
+    "scripts/run_repo_lint.py",
     "scripts/scir_h_bootstrap_model.py",
     "scripts/scir_python_bootstrap.py",
     "scripts/scir_rust_bootstrap.py",
@@ -119,7 +90,6 @@ REQUIRED_FILES = [
     "scripts/benchmark_contract_dry_run.py",
     "scripts/benchmark_repro.py",
     "scripts/sync_python_proof_loop_artifacts.py",
-    "reports/README.md",
     "reports/examples/module_manifest.example.json",
     "reports/examples/corpus_manifest.example.json",
     "reports/examples/feature_tier_report.example.json",
@@ -147,14 +117,53 @@ REQUIRED_FILES = [
     "tests/corpora/python_tier_a_micro_corpus.json",
     "tests/corpora/python_proof_loop_corpus.json",
     "tests/corpora/python_preservation_negative_corpus.json",
-    "tests/typescript_importer/README.md",
-    "tests/typescript_importer/NOT_ACTIVE.md",
     "tests/invalid_scir_h/README.md",
     "tests/invalid_scir_h/manifest.json",
     "tests/invalid_scir_l/README.md",
     "tests/invalid_scir_l/manifest.json",
     "tests/sweeps/python_proof_loop_smoke.json",
     "tests/sweeps/python_proof_loop_full.json",
+]
+
+AUDIT_REQUIRED_FILES = [
+    "plans/PLANS.md",
+    "plans/2026-04-10-repo-reset-consolidation.md",
+    "docs/project_overview.md",
+    "docs/reconstruction_policy.md",
+    "docs/scir_h_overview.md",
+    "docs/scir_l_overview.md",
+    "docs/runtime_doctrine.md",
+    "docs/repository_map.md",
+    "frontend/README.md",
+    "frontend/python/IMPORT_SCOPE.md",
+    "frontend/rust/IMPORT_SCOPE.md",
+    "frontend/typescript/IMPORT_SCOPE.md",
+    "frontend/typescript/NOT_ACTIVE.md",
+    "validators/README.md",
+    "validators/validator_contracts.md",
+    "backends/README.md",
+    "backends/wasm/README.md",
+    "benchmarks/README.md",
+    "benchmarks/tracks.md",
+    "benchmarks/baselines.md",
+    "benchmarks/corpora_policy.md",
+    "benchmarks/contamination_controls.md",
+    "benchmarks/success_failure_gates.md",
+    "tooling/README.md",
+    "tooling/NOT_ACTIVE.md",
+    "tooling/agent_api.md",
+    "tooling/formatter_contract.md",
+    "tooling/checker_contract.md",
+    "tooling/explorer_contract.md",
+    "ci/README.md",
+    "ci/validation_pipeline.md",
+    "ci/benchmark_pipeline.md",
+    ".github/workflows/validate.yml",
+    ".github/workflows/benchmarks.yml",
+    "reports/README.md",
+    "tests/typescript_importer/README.md",
+    "tests/typescript_importer/NOT_ACTIVE.md",
+    "scripts/typescript_importer_conformance.py",
 ]
 
 EXAMPLE_ARTIFACTS = [
@@ -183,11 +192,14 @@ EXAMPLE_ARTIFACTS = [
     ("reports/examples/benchmark_track_c_result.example.json", "schemas/benchmark_result.schema.json"),
 ]
 
-NOT_ACTIVE_MARKERS = {
+LIVE_NOT_ACTIVE_MARKERS = {
     "frontend/typescript/NOT_ACTIVE.md": ["NOT ACTIVE", "frontend/typescript", "default validation"],
     "tests/typescript_importer/NOT_ACTIVE.md": ["NOT ACTIVE", "tests/typescript_importer", "default validation"],
-    "tooling/NOT_ACTIVE.md": ["NOT ACTIVE", "tooling/agent_api.md", "tooling/explorer_contract.md"],
     "scripts/NOT_ACTIVE.md": ["NOT ACTIVE", "scripts/typescript_importer_conformance.py", "default validation"],
+}
+
+AUDIT_NOT_ACTIVE_MARKERS = {
+    "tooling/NOT_ACTIVE.md": ["NOT ACTIVE", "tooling/agent_api.md", "tooling/explorer_contract.md"],
 }
 
 ACTIVE_FOCUS_MARKERS = [
@@ -362,8 +374,8 @@ def validate_instance(root: pathlib.Path, payload, schema_rel: str, label: str) 
     return [f"{label} {path}: {message}" for path, message in collect_instance_validation_errors(payload, schema)]
 
 
-def check_required_files(root: pathlib.Path) -> list[str]:
-    return [f"missing file: {rel}" for rel in REQUIRED_FILES if not (root / rel).exists()]
+def check_required_files(root: pathlib.Path, required_files: list[str]) -> list[str]:
+    return [f"missing file: {rel}" for rel in required_files if not (root / rel).exists()]
 
 
 def check_focus_alignment(root: pathlib.Path) -> list[str]:
@@ -387,9 +399,13 @@ def check_focus_alignment(root: pathlib.Path) -> list[str]:
     plan_rel = "plans/2026-04-10-repo-reset-consolidation.md"
     if plan_rel not in focus_text:
         failures.append("CURRENT_FOCUS.md: active plan link missing")
-    plan_text = (root / plan_rel).read_text(encoding="utf-8")
-    if "Status: in-progress" not in plan_text and "Status: complete" not in plan_text:
-        failures.append(f"{plan_rel}: expected Status: in-progress or Status: complete")
+    plan_path = root / plan_rel
+    if not plan_path.exists():
+        failures.append(f"CURRENT_FOCUS.md: active plan missing {plan_rel}")
+    else:
+        plan_text = plan_path.read_text(encoding="utf-8")
+        if "Status: in-progress" not in plan_text and "Status: complete" not in plan_text:
+            failures.append(f"{plan_rel}: expected Status: in-progress or Status: complete")
     return failures
 
 
@@ -418,16 +434,19 @@ def check_removed_surface_references(root: pathlib.Path) -> list[str]:
         "scripts/run_repo_validation.py",
         "Makefile",
     ]:
-        text = (root / rel).read_text(encoding="utf-8")
+        path = root / rel
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
         for marker in REMOVED_SURFACE_MARKERS:
             if marker in text:
                 failures.append(f"{rel}: stale removed-surface reference {marker!r}")
     return failures
 
 
-def check_not_active_markers(root: pathlib.Path) -> list[str]:
+def check_not_active_markers(root: pathlib.Path, marker_map: dict[str, list[str]]) -> list[str]:
     failures = []
-    for rel, markers in NOT_ACTIVE_MARKERS.items():
+    for rel, markers in marker_map.items():
         text = (root / rel).read_text(encoding="utf-8")
         for marker in markers:
             if marker not in text:
@@ -468,15 +487,19 @@ def check_sweep_manifest(root: pathlib.Path, manifest_rel: str) -> list[str]:
     return failures
 
 
-def run_checks(root: pathlib.Path) -> list[str]:
+def run_checks(root: pathlib.Path, *, include_audit: bool = False) -> list[str]:
     failures = []
-    failures.extend(check_required_files(root))
+    failures.extend(check_required_files(root, LIVE_REQUIRED_FILES))
+    if include_audit:
+        failures.extend(check_required_files(root, AUDIT_REQUIRED_FILES))
     if failures:
         return failures
     failures.extend(check_focus_alignment(root))
     failures.extend(check_decision_register(root))
     failures.extend(check_removed_surface_references(root))
-    failures.extend(check_not_active_markers(root))
+    failures.extend(check_not_active_markers(root, LIVE_NOT_ACTIVE_MARKERS))
+    if include_audit:
+        failures.extend(check_not_active_markers(root, AUDIT_NOT_ACTIVE_MARKERS))
     failures.extend(check_examples(root))
     failures.extend(check_manifest_hashes(root, "tests/invalid_scir_h/manifest.json", "schemas/corpus_manifest.schema.json"))
     failures.extend(check_manifest_hashes(root, "tests/invalid_scir_l/manifest.json", "schemas/corpus_manifest.schema.json"))
@@ -498,12 +521,23 @@ def mutate_break_focus_alignment(root: pathlib.Path) -> None:
     path.write_text(text.replace("validator hardening", "validator work", 1), encoding="utf-8")
 
 
-def run_negative_fixture(root: pathlib.Path, name: str, mutate, expected_markers: list[str]) -> list[str]:
+def mutate_remove_audit_file(root: pathlib.Path) -> None:
+    (root / "tooling" / "README.md").unlink()
+
+
+def run_negative_fixture(
+    root: pathlib.Path,
+    name: str,
+    mutate,
+    expected_markers: list[str],
+    *,
+    include_audit: bool = False,
+) -> list[str]:
     with tempfile.TemporaryDirectory(prefix="scir_repo_check_") as tmp:
         fixture_root = pathlib.Path(tmp) / "repo"
         shutil.copytree(root, fixture_root, ignore=shutil.ignore_patterns(".git", "__pycache__", "artifacts"))
         mutate(fixture_root)
-        failures = run_checks(fixture_root)
+        failures = run_checks(fixture_root, include_audit=include_audit)
     if not failures:
         return [f"self-test {name}: expected failure but validation passed"]
     missing = [marker for marker in expected_markers if not any(marker in failure for failure in failures)]
@@ -525,27 +559,44 @@ def run_self_tests(root: pathlib.Path) -> list[str]:
             ["README.md: missing active-focus marker 'validator hardening'"],
         )
     )
+    failures.extend(
+        run_negative_fixture(
+            root,
+            "missing audit file",
+            mutate_remove_audit_file,
+            ["missing file: tooling/README.md"],
+            include_audit=True,
+        )
+    )
     return failures
 
 
 def print_success(mode: str, *, self_test_count: int | None = None) -> None:
-    print(f"[{mode}] repository contract validation passed")
-    print(
-        "Checked required files, current-focus alignment, decision-register scope, removed-surface cleanup, "
-        "NOT_ACTIVE markers, schema-valid examples, and manifest hash integrity for active and negative corpora."
-    )
+    if mode == "audit":
+        print("[audit] retained-surface repository audit passed")
+        print(
+            "Checked live blockers plus retained docs, placeholder surfaces, CI docs, and auxiliary contracts "
+            "kept on disk outside the default blocking surface."
+        )
+    else:
+        print(f"[{mode}] repository contract validation passed")
+        print(
+            "Checked live-surface blockers, current-focus alignment, removed-surface cleanup, TypeScript quarantine markers, "
+            "schema-valid examples, and manifest hash integrity for active and negative corpora."
+        )
     if mode == "test" and self_test_count is not None:
         print(f"Repository checker self-tests passed ({self_test_count} negative fixtures).")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", default="validate", choices=["build", "lint", "test", "validate"])
+    parser.add_argument("--mode", default="validate", choices=["audit", "test", "validate"])
     parser.add_argument("--root")
     args = parser.parse_args()
 
     root = pathlib.Path(args.root).resolve() if args.root else ROOT
-    failures = run_checks(root)
+    include_audit = args.mode in {"audit", "test"}
+    failures = run_checks(root, include_audit=include_audit)
     if failures:
         print(f"[{args.mode}] repository contract validation failed")
         for item in failures:
@@ -555,7 +606,7 @@ def main() -> int:
     self_test_count = None
     if args.mode == "test":
         self_test_failures = run_self_tests(root)
-        self_test_count = 2
+        self_test_count = 3
         if self_test_failures:
             print("[test] repository contract self-tests failed")
             for item in self_test_failures:
