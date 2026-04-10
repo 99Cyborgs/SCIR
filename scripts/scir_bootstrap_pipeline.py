@@ -4659,6 +4659,7 @@ def run_self_tests(root: pathlib.Path):
 
     output_failures = validate_executable_output_set(
         {
+            "scir_hc_reports": {},
             "scir_l_reports": {},
             "translation_reports": {},
             "reconstruction_reports": {"d_exec_eval": {}},
@@ -4671,6 +4672,7 @@ def run_self_tests(root: pathlib.Path):
 
     importer_only_output_failures = validate_executable_output_set(
         {
+            "scir_hc_reports": {case_name: {} for case_name in IMPORT_SUPPORTED_CASES},
             "scir_l_reports": {case_name: {} for case_name in SUPPORTED_CASES} | {"b_if_else_return": {}},
             "translation_reports": {case_name: {} for case_name in SUPPORTED_CASES} | {"b_async_arg_await": {}},
             "reconstruction_reports": {case_name: {} for case_name in SUPPORTED_CASES} | {"b_while_call_update": {}},
