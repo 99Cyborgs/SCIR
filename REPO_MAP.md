@@ -13,18 +13,19 @@ Status: Informative
 
 ## Main working areas
 
+- `docs/`: active profile, preservation, feature-tier, and overview support docs
 - `specs/`: normative semantics and validator-facing contracts
 - `schemas/`: schema contracts for retained reports and manifests
 - `scir/`: minimal shared package surface
+- `_internal/`: internal helper package used by derivation and benchmark helpers
 - `scripts/`: executable bootstrap, validation, and benchmark helpers
 - `tests/`: importer fixtures, corpora, and invalid examples
 - `validators/`: validator implementations and contracts
-- `runtime/`: bounded execution helpers used by retained validation surfaces
 - `reports/examples/`: curated schema-valid examples
 - `plans/`: plan template plus the current active consolidation plan
 
 ## Noise policy
 
-- repeated run outputs belong under ignored `artifacts/`
+- repeated default validation, sweep, and benchmark outputs overwrite stable paths under ignored `artifacts/`
 - derived exports are not part of the live surface
 - historical plans are not active authority unless referenced by `CURRENT_FOCUS.md`

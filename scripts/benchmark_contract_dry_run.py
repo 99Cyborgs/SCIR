@@ -1380,6 +1380,8 @@ def write_benchmark_outputs(
     manifest_lock: dict,
     sweep_manifest_rel: str,
 ):
+    if output_dir.exists():
+        shutil.rmtree(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     for name, payload in benchmark_items.items():
         (output_dir / f"{name}.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -1853,7 +1855,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--root")
     parser.add_argument("--include-track-c-pilot", action="store_true")
-    parser.add_argument("--output-dir")
+    parser.add_argument(
+        "--output-dir",
+        help="Optional directory to write benchmark artifacts. Defaults to artifacts/benchmark_runs/latest, or artifacts/benchmark_runs/claim with --claim-run.",
+    )
     parser.add_argument("--claim-run", action="store_true")
     parser.add_argument("--corpus-manifest")
     args = parser.parse_args()
@@ -1996,7 +2001,7 @@ def main():
             print(f" - {item}")
         sys.exit(1)
     output_dir = pathlib.Path(args.output_dir).resolve() if args.output_dir else (
-        root / "artifacts" / "benchmark_runs" / sweep_result["run_id"]
+        root / "artifacts" / "benchmark_runs" / ("claim" if args.claim_run else "latest")
     )
     write_benchmark_outputs(
         output_dir=output_dir,

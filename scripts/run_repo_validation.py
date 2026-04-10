@@ -10,6 +10,8 @@ from rust_toolchain import resolve_rust_toolchain, rust_toolchain_env
 
 
 ROOT = Path(__file__).resolve().parents[1]
+VALIDATION_SWEEP_OUTPUT_DIR = "artifacts/validation/sweep-smoke"
+VALIDATION_BENCHMARK_OUTPUT_DIR = "artifacts/validation/benchmark-smoke"
 
 
 def run_command(command: list[str], *, env: dict[str, str] | None = None) -> None:
@@ -41,7 +43,12 @@ def main() -> int:
     rust_available = bool(rust_resolution["available"])
     rust_env = rust_toolchain_env() if rust_available else None
 
-    benchmark_command = [sys.executable, "scripts/benchmark_contract_dry_run.py"]
+    benchmark_command = [
+        sys.executable,
+        "scripts/benchmark_contract_dry_run.py",
+        "--output-dir",
+        VALIDATION_BENCHMARK_OUTPUT_DIR,
+    ]
     if args.include_track_c_pilot:
         benchmark_command.append("--include-track-c-pilot")
 
@@ -51,7 +58,14 @@ def main() -> int:
         [sys.executable, "scripts/python_importer_conformance.py", "--mode", "validate-fixtures"],
         [sys.executable, "scripts/rust_importer_conformance.py", "--mode", "validate-fixtures"],
         [sys.executable, "scripts/scir_bootstrap_pipeline.py", "--mode", "validate"],
-        [sys.executable, "scripts/scir_sweep.py", "--manifest", "tests/sweeps/python_proof_loop_smoke.json"],
+        [
+            sys.executable,
+            "scripts/scir_sweep.py",
+            "--manifest",
+            "tests/sweeps/python_proof_loop_smoke.json",
+            "--output-dir",
+            VALIDATION_SWEEP_OUTPUT_DIR,
+        ],
         benchmark_command,
     ]
     deep_rust_commands = [
@@ -89,6 +103,8 @@ def main() -> int:
                 "rust_importer_validation_status": "executed",
                 "benchmark_validation_status": "executed",
                 "sweep_validation_status": "executed",
+                "benchmark_output_dir": VALIDATION_BENCHMARK_OUTPUT_DIR,
+                "sweep_output_dir": VALIDATION_SWEEP_OUTPUT_DIR,
                 "conditional_track_c_validation_status": conditional_track_c_status,
                 "deep_rust_validation_status": deep_rust_status,
                 "full_rust_validation_command": "python scripts/run_repo_validation.py --require-rust",

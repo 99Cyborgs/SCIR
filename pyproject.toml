@@ -17,5 +17,5 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["benchmarks*", "runtime*", "scir*", "validators*"]
+include = ["_internal*", "benchmarks*", "scir*", "validators*"]
 namespaces = true

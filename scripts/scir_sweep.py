@@ -6,6 +6,7 @@ import datetime as dt
 import difflib
 import json
 import pathlib
+import shutil
 import subprocess
 import sys
 import time
@@ -122,6 +123,10 @@ def opaque_fraction_for_case(root: pathlib.Path, case_name: str) -> float:
 def output_dir_for_run(root: pathlib.Path, commit_sha: str, timestamp: dt.datetime) -> pathlib.Path:
     run_label = f"{commit_sha[:12]}-{timestamp.strftime('%Y%m%dT%H%M%SZ')}"
     return root / "artifacts" / "sweeps" / run_label
+
+
+def default_output_dir(root: pathlib.Path) -> pathlib.Path:
+    return root / "artifacts" / "sweeps" / "latest"
 
 
 def compare_payload_path(compare_path: pathlib.Path | None) -> pathlib.Path | None:
@@ -1123,6 +1128,8 @@ def write_outputs(
     comparison_summary: dict,
     contamination_report: dict,
 ):
+    if output_dir.exists():
+        shutil.rmtree(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "sweep_result.json").write_text(json.dumps(result_payload, indent=2) + "\n", encoding="utf-8")
     (output_dir / "sweep_summary.json").write_text(json.dumps(sweep_summary, indent=2) + "\n", encoding="utf-8")
@@ -1152,7 +1159,10 @@ def write_outputs(
 def parse_args():
     parser = argparse.ArgumentParser(description="Run a slice-based SCIR sweep over a fixed corpus manifest.")
     parser.add_argument("--manifest", required=True, help="Relative path to a sweep manifest.")
-    parser.add_argument("--output-dir", help="Optional directory to write sweep artifacts. Defaults to artifacts/sweeps/<run>.")
+    parser.add_argument(
+        "--output-dir",
+        help="Optional directory to write sweep artifacts. Defaults to artifacts/sweeps/latest.",
+    )
     parser.add_argument("--compare", help="Optional prior sweep run directory or sweep_result.json path.")
     parser.add_argument("--enforce-regression-gates", action="store_true", help="Fail when comparison reveals blocked regressions.")
     parser.add_argument("--root")
@@ -1174,12 +1184,7 @@ def main():
             print(f" - {item}")
         return 1
 
-    generated_at = dt.datetime.fromisoformat(result_payload["generated_at"])
-    output_dir = pathlib.Path(args.output_dir).resolve() if args.output_dir else output_dir_for_run(
-        root,
-        result_payload["commit_sha"],
-        generated_at,
-    )
+    output_dir = pathlib.Path(args.output_dir).resolve() if args.output_dir else default_output_dir(root)
     write_outputs(output_dir, result_payload, sweep_summary, regression_summary, comparison_summary, contamination_report)
 
     gate_failures = (
