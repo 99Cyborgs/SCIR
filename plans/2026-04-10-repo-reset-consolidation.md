@@ -1,6 +1,6 @@
 # Repository reset consolidation
 
-Status: in-progress
+Status: complete
 Owner: Codex
 Date: 2026-04-10
 
@@ -35,10 +35,20 @@ Reset `main` to a smaller, implementation-led baseline centered on the Python su
 - VALIDATION_STRATEGY.md
 - reports/README.md
 - reports/repo_reset_report.md
+- reports/repo_reset_followthrough.md
 - scripts/validate_repo_contracts.py
+- scripts/run_repo_build.py
+- scripts/run_repo_lint.py
+- scripts/run_repo_validation.py
+- scripts/scir_sweep.py
+- scripts/benchmark_contract_dry_run.py
 - .gitignore
 - CURRENT_FOCUS.md
 - BACKLOG.md
+- pyproject.toml
+- Makefile
+- ci/validation_pipeline.md
+- AGENTS.md
 
 ## Invariants that must remain true
 
@@ -57,6 +67,9 @@ Reset `main` to a smaller, implementation-led baseline centered on the Python su
 ## Validation steps
 
 - `python scripts/validate_repo_contracts.py --mode validate`
+- `python scripts/validate_repo_contracts.py --mode audit`
+- `python scripts/run_repo_lint.py`
+- `python scripts/run_repo_build.py`
 - `python scripts/run_repo_validation.py`
 
 ## Rollback strategy
@@ -66,5 +79,7 @@ Reapply only the removed files or checks that prove to be validator-consumed, ke
 ## Evidence required for completion
 
 - `reports/repo_reset_report.md`
+- `reports/repo_reset_followthrough.md`
 - successful `python scripts/run_repo_validation.py`
 - diff review showing tracked artifact and queue-surface removal
+- branch cleanup showing `main` as the only remaining operating branch

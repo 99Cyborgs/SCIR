@@ -53,3 +53,8 @@ No other branch-only changes were retained. The remaining unique branch diff was
 ## Single active MVP target
 
 `Python subset importer -> canonical SCIR-H -> validator hardening`
+
+## Follow-through
+
+The remaining post-reset cleanup was completed in `reports/repo_reset_followthrough.md`.
+That pass removed the stale `codex/*` authority branches, split live-surface blockers from retained-surface audit checks, repaired the public build/lint command contract, removed the stale `runtime*` package claim, and switched default sweep/benchmark outputs to stable ignored overwrite paths.

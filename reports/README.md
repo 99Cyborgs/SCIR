@@ -7,11 +7,13 @@ This directory is intentionally small.
 
 - `examples/`: curated schema-valid example artifacts
 - `repo_reset_report.md`: the current repository consolidation report
+- `repo_reset_followthrough.md`: the follow-through pass that closed the remaining reset gaps
 
 ## Rules
 
 - examples are illustrative fixtures, not breadth claims
 - repeated run outputs belong under ignored `artifacts/`, not here
+- default sweep and benchmark runs overwrite stable ignored paths unless an explicit `--output-dir` is requested
 - derived exports are not part of the live repository surface
 - release-oriented bundles remain opt-in only
 
