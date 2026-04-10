@@ -66,4 +66,4 @@ A plan is complete only when its evidence section is satisfied and the relevant 
 ## Historical-plan rule
 
 Older plan files are historical evidence unless they are named by the current root boundary docs or the active execution queue.
-Historical plans must not be treated as active scope authority when they conflict with `README.md`, `MVP_SCOPE.md`, `ROADMAP.md`, `IMPLEMENTATION_PLAN.md`, or the current dated plan.
+Historical plans must not be treated as active scope authority when they conflict with `README.md`, `CURRENT_FOCUS.md`, `BACKLOG.md`, `IMPLEMENTATION_PLAN.md`, or the current dated plan.

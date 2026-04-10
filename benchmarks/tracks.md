@@ -45,10 +45,10 @@ Status: Normative
 
 ## Track C sample posture re-decision triggers
 
-- `changing checked-in sample status from mixed requires a new decision-register entry and queue update`
-- `changing checked-in sample evidence or retained-diagnostic wording requires a new decision-register entry and queue update`
-- `changing checked-in sample task family, case set, or boundary-accounting posture requires a new decision-register entry and queue update`
-- `changing checked-in sample default-gate or promotion posture requires a new decision-register entry and queue update`
+- `changing checked-in sample status from mixed requires a new decision-register entry and focus/backlog update`
+- `changing checked-in sample evidence or retained-diagnostic wording requires a new decision-register entry and focus/backlog update`
+- `changing checked-in sample task family, case set, or boundary-accounting posture requires a new decision-register entry and focus/backlog update`
+- `changing checked-in sample default-gate or promotion posture requires a new decision-register entry and focus/backlog update`
 
 ## Track C editorial-only sample refreshes
 

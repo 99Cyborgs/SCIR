@@ -2,3 +2,8 @@ __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
+/artifacts/
+/reports/exports/
+/dist/
+/build/
+/*.egg-info/

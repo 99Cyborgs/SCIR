@@ -17,8 +17,8 @@ Track `D` is deferred.
 See `benchmarks/tracks.md`.
 
 The active executable benchmark corpus is frozen by the checked-in proof-loop corpus manifests under `tests/corpora/`.
-Those manifests are governance artifacts, not benchmark result claims by themselves.
-Sweep artifacts under `artifacts/sweeps/` are the historical comparison surface for those fixed corpora.
+Those manifests are retained inputs, not benchmark result claims by themselves.
+Generated sweep artifacts belong under ignored `artifacts/` and are not part of the live repository surface.
 
 ### Active executable benchmark cases
 
@@ -170,10 +170,10 @@ It remains non-default, and the checked-in sample artifacts stay outside the def
 
 ### Conditional Track C sample posture re-decision triggers
 
-- `changing checked-in sample status from mixed requires a new decision-register entry and queue update`
-- `changing checked-in sample evidence or retained-diagnostic wording requires a new decision-register entry and queue update`
-- `changing checked-in sample task family, case set, or boundary-accounting posture requires a new decision-register entry and queue update`
-- `changing checked-in sample default-gate or promotion posture requires a new decision-register entry and queue update`
+- `changing checked-in sample status from mixed requires a new decision-register entry and focus/backlog update`
+- `changing checked-in sample evidence or retained-diagnostic wording requires a new decision-register entry and focus/backlog update`
+- `changing checked-in sample task family, case set, or boundary-accounting posture requires a new decision-register entry and focus/backlog update`
+- `changing checked-in sample default-gate or promotion posture requires a new decision-register entry and focus/backlog update`
 
 ### Conditional Track C editorial-only sample refreshes
 

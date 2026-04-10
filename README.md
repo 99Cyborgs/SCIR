@@ -1,36 +1,67 @@
 # SCIR
-Status: Informative
 
-SCIR is a two-layer semantic compression substrate.
+SCIR is a two-layer semantic substrate.
 
-## Goal
+- `SCIR-H` is the only normative semantic authority.
+- `SCIR-L` is derivative-only lowering justified by validated `SCIR-H`.
 
-- make `SCIR-H` the only normative semantic representation
-- keep `SCIR-L` derivative-only for lowering, validation, backend preparation, and reference emission
-- prove the narrowed MVP is worth continuing through validator-enforced preservation, a credible Python proof loop, bounded Rust importer evidence, a subset-bound Wasm reference backend, and strong-baseline Track `A` / Track `B` benchmarks
+## Active MVP lane
 
-## Current State
+The live implementation target is:
 
-- the active MVP is limited to canonical `SCIR-H`, derived `SCIR-Hc`, derivative `SCIR-L`, their validators, Python subset import, Rust safe-subset import evidence, Python reconstruction from validated `SCIR-H`, the Wasm reference-backend MVP contract, and Track `A` / Track `B` benchmark harnesses
-- the confirmed executable proof loop is Python import -> `SCIR-H` -> `SCIR-H` validation -> `SCIR-Hc` derivation and validation -> `SCIR-H -> SCIR-L` lowering -> `SCIR-L` validation -> Python reconstruction -> Track `A` / Track `B` benchmark checks
-- Rust is active at the importer-evidence layer and optional bounded validation slice only; Rust reconstruction, active TypeScript implementation, Track `D`, native-backend breadth, and broad runtime or tooling claims remain deferred
-- the current operator entrypoints remain:
+`Python subset importer -> canonical SCIR-H -> validator hardening`
+
+Maintained but frozen support surfaces remain on disk:
+
+- bounded `SCIR-H -> SCIR-L` lowering
+- bounded Rust importer evidence
+- bounded Wasm reference backend
+- Track `A` and Track `B` benchmark harnesses
+
+Those surfaces are retained, but they are not the current scope-expansion target.
+
+## Live surface
+
+The default working set is:
+
+- `README.md`
+- `ARCHITECTURE.md`
+- `CURRENT_FOCUS.md`
+- `BACKLOG.md`
+- `DECISION_REGISTER.md`
+- `specs/`
+- `scir/`
+- `scripts/`
+- `tests/`
+- `schemas/`
+- `reports/examples/`
+
+Tracked generated run outputs are intentionally excluded from the live surface.
+
+## Commands
 
 ```bash
 python scripts/run_repo_validation.py
+python scripts/run_repo_validation.py --require-rust
+python scripts/benchmark_contract_dry_run.py
 python scripts/benchmark_contract_dry_run.py --claim-run
-python scripts/benchmark_repro.py --run-id <run-id>
-python scripts/sync_python_proof_loop_artifacts.py --mode check
-python scripts/sync_python_proof_loop_artifacts.py --mode write
-python scripts/benchmark_contract_dry_run.py --include-track-c-pilot
-python scripts/run_repo_validation.py --include-track-c-pilot
+make validate
+make benchmark
 ```
 
-## Next Steps
+`python scripts/run_repo_validation.py` is the canonical default gate.
 
-1. keep the Python proof loop healthy without widening beyond the admitted subset
-2. keep Rust importer evidence aligned to the same `SCIR-H` contract without widening round-trip or benchmark claims
-3. harden identity, canonical-storage, and derived-view boundaries so `SCIR-H` remains the only semantic authority
-4. keep the Wasm reference backend explicit, profile-qualified, and bounded to the currently admitted emission surface
-5. keep Track `A` and Track `B` reproducible and baseline-strong
-6. consider the minimal opt-in Track `C` pilot only if the earlier loop remains stable
+## Operating rules
+
+- widen grammar only through spec-first changes
+- keep release-bundle machinery opt-in only
+- keep `SCIR-H` normative and `SCIR-L` derivative
+- prefer modifying existing architecture over adding new control surfaces
+
+## Current navigation
+
+- [CURRENT_FOCUS.md](CURRENT_FOCUS.md) names the one active bounded item
+- [BACKLOG.md](BACKLOG.md) ranks deferred work
+- [ARCHITECTURE.md](ARCHITECTURE.md) defines the stable system shape
+- [VALIDATION_STRATEGY.md](VALIDATION_STRATEGY.md) defines the default gate
+- [reports/repo_reset_report.md](reports/repo_reset_report.md) records the consolidation decisions for this reset

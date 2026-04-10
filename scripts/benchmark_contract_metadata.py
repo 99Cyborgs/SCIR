@@ -27,10 +27,10 @@ TRACK_C_SAMPLE_SYNC_REQUIREMENTS = [
     "checked-in sample result must keep gate_S2_ready true, gate_K1_hit false, and status mixed or pass",
 ]
 TRACK_C_SAMPLE_POSTURE_REDECISION_TRIGGERS = [
-    "changing checked-in sample status from mixed requires a new decision-register entry and queue update",
-    "changing checked-in sample evidence or retained-diagnostic wording requires a new decision-register entry and queue update",
-    "changing checked-in sample task family, case set, or boundary-accounting posture requires a new decision-register entry and queue update",
-    "changing checked-in sample default-gate or promotion posture requires a new decision-register entry and queue update",
+    "changing checked-in sample status from mixed requires a new decision-register entry and focus/backlog update",
+    "changing checked-in sample evidence or retained-diagnostic wording requires a new decision-register entry and focus/backlog update",
+    "changing checked-in sample task family, case set, or boundary-accounting posture requires a new decision-register entry and focus/backlog update",
+    "changing checked-in sample default-gate or promotion posture requires a new decision-register entry and focus/backlog update",
 ]
 TRACK_C_EDITORIAL_ONLY_SAMPLE_REFRESHES = [
     "json whitespace, indentation, and trailing-newline normalization that preserves parsed sample content",

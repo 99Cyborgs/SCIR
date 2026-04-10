@@ -21,7 +21,7 @@ Track `A` report surfaces separate canonical `SCIR-H` metrics from compressed `S
 - the current disposition is to retain that pilot as a bounded diagnostic slice rather than promote it
 - explicit retention and retirement criteria now govern whether that retained pilot may stay on disk unchanged
 - checked-in Track `C` sample artifacts must stay identical to the current opt-in pilot outputs while continuing to satisfy the retained lock criteria
-- any change to Track `C` sample status, retained-diagnostic wording, case or boundary posture, or default-gate posture requires a new decision-register entry and queue update before the sample bundle may change
+- any change to Track `C` sample status, retained-diagnostic wording, case or boundary posture, or default-gate posture requires a new decision-register entry and focus/backlog update before the sample bundle may change
 - editorial-only Track `C` sample refreshes are limited to JSON-equivalent formatting changes such as whitespace, indentation, trailing-newline, or key-order normalization
 - any non-editorial Track `C` sample refresh that remains within the retained pilot contract must cite `python scripts/benchmark_contract_dry_run.py --include-track-c-pilot`, `python scripts/run_repo_validation.py --include-track-c-pilot`, the regenerated corpus hash, and the regenerated `run_id` plus `system_under_test`
 

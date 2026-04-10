@@ -716,7 +716,7 @@ def check_benchmark_doc_contract(root: pathlib.Path):
         failures.append("benchmarks/README.md: Track C retained diagnostic disposition must remain explicit")
     if "must stay identical to the current opt-in pilot outputs while continuing to satisfy the retained lock criteria" not in benchmark_readme:
         failures.append("benchmarks/README.md: Track C sample synchronization rule must remain explicit")
-    if "requires a new decision-register entry and queue update before the sample bundle may change" not in benchmark_readme:
+    if "requires a new decision-register entry and focus/backlog update before the sample bundle may change" not in benchmark_readme:
         failures.append("benchmarks/README.md: Track C sample posture re-decision rule must remain explicit")
     if "editorial-only Track `C` sample refreshes are limited to JSON-equivalent formatting changes" not in benchmark_readme:
         failures.append("benchmarks/README.md: Track C editorial-only sample refresh rule must remain explicit")
@@ -1563,17 +1563,17 @@ def mutate_break_track_c_sample_redecision_list(root: pathlib.Path):
     text = path.read_text(encoding="utf-8")
     old = (
         "## Track C sample posture re-decision triggers\n\n"
-        "- `changing checked-in sample status from mixed requires a new decision-register entry and queue update`\n"
-        "- `changing checked-in sample evidence or retained-diagnostic wording requires a new decision-register entry and queue update`\n"
-        "- `changing checked-in sample task family, case set, or boundary-accounting posture requires a new decision-register entry and queue update`\n"
-        "- `changing checked-in sample default-gate or promotion posture requires a new decision-register entry and queue update`"
+        "- `changing checked-in sample status from mixed requires a new decision-register entry and focus/backlog update`\n"
+        "- `changing checked-in sample evidence or retained-diagnostic wording requires a new decision-register entry and focus/backlog update`\n"
+        "- `changing checked-in sample task family, case set, or boundary-accounting posture requires a new decision-register entry and focus/backlog update`\n"
+        "- `changing checked-in sample default-gate or promotion posture requires a new decision-register entry and focus/backlog update`"
     )
     new = (
         "## Track C sample posture re-decision triggers\n\n"
         "- `changing checked-in sample status from mixed is editorial only`\n"
-        "- `changing checked-in sample evidence or retained-diagnostic wording requires a new decision-register entry and queue update`\n"
-        "- `changing checked-in sample task family, case set, or boundary-accounting posture requires a new decision-register entry and queue update`\n"
-        "- `changing checked-in sample default-gate or promotion posture requires a new decision-register entry and queue update`"
+        "- `changing checked-in sample evidence or retained-diagnostic wording requires a new decision-register entry and focus/backlog update`\n"
+        "- `changing checked-in sample task family, case set, or boundary-accounting posture requires a new decision-register entry and focus/backlog update`\n"
+        "- `changing checked-in sample default-gate or promotion posture requires a new decision-register entry and focus/backlog update`"
     )
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
 

@@ -90,4 +90,4 @@ Any change to this sequencing requires:
 - a plan in `plans/`,
 - a decision-register update,
 - benchmark impact notes,
-- updated deferred-component notes when scope moves in or out of MVP.
+- updated `CURRENT_FOCUS.md` and `BACKLOG.md` when scope moves in or out of the active implementation lane.
