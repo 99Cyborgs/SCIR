@@ -1,3 +1,9 @@
+"""File: _internal/scirhc_transform.py
+Purpose: Guard and implement the derived-only SCIR-H <-> SCIR-Hc transform path used by reporting and doctrine checks.
+Role in system: This is the internal compression boundary that keeps SCIR-Hc subordinate to canonical SCIR-H.
+Key dependencies: scir_h_bootstrap_model normalization and inference helpers, dataclasses, inspect, and hashing.
+Side effects: Inspects the call stack for authorized callers, computes lineage or generation tokens, and raises context errors on misuse.
+"""
 from __future__ import annotations
 
 import hashlib
@@ -48,6 +54,14 @@ ALLOWED_INTERNAL_CALLERS = {
 
 @dataclass(frozen=True)
 class ScirhcLineageRoot:
+    """Represents: The canonical lineage tuple that binds derived SCIR-Hc output back to normalized SCIR-H.
+
+    Invariants:
+      - module_id identifies the normalized canonical module.
+      - semantic_lineage_id and normalized_canonical_hash are both derived from normalized SCIR-H.
+    Relationships:
+      - Embedded inside ScirhcGenerationContext and emitted into lineage-reference payloads.
+    """
     module_id: str
     semantic_lineage_id: str
     normalized_canonical_hash: str
@@ -55,6 +69,14 @@ class ScirhcLineageRoot:
 
 @dataclass(frozen=True)
 class ScirhcGenerationContext:
+    """Represents: The report-scoped authorization bundle required to derive or reconstruct SCIR-Hc safely.
+
+    Invariants:
+      - is_report_context must stay true for executable transform calls.
+      - generation_token must match the embedded lineage_root.
+    Relationships:
+      - Produced by build_scirhc_generation_context and validated by require_scirhc_context.
+    """
     is_report_context: bool
     generation_token: str
     lineage_root: ScirhcLineageRoot
@@ -62,6 +84,20 @@ class ScirhcGenerationContext:
 
 @contextmanager
 def internal_scirhc_transform_access():
+    """Purpose: Allow SCIR-Hc transforms only when an approved internal caller opens the access gate.
+
+    Inputs:
+      - None.
+    Outputs:
+      - contextmanager access window for authorized transform calls.
+    Side Effects:
+      - Inspects the live Python call stack.
+      - Mutates the module-level internal call depth counter for nested authorized calls.
+    Assumptions:
+      - Only the benchmark and validation surfaces listed in ALLOWED_INTERNAL_CALLERS may trigger these transforms.
+    Failure Modes:
+      - Raises ScirhcContextError when an unauthorized caller attempts to open the gate.
+    """
     global _INTERNAL_CALL_DEPTH
     stack_paths = {
         pathlib.Path(frame_info.filename).resolve()
@@ -77,11 +113,37 @@ def internal_scirhc_transform_access():
 
 
 def _require_internal_call_context() -> None:
+    """Purpose: Enforce that transform helpers run only inside an authorized access window.
+
+    Inputs:
+      - None.
+    Outputs:
+      - None.
+    Side Effects:
+      - None.
+    Assumptions:
+      - _INTERNAL_CALL_DEPTH is incremented only by internal_scirhc_transform_access.
+    Failure Modes:
+      - Raises ScirhcContextError when no authorized access window is active.
+    """
     if _INTERNAL_CALL_DEPTH <= 0:
         raise ScirhcContextError("Unauthorized SCIR-Hc transform access")
 
 
 def scirhc_lineage_root_payload(root: ScirhcLineageRoot) -> dict[str, str]:
+    """Purpose: Render the lineage fields that downstream reports may expose for derived SCIR-Hc evidence.
+
+    Inputs:
+      - root: ScirhcLineageRoot canonical lineage tuple.
+    Outputs:
+      - dict[str, str] lineage reference payload without the module id wrapper.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Report surfaces only need the lineage id and canonical hash, not the full context object.
+    Failure Modes:
+      - None.
+    """
     return {
         "semantic_lineage_id": root.semantic_lineage_id,
         "normalized_canonical_hash": root.normalized_canonical_hash,
@@ -89,6 +151,19 @@ def scirhc_lineage_root_payload(root: ScirhcLineageRoot) -> dict[str, str]:
 
 
 def build_scirhc_lineage_root(module: Module) -> ScirhcLineageRoot:
+    """Purpose: Bind a module to the normalized canonical lineage data used by SCIR-Hc generation.
+
+    Inputs:
+      - module: Module canonical or pre-normalized SCIR-H module.
+    Outputs:
+      - ScirhcLineageRoot derived from normalized SCIR-H.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Lineage must be computed from normalized SCIR-H so formatting noise cannot spoof identity.
+    Failure Modes:
+      - Propagates normalization or hashing errors from the underlying model helpers.
+    """
     normalized = normalize_module(module)
     return ScirhcLineageRoot(
         module_id=normalized.module_id,
@@ -98,6 +173,19 @@ def build_scirhc_lineage_root(module: Module) -> ScirhcLineageRoot:
 
 
 def _generation_token_payload(lineage_root: ScirhcLineageRoot) -> str:
+    """Purpose: Produce the canonical JSON payload that generation-token hashing signs.
+
+    Inputs:
+      - lineage_root: ScirhcLineageRoot canonical lineage tuple.
+    Outputs:
+      - str canonical JSON payload.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Token validity must depend only on stable lineage fields.
+    Failure Modes:
+      - None.
+    """
     return json.dumps(
         {
             "module_id": lineage_root.module_id,
@@ -110,6 +198,19 @@ def _generation_token_payload(lineage_root: ScirhcLineageRoot) -> str:
 
 
 def build_scirhc_generation_token(lineage_root: ScirhcLineageRoot) -> str:
+    """Purpose: Derive the tamper-evident token that authorizes one SCIR-Hc generation context.
+
+    Inputs:
+      - lineage_root: ScirhcLineageRoot canonical lineage tuple.
+    Outputs:
+      - str SHA-256 hex token.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Any mutation to lineage_root should force a different generation token.
+    Failure Modes:
+      - None.
+    """
     return hashlib.sha256(_generation_token_payload(lineage_root).encode("utf-8")).hexdigest()
 
 
@@ -118,6 +219,20 @@ def build_scirhc_generation_context(
     *,
     is_report_context: bool = True,
 ) -> ScirhcGenerationContext:
+    """Purpose: Build the report-scoped context required by SCIR-Hc transform entrypoints.
+
+    Inputs:
+      - module: Module canonical SCIR-H module to authorize.
+      - is_report_context: bool marker that keeps compression generation off non-report paths.
+    Outputs:
+      - ScirhcGenerationContext fully bound to the normalized module lineage.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Executable SCIR-Hc transforms remain report-only in the MVP.
+    Failure Modes:
+      - Propagates lineage construction failures from build_scirhc_lineage_root.
+    """
     lineage_root = build_scirhc_lineage_root(module)
     return ScirhcGenerationContext(
         is_report_context=is_report_context,
@@ -127,6 +242,19 @@ def build_scirhc_generation_context(
 
 
 def require_scirhc_context(ctx: ScirhcGenerationContext | None) -> None:
+    """Purpose: Validate that a caller supplied a structurally sound, report-scoped SCIR-Hc context.
+
+    Inputs:
+      - ctx: ScirhcGenerationContext | None candidate authorization context.
+    Outputs:
+      - None.
+    Side Effects:
+      - None.
+    Assumptions:
+      - A missing, malformed, or non-report context must block any transform attempt.
+    Failure Modes:
+      - Raises ScirhcContextError when required fields are missing, malformed, or mismatched.
+    """
     if ctx is None:
         raise ScirhcContextError("Missing SCIR-Hc generation context")
     if not ctx.is_report_context:
@@ -149,6 +277,20 @@ def require_scirhc_context(ctx: ScirhcGenerationContext | None) -> None:
 
 
 def _require_context_for_module(module: Module, ctx: ScirhcGenerationContext | None) -> Module:
+    """Purpose: Validate both authorization and lineage binding before transforming a specific module.
+
+    Inputs:
+      - module: Module candidate SCIR-H input.
+      - ctx: ScirhcGenerationContext | None authorization context for that module.
+    Outputs:
+      - Module normalized canonical SCIR-H module.
+    Side Effects:
+      - None.
+    Assumptions:
+      - The supplied context must match the normalized module exactly, not just by module id.
+    Failure Modes:
+      - Raises ScirhcContextError on missing authorization, caller misuse, or lineage mismatch.
+    """
     require_scirhc_context(ctx)
     _require_internal_call_context()
     normalized = normalize_module(module)
@@ -159,6 +301,19 @@ def _require_context_for_module(module: Module, ctx: ScirhcGenerationContext | N
 
 
 def _lineage_reference_dict(lineage_root: ScirhcLineageRoot) -> dict[str, dict[str, str]]:
+    """Purpose: Wrap lineage payloads in the module-keyed shape expected by audit artifacts.
+
+    Inputs:
+      - lineage_root: ScirhcLineageRoot canonical lineage tuple.
+    Outputs:
+      - dict[str, dict[str, str]] module-id keyed lineage-reference map.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Downstream audit payloads are keyed by module id, even for single-module outputs.
+    Failure Modes:
+      - None.
+    """
     return {lineage_root.module_id: scirhc_lineage_root_payload(lineage_root)}
 
 
@@ -168,6 +323,22 @@ def scirh_to_scirhc(
     ctx: ScirhcGenerationContext | None = None,
     boundary_contracts=None,
 ) -> HcModule:
+    """Purpose: Derive compressed SCIR-Hc from canonical SCIR-H while recording every permitted omission.
+
+    Inputs:
+      - module: Module canonical SCIR-H input.
+      - ctx: ScirhcGenerationContext | None required report-scoped authorization context.
+      - boundary_contracts: Optional boundary metadata carried through to the underlying model helpers.
+    Outputs:
+      - HcModule normalized derived SCIR-Hc artifact.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Only inferred return types, inferred effects, and ownership-related elisions may be compressed away.
+    Failure Modes:
+      - Raises ScirhcContextError when authorization or lineage checks fail.
+      - Propagates model-helper failures if the source module is invalid.
+    """
     normalized = _require_context_for_module(module, ctx)
     record_field_types = _record_field_type_map(normalized)
     function_returns = {function.name: function.return_type for function in normalized.functions}
@@ -223,6 +394,21 @@ def scirhc_to_scirh(
     *,
     ctx: ScirhcGenerationContext | None = None,
 ) -> Module:
+    """Purpose: Reconstruct canonical SCIR-H from a validated derived SCIR-Hc artifact.
+
+    Inputs:
+      - module: HcModule derived SCIR-Hc input.
+      - ctx: ScirhcGenerationContext | None authorization context bound to the expected canonical lineage.
+    Outputs:
+      - Module normalized canonical SCIR-H reconstruction.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Missing types and effects in SCIR-Hc are recoverable only through canonical inference helpers.
+    Failure Modes:
+      - Raises ScirhcContextError when authorization fails or reconstructed lineage does not match the context.
+      - Propagates normalization or inference failures from the model helpers.
+    """
     require_scirhc_context(ctx)
     _require_internal_call_context()
     normalized_hc = normalize_hc_module(module)
@@ -266,6 +452,22 @@ def scirhc_normalization_stats(
     ctx: ScirhcGenerationContext | None = None,
     boundary_contracts=None,
 ) -> dict[str, int]:
+    """Purpose: Count the specific compressions applied when deriving SCIR-Hc from canonical SCIR-H.
+
+    Inputs:
+      - module: Module canonical SCIR-H source.
+      - ctx: ScirhcGenerationContext | None required authorization context.
+      - boundary_contracts: Optional boundary metadata forwarded to derivation.
+    Outputs:
+      - dict[str, int] normalization statistics for report payloads.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Statistics are informative only after the same authorization and lineage checks as the real transform.
+    Failure Modes:
+      - Raises ScirhcContextError on invalid context.
+      - Propagates transform failures from scirh_to_scirhc.
+    """
     normalized = _require_context_for_module(module, ctx)
     hc_module = scirh_to_scirhc(normalized, ctx=ctx, boundary_contracts=boundary_contracts)
     effect_rows_deduplicated = sum(
@@ -307,6 +509,21 @@ def validate_scirhc_roundtrip(
     ctx: ScirhcGenerationContext | None = None,
     boundary_contracts=None,
 ) -> list[str]:
+    """Purpose: Check that SCIR-Hc text rendering and reconstruction stay lossless for one canonical module.
+
+    Inputs:
+      - module: Module canonical SCIR-H source.
+      - ctx: ScirhcGenerationContext | None required authorization context.
+      - boundary_contracts: Optional boundary metadata forwarded to derivation.
+    Outputs:
+      - list[str] human-readable diagnostics. Empty means the round trip stayed stable.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Round-trip validation must compare both semantic lineage and canonical formatting, not just object equality.
+    Failure Modes:
+      - Raises ScirhcContextError when the caller is unauthorized.
+    """
     normalized = _require_context_for_module(module, ctx)
     diagnostics = []
     hc_module = scirh_to_scirhc(normalized, ctx=ctx, boundary_contracts=boundary_contracts)
@@ -334,6 +551,22 @@ def generate_scirhc_diff_audit(
     ctx: ScirhcGenerationContext | None = None,
     boundary_contracts=None,
 ) -> dict[str, object]:
+    """Purpose: Describe exactly which canonical SCIR-H fields were omitted or preserved in a derived SCIR-Hc artifact.
+
+    Inputs:
+      - module: Module canonical SCIR-H source.
+      - scirhc: HcModule derived SCIR-Hc artifact to audit.
+      - ctx: ScirhcGenerationContext | None required authorization context.
+      - boundary_contracts: Optional boundary metadata forwarded to normalization-stat computation.
+    Outputs:
+      - dict[str, object] diff-audit payload for benchmark and doctrine reporting.
+    Side Effects:
+      - None.
+    Assumptions:
+      - The audited SCIR-Hc artifact must describe the same module lineage as the canonical source.
+    Failure Modes:
+      - Raises ScirhcContextError when module ids or authorization contexts do not match.
+    """
     normalized = _require_context_for_module(module, ctx)
     normalized_hc = normalize_hc_module(scirhc)
     if normalized_hc.module_id != normalized.module_id:

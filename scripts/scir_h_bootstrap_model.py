@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""Canonical SCIR-H and derived SCIR-Hc bootstrap data model.
-
-This file is the executable kernel for canonical storage, normalization,
-formatting, parsing, and lineage binding. `SCIR-H` remains the only semantic
-authority. `SCIR-Hc` is modeled here only as a derived transport/compression
-view with an explicit authority boundary so downstream code cannot treat it as a
-peer source of truth.
+"""File: scripts/scir_h_bootstrap_model.py
+Purpose: Define the executable data model and canonical text machinery for `SCIR-H`, plus the bounded derived `SCIR-Hc` transport view.
+Role in system: Serves as the repository's parser, formatter, normalization kernel, and structural model for canonical storage used throughout pipeline, importer, validation, and lineage surfaces.
+Key dependencies: Python dataclasses, enum support, regular-expression validators, and the in-file kernel metadata used by repo-contract checks.
+Side effects: No external I/O during normal use; raises model errors when text or nodes violate the canonical grammar or derived-only `SCIR-Hc` boundary.
 """
 from __future__ import annotations
 
@@ -341,14 +339,27 @@ SCIR_H_KERNEL_METADATA = {
 
 
 class ScirHModelError(Exception):
+    """Represents: A violation of the canonical `SCIR-H` or bounded `SCIR-Hc` model contract."""
+
     pass
 
 
 class ScirhcContextError(Exception):
+    """Represents: Use of `SCIR-Hc` derivation outside the explicitly authorized report context."""
+
     pass
 
 
 class CompressionOrigin(str, Enum):
+    """Represents: Why a `SCIR-Hc` node is allowed to elide information from canonical `SCIR-H`.
+
+    Invariants:
+      - Values are serialized in a fixed order so derived transport text is deterministic.
+      - Origins justify compression only; they never grant semantic authority to `SCIR-Hc`.
+    Relationships:
+      - Consumed by `HcVarDecl`, `HcFunctionDecl`, and `HcModule`.
+    """
+
     INFERRED_TYPE = "INFERRED_TYPE"
     INFERRED_EFFECT = "INFERRED_EFFECT"
     REDUNDANT_CAPABILITY = "REDUNDANT_CAPABILITY"
@@ -374,12 +385,16 @@ COMPRESSION_ORIGIN_FROM_CODE = {
 
 @dataclass(frozen=True)
 class Param:
+    """Represents: One function parameter in canonical or derived function declarations."""
+
     name: str
     type_name: str
 
 
 @dataclass(frozen=True)
 class ImportDecl:
+    """Represents: A top-level import declaration preserved in canonical module order."""
+
     kind: str
     local_id: str
     ref: str
@@ -387,66 +402,96 @@ class ImportDecl:
 
 @dataclass(frozen=True)
 class FieldType:
+    """Represents: One named field inside a record type expression."""
+
     name: str
     type_name: str
 
 
 @dataclass(frozen=True)
 class RecordType:
+    """Represents: A record-shaped type expression with explicitly named fields.
+
+    Invariants:
+      - Canonical record types must contain at least one field.
+    Relationships:
+      - Used inside `TypeDecl.type_expr`.
+    """
+
     fields: tuple[FieldType, ...]
 
 
 @dataclass(frozen=True)
 class TypeDecl:
+    """Represents: A top-level named type declaration in a module."""
+
     name: str
     type_expr: object
 
 
 @dataclass(frozen=True)
 class NamePlace:
+    """Represents: A local assignment target by identifier only."""
+
     name: str
 
 
 @dataclass(frozen=True)
 class FieldPlace:
+    """Represents: A dotted field assignment target rooted in another place node."""
+
     base: object
     field: str
 
 
 @dataclass(frozen=True)
 class NameExpr:
+    """Represents: A plain identifier expression."""
+
     name: str
 
 
 @dataclass(frozen=True)
 class PlaceExpr:
+    """Represents: A place expression read back as a value."""
+
     place: object
 
 
 @dataclass(frozen=True)
 class IntExpr:
+    """Represents: A signed integer literal."""
+
     value: int
 
 
 @dataclass(frozen=True)
 class CallExpr:
+    """Represents: A direct function call with positional arguments only."""
+
     callee: str
     args: tuple[object, ...]
 
 
 @dataclass(frozen=True)
 class AwaitExpr:
+    """Represents: An await wrapper around another expression."""
+
     value: object
 
 
 @dataclass(frozen=True)
 class IntrinsicExpr:
+    """Represents: One of the fixed intrinsic comparison operations admitted by the kernel."""
+
     op: str
     args: tuple[object, object]
 
 
 @dataclass(frozen=True)
 class VarDecl:
+    """Represents: A mutable local declaration with an explicit type and initializer."""
+
     name: str
     type_name: str
     value: object
@@ -454,17 +499,23 @@ class VarDecl:
 
 @dataclass(frozen=True)
 class SetStmt:
+    """Represents: A local or field assignment statement."""
+
     target: object
     value: object
 
 
 @dataclass(frozen=True)
 class ReturnStmt:
+    """Represents: A single-value return from a function body."""
+
     value: object
 
 
 @dataclass(frozen=True)
 class IfStmt:
+    """Represents: A two-branch conditional statement with explicit then and else bodies."""
+
     condition: object
     then_body: tuple[object, ...]
     else_body: tuple[object, ...]
@@ -472,22 +523,30 @@ class IfStmt:
 
 @dataclass(frozen=True)
 class LoopStmt:
+    """Represents: A labeled loop used by the bounded proof-loop executable subset."""
+
     loop_id: str
     body: tuple[object, ...]
 
 
 @dataclass(frozen=True)
 class BreakStmt:
+    """Represents: A loop exit that targets an explicit loop identifier."""
+
     loop_id: str
 
 
 @dataclass(frozen=True)
 class ContinueStmt:
+    """Represents: A loop continue that targets an explicit loop identifier."""
+
     loop_id: str
 
 
 @dataclass(frozen=True)
 class TryStmt:
+    """Represents: The bounded single-handler try/catch form admitted by the MVP parser."""
+
     try_body: tuple[object, ...]
     catch_name: str
     catch_type: str
@@ -496,6 +555,15 @@ class TryStmt:
 
 @dataclass(frozen=True)
 class FunctionDecl:
+    """Represents: A canonical function declaration with explicit signature, effects, and body.
+
+    Invariants:
+      - Parameter names and types must be explicit in canonical `SCIR-H`.
+      - Effects are stored canonically even if source order differed.
+    Relationships:
+      - Collected under `Module.functions`.
+    """
+
     name: str
     params: tuple[Param, ...]
     return_type: str
@@ -516,6 +584,14 @@ class Module:
 
 @dataclass(frozen=True)
 class HcVarDecl:
+    """Represents: A derived `SCIR-Hc` local declaration that may omit canonical type detail.
+
+    Invariants:
+      - Compression origins must justify any elided type information.
+    Relationships:
+      - Derived from `VarDecl` during `SCIR-H` to `SCIR-Hc` transport conversion.
+    """
+
     name: str
     type_name: str | None
     value: object
@@ -524,6 +600,8 @@ class HcVarDecl:
 
 @dataclass(frozen=True)
 class HcFunctionDecl:
+    """Represents: A derived `SCIR-Hc` function declaration with optional signature elision."""
+
     name: str
     params: tuple[Param, ...]
     return_type: str | None
@@ -546,16 +624,19 @@ class HcModule:
 
 
 def expect_identifier(value: str, label: str):
+    """Purpose: Enforce the kernel's identifier grammar for names that appear in canonical text."""
     if not IDENTIFIER_RE.match(value):
         raise ScirHModelError(f"invalid {label}: {value!r}")
 
 
 def expect_type_name(value: str, label: str):
+    """Purpose: Enforce the bounded type-token grammar used by canonical storage."""
     if not TYPE_RE.match(value):
         raise ScirHModelError(f"invalid {label}: {value!r}")
 
 
 def normalize_compression_origins(origins) -> tuple[CompressionOrigin, ...]:
+    """Purpose: Canonicalize compression-origin metadata into a deduplicated, stable serialization order."""
     if origins in (None, ()):
         return ()
     if isinstance(origins, (CompressionOrigin, str)):
@@ -571,6 +652,7 @@ def normalize_compression_origins(origins) -> tuple[CompressionOrigin, ...]:
 
 
 def carries_ownership_type(type_name: str | None) -> bool:
+    """Purpose: Detect ownership-sensitive wrapper types that `SCIR-Hc` may elide only under doctrine."""
     return isinstance(type_name, str) and (
         type_name.startswith("borrow<")
         or type_name.startswith("borrow_mut<")
@@ -579,6 +661,7 @@ def carries_ownership_type(type_name: str | None) -> bool:
 
 
 def format_compression_origin_fragment(origins) -> str:
+    """Purpose: Render the suffix fragment that records why a derived `SCIR-Hc` node was compressed."""
     normalized = normalize_compression_origins(origins)
     if not normalized:
         return ""
@@ -586,6 +669,7 @@ def format_compression_origin_fragment(origins) -> str:
 
 
 def parse_compression_origin_codes(code_text: str) -> tuple[CompressionOrigin, ...]:
+    """Purpose: Parse serialized compression-origin codes back into canonical enum values."""
     if not code_text:
         raise ScirHModelError("compression-origin suffix must not be empty")
     origins = []
@@ -598,6 +682,7 @@ def parse_compression_origin_codes(code_text: str) -> tuple[CompressionOrigin, .
 
 
 def split_compression_origin_suffix(text: str) -> tuple[str, tuple[CompressionOrigin, ...]]:
+    """Purpose: Split a `SCIR-Hc` token into its base text and optional compression-origin suffix."""
     if " ~" not in text:
         return text, ()
     base, suffix = text.rsplit(" ~", 1)
@@ -605,6 +690,7 @@ def split_compression_origin_suffix(text: str) -> tuple[str, tuple[CompressionOr
 
 
 def normalize_effects(effects: tuple[str, ...]) -> tuple[str, ...]:
+    """Purpose: Deduplicate and sort effect names so effect rows serialize deterministically."""
     normalized = tuple(sorted(dict.fromkeys(effects)))
     for effect in normalized:
         expect_identifier(effect, "effect")
@@ -612,6 +698,7 @@ def normalize_effects(effects: tuple[str, ...]) -> tuple[str, ...]:
 
 
 def normalize_place(place):
+    """Purpose: Convert supported place syntaxes into canonical place nodes for assignments and reads."""
     if isinstance(place, str):
         expect_identifier(place, "assignment target")
         return NamePlace(place)
@@ -624,6 +711,7 @@ def normalize_place(place):
 
 
 def format_place(place) -> str:
+    """Purpose: Render a canonical place node back into dotted assignment-target text."""
     place = normalize_place(place)
     if isinstance(place, NamePlace):
         return place.name
@@ -633,6 +721,7 @@ def format_place(place) -> str:
 
 
 def parse_place(text: str):
+    """Purpose: Parse dotted place text into the canonical recursive place structure."""
     parts = text.split(".")
     if not parts or any(not part for part in parts):
         raise ScirHModelError(f"invalid place: {text!r}")
@@ -643,6 +732,7 @@ def parse_place(text: str):
 
 
 def normalize_expr(expr):
+    """Purpose: Validate and canonicalize expression nodes admitted by the executable kernel."""
     if isinstance(expr, NameExpr):
         expect_identifier(expr.name, "name expression")
         return expr
@@ -663,6 +753,7 @@ def normalize_expr(expr):
 
 
 def normalize_stmt(stmt):
+    """Purpose: Validate and canonicalize statement nodes before formatting, hashing, or lowering."""
     if isinstance(stmt, VarDecl):
         expect_identifier(stmt.name, "mutable local")
         expect_type_name(stmt.type_name, "mutable local type")
@@ -699,20 +790,24 @@ def normalize_stmt(stmt):
 
 
 def _normalize_field_name(value: str) -> str:
+    """Purpose: Reuse identifier validation for record-field names."""
     expect_identifier(value, "record field")
     return value
 
 
 def normalize_field_type(field: FieldType) -> FieldType:
+    """Purpose: Canonicalize one record field declaration."""
     return FieldType(_normalize_field_name(field.name), _normalize_type_atom(field.type_name))
 
 
 def _normalize_type_atom(value: str) -> str:
+    """Purpose: Validate one non-record type token."""
     expect_type_name(value, "type")
     return value
 
 
 def normalize_type_expr(type_expr):
+    """Purpose: Canonicalize supported type expressions into their stable storage form."""
     if isinstance(type_expr, str):
         return _normalize_type_atom(type_expr)
     if isinstance(type_expr, RecordType):
@@ -724,6 +819,7 @@ def normalize_type_expr(type_expr):
 
 
 def format_type_expr(type_expr) -> str:
+    """Purpose: Render a canonical type expression into deterministic `SCIR-H` text."""
     type_expr = normalize_type_expr(type_expr)
     if isinstance(type_expr, str):
         return type_expr
@@ -734,7 +830,19 @@ def format_type_expr(type_expr) -> str:
 
 
 def normalize_module(module: Module) -> Module:
-    """Enforce canonical `SCIR-H` storage before hashing or downstream use."""
+    """Purpose: Enforce canonical `SCIR-H` storage before hashing or downstream use.
+
+    Inputs:
+      - module: Module candidate built from parser output or programmatic construction.
+    Outputs:
+      - Module: Canonicalized module with validated names, sorted imports, and normalized bodies.
+    Side Effects:
+      - None.
+    Assumptions:
+      - `SCIR-H` is the only semantic authority, so normalization must preserve meaning while eliminating incidental variance.
+    Failure Modes:
+      - Raises `ScirHModelError` for duplicate declarations, invalid identifiers, unsupported nodes, or malformed types/effects.
+    """
 
     if not MODULE_ID_RE.match(module.module_id):
         raise ScirHModelError(f"invalid module id: {module.module_id!r}")
@@ -790,6 +898,7 @@ def normalize_module(module: Module) -> Module:
 
 
 def format_effects(effects: tuple[str, ...]) -> str:
+    """Purpose: Render canonical effect tuples into the `!effect_a,effect_b` storage form."""
     normalized = normalize_effects(effects)
     if not normalized:
         return "!"
@@ -797,6 +906,7 @@ def format_effects(effects: tuple[str, ...]) -> str:
 
 
 def format_expr(expr) -> str:
+    """Purpose: Render a normalized expression into deterministic canonical text."""
     expr = normalize_expr(expr)
     if isinstance(expr, NameExpr):
         return expr.name
@@ -815,6 +925,7 @@ def format_expr(expr) -> str:
 
 
 def format_stmt(stmt, indent: int) -> list[str]:
+    """Purpose: Render one canonical statement subtree into indentation-sensitive text lines."""
     prefix = " " * indent
     stmt = normalize_stmt(stmt)
     if isinstance(stmt, VarDecl):
@@ -853,6 +964,7 @@ def format_stmt(stmt, indent: int) -> list[str]:
 
 
 def format_function(function: FunctionDecl) -> list[str]:
+    """Purpose: Render one canonical function declaration, including its normalized effect row and body."""
     function = FunctionDecl(
         name=function.name,
         params=function.params,
@@ -877,7 +989,7 @@ def format_function(function: FunctionDecl) -> list[str]:
 
 
 def format_module(module: Module) -> str:
-    """Render deterministic canonical `SCIR-H` text for storage and hash input."""
+    """Purpose: Render deterministic canonical `SCIR-H` text for storage and hash input."""
 
     module = normalize_module(module)
     lines = [f"module {module.module_id}"]
@@ -900,6 +1012,7 @@ def format_module(module: Module) -> str:
 
 
 def split_indent(line: str) -> tuple[int, str]:
+    """Purpose: Decode canonical indentation while rejecting tabs and odd-width nesting."""
     if "\t" in line:
         raise ScirHModelError("tabs are not valid in canonical SCIR-H")
     leading = len(line) - len(line.lstrip(" "))
@@ -909,6 +1022,7 @@ def split_indent(line: str) -> tuple[int, str]:
 
 
 def parse_effects(token: str) -> tuple[str, ...]:
+    """Purpose: Parse and canonicalize an effect row from a function header."""
     if not EFFECT_RE.match(token):
         raise ScirHModelError(f"invalid effect row: {token!r}")
     if token == "!":
@@ -918,6 +1032,7 @@ def parse_effects(token: str) -> tuple[str, ...]:
 
 
 def parse_atomic_expr(text: str):
+    """Purpose: Parse the non-composite expression forms before higher-level expression handling."""
     if re.fullmatch(r"-?\d+", text):
         return IntExpr(int(text))
     if "." in text:
@@ -927,6 +1042,7 @@ def parse_atomic_expr(text: str):
 
 
 def split_call_args(inner: str) -> list[str]:
+    """Purpose: Split the current restricted call syntax, which only allows flat comma-separated arguments."""
     inner = inner.strip()
     if not inner:
         return []
@@ -934,6 +1050,7 @@ def split_call_args(inner: str) -> list[str]:
 
 
 def parse_expr(text: str):
+    """Purpose: Parse the bounded expression grammar admitted by canonical `SCIR-H` text."""
     text = text.strip()
     if not text:
         raise ScirHModelError("missing expression")
@@ -956,6 +1073,7 @@ def parse_expr(text: str):
 
 
 def parse_import(line: str) -> ImportDecl:
+    """Purpose: Parse one top-level import declaration line."""
     fields = line.split()
     if len(fields) != 4 or fields[0] != "import":
         raise ScirHModelError(f"invalid import line: {line!r}")
@@ -964,6 +1082,7 @@ def parse_import(line: str) -> ImportDecl:
 
 
 def parse_record_type(text: str) -> RecordType:
+    """Purpose: Parse the record-type syntax used inside top-level type declarations."""
     if not (text.startswith("record {") and text.endswith("}")):
         raise ScirHModelError(f"invalid record type: {text!r}")
     inner = text[len("record {") : -1].strip()
@@ -979,6 +1098,7 @@ def parse_record_type(text: str) -> RecordType:
 
 
 def parse_type_expr(text: str):
+    """Purpose: Parse one supported type expression, either atomic or record-shaped."""
     text = text.strip()
     if text.startswith("record {"):
         return parse_record_type(text)
@@ -987,6 +1107,7 @@ def parse_type_expr(text: str):
 
 
 def parse_type_decl(line: str) -> TypeDecl:
+    """Purpose: Parse one top-level type declaration line."""
     fields = line.split(maxsplit=2)
     if len(fields) != 3 or fields[0] != "type":
         raise ScirHModelError(f"invalid type declaration: {line!r}")
@@ -994,6 +1115,7 @@ def parse_type_decl(line: str) -> TypeDecl:
 
 
 def parse_function_header(line: str) -> FunctionDecl:
+    """Purpose: Parse a function signature line before the indented body is attached."""
     fields = line.split()
     is_async = False
     if fields[:2] == ["async", "fn"]:
@@ -1030,6 +1152,21 @@ def parse_function_header(line: str) -> FunctionDecl:
 
 
 def parse_suite(lines: list[str], index: int, indent: int) -> tuple[tuple[object, ...], int]:
+    """Purpose: Parse an indentation-scoped statement suite in the canonical line-based grammar.
+
+    Inputs:
+      - lines: Full module text split into logical lines.
+      - index: Current line index where the suite begins.
+      - indent: Required indentation level for statements in this suite.
+    Outputs:
+      - tuple[tuple[object, ...], int]: Parsed statements plus the next unread line index.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Canonical `SCIR-H` uses two-space indentation and block keywords instead of explicit terminators.
+    Failure Modes:
+      - Raises `ScirHModelError` for malformed indentation, unsupported statements, or incomplete `try/catch` structure.
+    """
     body = []
     while index < len(lines):
         raw_line = lines[index]
@@ -1092,6 +1229,8 @@ def parse_suite(lines: list[str], index: int, indent: int) -> tuple[tuple[object
             body.append(ContinueStmt(fields[1]))
             index += 1
             continue
+        # `try` owns the following indented block and must be followed by an
+        # aligned `catch`; otherwise the canonical grammar is incomplete.
         if content == "try":
             try_body, index = parse_suite(lines, index + 1, indent + 2)
             while index < len(lines) and not lines[index].strip():
@@ -1116,7 +1255,19 @@ def parse_suite(lines: list[str], index: int, indent: int) -> tuple[tuple[object
 
 
 def parse_module(text: str) -> Module:
-    """Reject any `SCIR-H` text that is not already inside the canonical storage contract."""
+    """Purpose: Parse canonical `SCIR-H` text and reject any editorial variance outside the storage contract.
+
+    Inputs:
+      - text: Serialized module text expected to already conform to canonical `SCIR-H` layout rules.
+    Outputs:
+      - Module: Normalized module ready for hashing, formatting, lowering, or validation.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Canonical storage requires a trailing newline, two-space indentation, and no trailing whitespace.
+    Failure Modes:
+      - Raises `ScirHModelError` for malformed module headers, unsupported declarations, indentation drift, or statement/typing violations.
+    """
 
     if not text.endswith("\n"):
         raise ScirHModelError("canonical SCIR-H text must end with a newline")
@@ -1185,6 +1336,7 @@ def parse_module(text: str) -> Module:
 
 
 def normalize_hc_stmt(stmt):
+    """Purpose: Validate and canonicalize statement nodes admitted by the derived `SCIR-Hc` transport grammar."""
     if isinstance(stmt, HcVarDecl):
         expect_identifier(stmt.name, "compressed mutable local")
         if stmt.type_name is not None:
@@ -1236,6 +1388,19 @@ def normalize_hc_stmt(stmt):
 
 
 def normalize_hc_module(module: HcModule) -> HcModule:
+    """Purpose: Enforce the bounded `SCIR-Hc` transport contract before formatting, parsing, or inference.
+
+    Inputs:
+      - module: Candidate derived module carrying compression metadata.
+    Outputs:
+      - HcModule: Canonicalized derived module with validated elision provenance.
+    Side Effects:
+      - None.
+    Assumptions:
+      - `SCIR-Hc` may omit information only when the omission is justified by explicit compression-origin metadata.
+    Failure Modes:
+      - Raises `ScirHModelError` when elided return types, effects, locals, or module-level origins are not justified by the allowed doctrine.
+    """
     if not MODULE_ID_RE.match(module.module_id):
         raise ScirHModelError(f"invalid compressed module id: {module.module_id!r}")
     if module.authority_boundary != SCIRHC_AUTHORITY_BOUNDARY:
@@ -1343,6 +1508,7 @@ def normalize_hc_module(module: HcModule) -> HcModule:
 
 
 def format_hc_type_expr(type_expr) -> str:
+    """Purpose: Render the compact type-expression syntax used by derived `SCIR-Hc` text."""
     type_expr = normalize_type_expr(type_expr)
     if isinstance(type_expr, str):
         return type_expr
@@ -1352,6 +1518,7 @@ def format_hc_type_expr(type_expr) -> str:
 
 
 def parse_hc_type_expr(text: str):
+    """Purpose: Parse the compact derived type-expression syntax back into canonical type nodes."""
     text = text.strip()
     if text.startswith("{") and text.endswith("}"):
         inner = text[1:-1].strip()
@@ -1368,6 +1535,7 @@ def parse_hc_type_expr(text: str):
 
 
 def format_hc_expr(expr) -> str:
+    """Purpose: Render derived expressions, using the compact await marker accepted by `SCIR-Hc` text."""
     expr = normalize_expr(expr)
     if isinstance(expr, AwaitExpr):
         return "@" + format_hc_expr(expr.value)
@@ -1375,6 +1543,7 @@ def format_hc_expr(expr) -> str:
 
 
 def parse_hc_expr(text: str):
+    """Purpose: Parse the bounded derived-expression syntax used by `SCIR-Hc` transport text."""
     text = text.strip()
     if not text:
         raise ScirHModelError("missing compressed expression")
@@ -1384,6 +1553,7 @@ def parse_hc_expr(text: str):
 
 
 def format_hc_stmt(stmt, indent: int) -> list[str]:
+    """Purpose: Render one derived statement subtree into compact `SCIR-Hc` lines."""
     prefix = " " * indent
     stmt = normalize_hc_stmt(stmt)
     if isinstance(stmt, HcVarDecl):
@@ -1426,6 +1596,7 @@ def format_hc_stmt(stmt, indent: int) -> list[str]:
 
 
 def format_hc_function(function: HcFunctionDecl) -> list[str]:
+    """Purpose: Render one derived function declaration after revalidating its elision metadata."""
     function = normalize_hc_module(
         HcModule(module_id="compressed.placeholder", imports=(), type_decls=(), functions=(function,))
     ).functions[0]
@@ -1443,7 +1614,7 @@ def format_hc_function(function: HcFunctionDecl) -> list[str]:
 
 
 def format_scirhc_module(module: HcModule) -> str:
-    """Render derived `SCIR-Hc` text with explicit omission provenance."""
+    """Purpose: Render derived `SCIR-Hc` text with explicit omission provenance."""
 
     module = normalize_hc_module(module)
     header = f"m {module.module_id} ~D"
@@ -1469,6 +1640,7 @@ def format_scirhc_module(module: HcModule) -> str:
 
 
 def parse_hc_import(line: str) -> ImportDecl:
+    """Purpose: Parse one compact derived import declaration."""
     fields = line.split(maxsplit=2)
     if len(fields) != 3 or fields[0] not in {"is", "it"}:
         raise ScirHModelError(f"invalid compressed import line: {line!r}")
@@ -1477,6 +1649,7 @@ def parse_hc_import(line: str) -> ImportDecl:
 
 
 def parse_hc_type_decl(line: str) -> TypeDecl:
+    """Purpose: Parse one compact derived type declaration line."""
     fields = line.split(maxsplit=2)
     if len(fields) != 3 or fields[0] != "t":
         raise ScirHModelError(f"invalid compressed type declaration: {line!r}")
@@ -1484,6 +1657,7 @@ def parse_hc_type_decl(line: str) -> TypeDecl:
 
 
 def parse_hc_params(text: str) -> tuple[Param, ...]:
+    """Purpose: Parse the comma-separated `name:type` parameter list used in derived function headers."""
     text = text.strip()
     if not text:
         return ()
@@ -1497,6 +1671,7 @@ def parse_hc_params(text: str) -> tuple[Param, ...]:
 
 
 def parse_hc_function_header(line: str) -> HcFunctionDecl:
+    """Purpose: Parse one derived function header, including any explicit compression-origin suffix."""
     line, origins = split_compression_origin_suffix(line)
     if line.startswith("af "):
         is_async = True
@@ -1543,6 +1718,7 @@ def parse_hc_function_header(line: str) -> HcFunctionDecl:
 
 
 def parse_hc_suite(lines: list[str], index: int, indent: int) -> tuple[tuple[object, ...], int]:
+    """Purpose: Parse an indentation-scoped suite in the compact `SCIR-Hc` grammar."""
     body = []
     while index < len(lines):
         raw_line = lines[index]
@@ -1571,6 +1747,8 @@ def parse_hc_suite(lines: list[str], index: int, indent: int) -> tuple[tuple[obj
             body.append(HcVarDecl(name, type_name, parse_hc_expr(expr_text), origins))
             index += 1
             continue
+        # Compression-origin suffixes are only legal on derived local declarations;
+        # elsewhere they would act like ad hoc hidden semantics.
         if origins:
             raise ScirHModelError(
                 f"compression-origin metadata is only valid on compressed var declarations: {raw_line!r}"
@@ -1620,6 +1798,8 @@ def parse_hc_suite(lines: list[str], index: int, indent: int) -> tuple[tuple[obj
             body.append(ContinueStmt(fields[1]))
             index += 1
             continue
+        # The compact grammar keeps the same structural guarantee as canonical
+        # `SCIR-H`: `try` must be closed by an aligned `catch`.
         if content == "try":
             try_body, index = parse_hc_suite(lines, index + 1, indent + 2)
             while index < len(lines) and not lines[index].strip():
@@ -1643,7 +1823,19 @@ def parse_hc_suite(lines: list[str], index: int, indent: int) -> tuple[tuple[obj
 
 
 def parse_scirhc_module(text: str) -> HcModule:
-    """Parse compressed text without relaxing the derived-only authority boundary."""
+    """Purpose: Parse compressed text without relaxing the derived-only authority boundary.
+
+    Inputs:
+      - text: Serialized `SCIR-Hc` module text.
+    Outputs:
+      - HcModule: Canonicalized derived module whose authority marker and compression metadata have been validated.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Derived text must still obey canonical whitespace and indentation constraints even though its syntax is more compact.
+    Failure Modes:
+      - Raises `ScirHModelError` for malformed headers, missing derived-only markers, unsupported declarations, or invalid compression provenance.
+    """
 
     if not text.endswith("\n"):
         raise ScirHModelError("compressed SCIR-Hc text must end with a newline")
@@ -1727,6 +1919,7 @@ def parse_scirhc_module(text: str) -> HcModule:
 
 
 def _unwrap_named_type(type_name: str | None) -> str | None:
+    """Purpose: Strip one wrapper layer from named generic-like types when looking up record-field shapes."""
     if type_name is None:
         return None
     if type_name.endswith(">") and "<" in type_name:
@@ -1735,6 +1928,7 @@ def _unwrap_named_type(type_name: str | None) -> str | None:
 
 
 def _record_field_type_map(module) -> dict[str, dict[str, str]]:
+    """Purpose: Build a lookup table for record field types so inference can resolve field accesses cheaply."""
     mapping: dict[str, dict[str, str]] = {}
     for type_decl in module.type_decls:
         type_expr = normalize_type_expr(type_decl.type_expr)
@@ -1744,6 +1938,7 @@ def _record_field_type_map(module) -> dict[str, dict[str, str]]:
 
 
 def _place_type(place, bindings: dict[str, str], record_field_types: dict[str, dict[str, str]]) -> str | None:
+    """Purpose: Infer the type of a place expression from local bindings and known record-field maps."""
     place = normalize_place(place)
     if isinstance(place, NamePlace):
         return bindings.get(place.name)
@@ -1763,6 +1958,7 @@ def _expr_type(
     record_field_types: dict[str, dict[str, str]],
     import_returns: dict[str, str],
 ) -> str | None:
+    """Purpose: Infer the result type of one expression inside the bounded executable and derived subsets."""
     expr = normalize_expr(expr)
     if isinstance(expr, NameExpr):
         return bindings.get(expr.name)
@@ -1786,6 +1982,7 @@ def _body_required_effects(
     function_effects: dict[str, tuple[str, ...]],
     import_effects: dict[str, tuple[str, ...]],
 ) -> tuple[str, ...]:
+    """Purpose: Infer the minimal effect set required by a body when `SCIR-Hc` has elided explicit effect rows."""
     effects: set[str] = set()
 
     def visit_expr(expr):
@@ -1851,6 +2048,7 @@ def _collect_return_types(
     record_field_types: dict[str, dict[str, str]],
     import_returns: dict[str, str],
 ) -> tuple[set[str], bool]:
+    """Purpose: Collect candidate return types from a body and report whether any branch remained unresolved."""
     return_types: set[str] = set()
     unresolved = False
     current_bindings = dict(bindings)
@@ -1940,6 +2138,7 @@ def _collect_return_types(
 
 
 def infer_scirh_function_return_type(module: Module, function: FunctionDecl) -> str | None:
+    """Purpose: Infer one canonical function's return type when all return sites collapse to a single resolved type."""
     module = normalize_module(module)
     record_field_types = _record_field_type_map(module)
     function_returns = {item.name: item.return_type for item in module.functions}
@@ -1951,6 +2150,7 @@ def infer_scirh_function_return_type(module: Module, function: FunctionDecl) -> 
 
 
 def infer_hc_function_return_types(module: HcModule) -> dict[str, str]:
+    """Purpose: Reconstruct elided return types for derived functions using a fixed-point pass over the module."""
     module = normalize_hc_module(module)
     record_field_types = _record_field_type_map(module)
     function_returns = {
@@ -1985,6 +2185,7 @@ def infer_hc_function_return_types(module: HcModule) -> dict[str, str]:
 
 
 def infer_hc_function_effects(module: HcModule) -> dict[str, tuple[str, ...]]:
+    """Purpose: Reconstruct elided effect rows for derived functions from body structure and imported opaque calls."""
     module = normalize_hc_module(module)
     import_effects = {item.local_id: ("opaque",) for item in module.imports if item.kind == "sym"}
     function_effects = {
@@ -2009,6 +2210,7 @@ def _scirh_stmt_to_scirhc(
     function_returns: dict[str, str],
     record_field_types: dict[str, dict[str, str]],
 ):
+    """Purpose: Convert one canonical `SCIR-H` statement into its derived `SCIR-Hc` transport form."""
     stmt = normalize_stmt(stmt)
     if isinstance(stmt, VarDecl):
         inferred_type = _expr_type(stmt.value, bindings, function_returns, record_field_types, {})
@@ -2054,6 +2256,7 @@ def _scirh_stmt_to_scirhc(
 
 
 def scirh_to_scirhc(module: Module, *, boundary_contracts=None) -> HcModule:
+    """Purpose: Reject direct transform access from this module; authorized derivation lives behind the internal context gate."""
     raise ScirhcContextError("Unauthorized SCIR-Hc transform access")
 
 
@@ -2063,6 +2266,7 @@ def _scirhc_stmt_to_scirh(
     function_returns: dict[str, str],
     record_field_types: dict[str, dict[str, str]],
 ):
+    """Purpose: Reconstruct one canonical `SCIR-H` statement from a validated derived `SCIR-Hc` statement."""
     if isinstance(stmt, HcVarDecl):
         inferred_type = stmt.type_name or _expr_type(
             stmt.value,
@@ -2108,18 +2312,22 @@ def _scirhc_stmt_to_scirh(
 
 
 def scirhc_to_scirh(module: HcModule) -> Module:
+    """Purpose: Reject direct reverse-transform access from this module; authorized round-trips live behind the internal context gate."""
     raise ScirhcContextError("Unauthorized SCIR-Hc transform access")
 
 
 def scirhc_normalization_stats(module: Module, *, boundary_contracts=None) -> dict[str, int]:
+    """Purpose: Reject direct normalization-stat access here; report generation must go through the authorized internal transform surface."""
     raise ScirhcContextError("Unauthorized SCIR-Hc transform access")
 
 
 def validate_scirhc_roundtrip(module: Module, *, boundary_contracts=None) -> list[str]:
+    """Purpose: Reject direct round-trip validation access here; doctrine requires the internal transform gate."""
     raise ScirhcContextError("Unauthorized SCIR-Hc transform access")
 
 
 def _semantic_expr_key(expr):
+    """Purpose: Collapse expressions into a semantic-comparison key that ignores formatting-only variance."""
     expr = normalize_expr(expr)
     if isinstance(expr, NameExpr):
         return ("name", expr.name)
@@ -2137,6 +2345,7 @@ def _semantic_expr_key(expr):
 
 
 def _semantic_stmt_key(stmt):
+    """Purpose: Collapse statements into a semantic-comparison key used by lineage and idempotence checks."""
     stmt = normalize_stmt(stmt)
     if isinstance(stmt, VarDecl):
         return ("var", stmt.name, stmt.type_name, _semantic_expr_key(stmt.value))
@@ -2169,6 +2378,7 @@ def _semantic_stmt_key(stmt):
 
 
 def _semantic_type_key(type_expr):
+    """Purpose: Collapse type expressions into a stable semantic key for lineage payload generation."""
     type_expr = normalize_type_expr(type_expr)
     if isinstance(type_expr, str):
         return ("type", type_expr)
@@ -2181,6 +2391,19 @@ def _semantic_type_key(type_expr):
 
 
 def semantic_lineage_payload(module: Module) -> dict:
+    """Purpose: Build the canonical semantic payload used for stable lineage identity.
+
+    Inputs:
+      - module: Canonical module whose semantic identity is being derived.
+    Outputs:
+      - dict: Stable semantic payload stripped of formatting-only variance.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Semantic lineage must remain stable across harmless formatting changes and declaration reordering already absorbed by normalization.
+    Failure Modes:
+      - Raises `ScirHModelError` indirectly if the module is not canonicalizable.
+    """
     module = normalize_module(module)
     return {
         "module_id": module.module_id,
@@ -2204,7 +2427,7 @@ def semantic_lineage_payload(module: Module) -> dict:
 
 
 def semantic_lineage_id(module: Module) -> str:
-    """Hash semantic payload only, excluding revision-local presentation details."""
+    """Purpose: Hash the semantic lineage payload only, excluding revision-local presentation details."""
 
     payload = json.dumps(
         semantic_lineage_payload(module),
@@ -2215,7 +2438,7 @@ def semantic_lineage_id(module: Module) -> str:
 
 
 def canonical_content_hash(module: Module) -> str:
-    """Hash canonical storage bytes, not pretty views or other non-authoritative renderings."""
+    """Purpose: Hash canonical storage bytes, not pretty views or other non-authoritative renderings."""
 
     canonical_text = format_module(module)
     return hashlib.sha256(canonical_text.encode("utf-8")).hexdigest()
@@ -2228,6 +2451,7 @@ def revision_scoped_node_id(
     node_path: str,
     revision_tag: str,
 ) -> str:
+    """Purpose: Derive a node identifier that is stable for one revision but intentionally changes across revisions."""
     payload = (
         canonical_content_hash(module),
         decl_name,
@@ -2239,6 +2463,7 @@ def revision_scoped_node_id(
 
 
 def render_pretty_module(module: Module, *, include_identity: bool = True) -> str:
+    """Purpose: Render a human-facing pretty view of canonical `SCIR-H` without changing canonical storage or lineage."""
     module = normalize_module(module)
     lines = [f"# Pretty view for {module.module_id}"]
     if include_identity:

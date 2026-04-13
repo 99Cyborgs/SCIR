@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Python subset importer for the fixed SCIR proof-loop corpus.
-
-This file does not attempt broad Python understanding. It validates and imports
-only the checked-in bootstrap cases, emits canonical `SCIR-H`, and records the
-case metadata that other validators and benchmark scripts treat as governance
-inputs.
+"""File: scripts/scir_python_bootstrap.py
+Purpose: Import the fixed Python proof-loop corpus into canonical SCIR-H bundles and governance metadata.
+Role in system: This is the executable authority for the admitted Python bootstrap cases consumed by validators, the pipeline, and benchmark tooling.
+Key dependencies: `ast`, `scir_h_bootstrap_model`, and the fixed in-repo corpus metadata and source texts.
+Side effects: Parses checked-in Python fixtures, validates their fixed shapes, and writes importer bundles when invoked as a CLI.
 """
 from __future__ import annotations
 
@@ -917,14 +916,17 @@ SCIRH_TEXTS = {
 
 
 def is_name(node: ast.AST, value: str) -> bool:
+    """Return whether an AST node is exactly the expected bare name."""
     return isinstance(node, ast.Name) and node.id == value
 
 
 def is_const(node: ast.AST, value) -> bool:
+    """Return whether an AST node is a constant literal with the expected value."""
     return isinstance(node, ast.Constant) and node.value == value
 
 
 def is_signed_int(node: ast.AST, value: int) -> bool:
+    """Recognize both positive constants and unary-minus forms for fixed integer literals."""
     if is_const(node, value):
         return True
     if (
@@ -938,6 +940,7 @@ def is_signed_int(node: ast.AST, value: int) -> bool:
 
 
 def is_self_attr(node: ast.AST, attr: str) -> bool:
+    """Return whether an AST node is the exact `self.<attr>` field access shape."""
     return (
         isinstance(node, ast.Attribute)
         and isinstance(node.value, ast.Name)
@@ -947,6 +950,7 @@ def is_self_attr(node: ast.AST, attr: str) -> bool:
 
 
 def ensure_no_annotations(function: ast.FunctionDef | ast.AsyncFunctionDef):
+    """Reject type annotations because the bootstrap corpus keeps them out of source syntax."""
     if function.returns is not None:
         raise ImporterError(f"{function.name}: return annotations are outside the bootstrap corpus")
     for arg in function.args.args:
@@ -955,6 +959,7 @@ def ensure_no_annotations(function: ast.FunctionDef | ast.AsyncFunctionDef):
 
 
 def validate_basic_function(module: ast.Module):
+    """Admit only the exact `a_basic_function` source shape into the bootstrap corpus."""
     if len(module.body) != 1 or not isinstance(module.body[0], ast.FunctionDef):
         raise ImporterError("a_basic_function: expected one plain function definition")
 
@@ -1003,6 +1008,7 @@ def validate_basic_function(module: ast.Module):
 
 
 def validate_async_await(module: ast.Module):
+    """Admit only the fixed two-function async or await source shape used by the corpus."""
     if len(module.body) != 2 or not all(isinstance(node, ast.AsyncFunctionDef) for node in module.body):
         raise ImporterError("a_async_await: expected two async function definitions")
 
@@ -1029,6 +1035,7 @@ def validate_async_await(module: ast.Module):
 
 
 def validate_if_else_return(module: ast.Module):
+    """Admit only the fixed if or else direct-return shape used for the executable proof loop."""
     if len(module.body) != 1 or not isinstance(module.body[0], ast.FunctionDef):
         raise ImporterError("b_if_else_return: expected one plain function definition")
 
@@ -1060,6 +1067,7 @@ def validate_if_else_return(module: ast.Module):
 
 
 def validate_direct_call(module: ast.Module):
+    """Admit only the fixed local direct-call fixture without keywords or extra control flow."""
     if len(module.body) != 2 or not all(isinstance(node, ast.FunctionDef) for node in module.body):
         raise ImporterError("b_direct_call: expected two plain function definitions")
 
@@ -1084,6 +1092,7 @@ def validate_direct_call(module: ast.Module):
 
 
 def validate_async_arg_await(module: ast.Module):
+    """Admit only the parameter-threaded async await fixture used by the fixed corpus."""
     if len(module.body) != 2 or not all(isinstance(node, ast.AsyncFunctionDef) for node in module.body):
         raise ImporterError("b_async_arg_await: expected two async function definitions")
 
@@ -1110,6 +1119,7 @@ def validate_async_arg_await(module: ast.Module):
 
 
 def validate_while_call_update(module: ast.Module):
+    """Admit only the loop-and-update fixture that models one bounded mutable local loop shape."""
     if len(module.body) != 1 or not isinstance(module.body[0], ast.FunctionDef):
         raise ImporterError("b_while_call_update: expected one plain function definition")
 
@@ -1151,6 +1161,7 @@ def validate_while_call_update(module: ast.Module):
 
 
 def validate_while_break_continue(module: ast.Module):
+    """Admit only the loop fixture that demonstrates explicit break and continue structure."""
     if len(module.body) != 1 or not isinstance(module.body[0], ast.FunctionDef):
         raise ImporterError("b_while_break_continue: expected one plain function definition")
 
@@ -1211,6 +1222,7 @@ def validate_while_break_continue(module: ast.Module):
 
 
 def validate_class_init_method(module: ast.Module):
+    """Admit only the fixed class fixture with one initializer and one pure reader method."""
     if len(module.body) != 1 or not isinstance(module.body[0], ast.ClassDef):
         raise ImporterError("b_class_init_method: expected one plain class definition")
 
@@ -1263,6 +1275,7 @@ def validate_class_init_method(module: ast.Module):
 
 
 def validate_class_field_update(module: ast.Module):
+    """Admit only the fixed class fixture with one field update mediated by a local callable."""
     if len(module.body) != 1 or not isinstance(module.body[0], ast.ClassDef):
         raise ImporterError("b_class_field_update: expected one plain class definition")
 
@@ -1354,6 +1367,7 @@ def validate_opaque_call(module: ast.Module):
 
 
 def validate_exec_eval(module: ast.Module):
+    """Recognize the rejected dynamic-execution fixture so the importer can report Tier D cleanly."""
     if len(module.body) != 1 or not isinstance(module.body[0], ast.FunctionDef):
         raise ImporterError("d_exec_eval: expected one function")
     function = module.body[0]
@@ -1374,6 +1388,7 @@ def validate_exec_eval(module: ast.Module):
 
 
 def validate_try_except(module: ast.Module):
+    """Admit only the fixed try or except fixture retained as importer-only support."""
     if len(module.body) != 1 or not isinstance(module.body[0], ast.FunctionDef):
         raise ImporterError("d_try_except: expected one function")
     function = module.body[0]
@@ -1422,6 +1437,7 @@ CASE_VALIDATORS = {
 
 
 def make_summary(items: list[dict[str, str]]) -> dict[str, int]:
+    """Count feature-tier items so emitted reports stay synchronized with item-level metadata."""
     summary = {"A": 0, "B": 0, "C": 0, "D": 0}
     for item in items:
         summary[item["tier"]] += 1
@@ -1429,6 +1445,7 @@ def make_summary(items: list[dict[str, str]]) -> dict[str, int]:
 
 
 def derive_case_name(source_path: pathlib.Path) -> str:
+    """Resolve a source path into one fixed corpus case name and reject anything outside that corpus."""
     case_name = source_path.parent.name
     if case_name not in CASE_CONFIG:
         raise ImporterError(
@@ -1438,6 +1455,7 @@ def derive_case_name(source_path: pathlib.Path) -> str:
 
 
 def relative_source_path(root: pathlib.Path, source_path: pathlib.Path) -> str:
+    """Return a repo-relative source path so emitted manifests do not depend on machine-local absolutes."""
     try:
         return source_path.relative_to(root).as_posix()
     except ValueError as exc:
@@ -1504,12 +1522,14 @@ def build_bundle(root: pathlib.Path, source_path: pathlib.Path) -> Bundle:
 
 
 def write_bundle(bundle: Bundle, output_dir: pathlib.Path):
+    """Write the regenerated importer bundle files to disk for CLI callers."""
     output_dir.mkdir(parents=True, exist_ok=True)
     for name, contents in bundle.files.items():
         (output_dir / name).write_text(contents, encoding="utf-8")
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse the small CLI contract for one source fixture and one output directory."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", required=True)
     parser.add_argument("--output-dir", required=True)
@@ -1518,6 +1538,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main():
+    """Rebuild one Python importer bundle and exit nonzero when the fixed-corpus contract is violated."""
     args = parse_args()
     root = pathlib.Path(args.root).resolve() if args.root else pathlib.Path(__file__).resolve().parents[1]
     source_path = pathlib.Path(args.source).resolve()

@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+"""File: scripts/scir_sweep.py
+Purpose: Run the fixed-corpus SCIR sweep, summarize stage outcomes, compare against baselines, and emit audit artifacts.
+Role in system: This is the benchmark and regression orchestration layer that sits on top of the canonical bootstrap pipeline.
+Key dependencies: `scir_bootstrap_pipeline`, `benchmark_audit_common`, `benchmarks.baselines`, and schema validation helpers.
+Side effects: Reads manifests and fixtures, runs the pipeline, shells out to Git, and writes sweep artifacts under `artifacts/sweeps`.
+"""
+
 import argparse
 import datetime as dt
 import difflib
@@ -63,14 +70,17 @@ SCIR_MARKERS = ["await", "return", "if", "var ", "set ", ".", "opaque"]
 
 
 def load_json(path: pathlib.Path):
+    """Load a UTF-8 JSON file that participates in the sweep contract surface."""
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def load_schema(root: pathlib.Path, relative_path: str):
+    """Resolve and load one repo-relative schema used to validate emitted sweep artifacts."""
     return load_json(root / relative_path)
 
 
 def schema_failures(root: pathlib.Path, payload, schema_rel: str, label: str):
+    """Return normalized schema-validation failures for one payload instead of raising immediately."""
     schema = load_schema(root, schema_rel)
     return [
         f"{label} {location}: {message}"
@@ -79,6 +89,7 @@ def schema_failures(root: pathlib.Path, payload, schema_rel: str, label: str):
 
 
 def git_commit_sha(root: pathlib.Path) -> str:
+    """Capture the current commit SHA for reproducibility metadata without failing the sweep on Git issues."""
     completed = subprocess.run(
         ["git", "rev-parse", "HEAD"],
         cwd=root,
@@ -92,15 +103,18 @@ def git_commit_sha(root: pathlib.Path) -> str:
 
 
 def manifest_hash(root: pathlib.Path, manifest_rel: str) -> str:
+    """Hash a manifest canonically so downstream reports can bind themselves to exact corpus contents."""
     return canonical_json_hash(load_json(root / manifest_rel))
 
 
 def scir_semantic_explicitness(text: str) -> float:
+    """Estimate how much explicit SCIR-oriented structure a text artifact exposes via marker density."""
     total = max(token_count(text), 1)
     return round(sum(text.count(marker) for marker in SCIR_MARKERS) / total, 4)
 
 
 def primary_profile(entry: dict, *, stage: str, observed_profile: str | None = None) -> str:
+    """Choose the primary preservation profile for a fixture-stage pair when no explicit observation overrides it."""
     if observed_profile:
         return observed_profile
     profiles = entry.get("profiles", [])
@@ -112,6 +126,7 @@ def primary_profile(entry: dict, *, stage: str, observed_profile: str | None = N
 
 
 def opaque_fraction_for_case(root: pathlib.Path, case_name: str) -> float:
+    """Measure how much of a fixture's feature inventory lands in Tier C opaque accounting."""
     feature_report = load_import_artifacts(root, case_name)["feature_tier_report.json"]
     items = feature_report["items"]
     if not items:
@@ -121,15 +136,18 @@ def opaque_fraction_for_case(root: pathlib.Path, case_name: str) -> float:
 
 
 def output_dir_for_run(root: pathlib.Path, commit_sha: str, timestamp: dt.datetime) -> pathlib.Path:
+    """Build a stable timestamped output directory for one sweep run."""
     run_label = f"{commit_sha[:12]}-{timestamp.strftime('%Y%m%dT%H%M%SZ')}"
     return root / "artifacts" / "sweeps" / run_label
 
 
 def default_output_dir(root: pathlib.Path) -> pathlib.Path:
+    """Return the retained latest-run directory used by the sweep CLI by default."""
     return root / "artifacts" / "sweeps" / "latest"
 
 
 def compare_payload_path(compare_path: pathlib.Path | None) -> pathlib.Path | None:
+    """Normalize a compare target into a `sweep_result.json` payload path when available."""
     if compare_path is None:
         return None
     if compare_path.is_file():
@@ -141,10 +159,12 @@ def compare_payload_path(compare_path: pathlib.Path | None) -> pathlib.Path | No
 
 
 def slice_id_for_row(entry: dict, stage: str, profile: str, slice_axes: list[str]) -> str:
+    """Delegate slice-id construction so sweep and benchmark surfaces share one grouping contract."""
     return common_slice_id_for_row(entry, stage, profile, slice_axes)
 
 
 def stage_profile(entry: dict, case_name: str, stage: str, outputs: dict) -> str:
+    """Resolve the profile actually observed for a stage from emitted pipeline artifacts when possible."""
     if stage == "source_to_h":
         return outputs["source_to_h_reports"][case_name]["profile"]
     if stage == "scir_h_validation":
@@ -171,6 +191,7 @@ def scir_stage_metrics(
     test_pass,
     outputs: dict,
 ):
+    """Assemble stage-specific metrics while respecting which quantities are meaningful for each path."""
     source_text = (root / entry["path"]).read_text(encoding="utf-8")
     source_tokens = token_count(source_text)
     scirhc_report = outputs.get("scir_hc_reports", {}).get(case_name, {})
@@ -250,6 +271,7 @@ def build_stage_row(
     reproducibility_block: dict,
     outputs: dict,
 ):
+    """Build one canonical audit row for a fixture-stage observation in the sweep result."""
     preservation_expected = None
     if isinstance(expected_stage_behavior, dict):
         preservation_expected = expected_stage_behavior.get("preservation_level")
@@ -303,6 +325,7 @@ def stage_rows_for_entry(
     corpus_manifest_hash: str,
     reproducibility_block: dict,
 ):
+    """Expand one corpus entry into the ordered stage rows requested by the sweep manifest."""
     case_name = case_name_from_artifact_id(entry["id"])
     stage_observations = outputs["stage_observations"][case_name]
     stages = [
@@ -350,6 +373,7 @@ def stage_rows_for_entry(
 
 
 def baseline_stage_profile(entry: dict, stage: str) -> str:
+    """Choose the baseline comparison profile for a stage using retained stage-specific rules."""
     profiles = entry.get("profiles", [])
     if stage == "h_to_python" and "R" in profiles:
         return "R"
@@ -368,6 +392,7 @@ def baseline_rows_for_manifest(
     corpus_manifest_hash: str,
     reproducibility_block: dict,
 ):
+    """Run every retained baseline over the active corpus manifest and collect audit rows."""
     context = {
         "run_id": run_id,
         "commit_sha": commit_sha,
@@ -394,16 +419,19 @@ def baseline_rows_for_manifest(
 
 
 def fixture_text(root: pathlib.Path, entry: dict) -> str:
+    """Load a fixture's source text for contamination and near-duplicate analysis."""
     return (root / entry["path"]).read_text(encoding="utf-8")
 
 
 def near_duplicate_ratio(left_text: str, right_text: str) -> float:
+    """Compute a tokenized similarity score that is less sensitive to formatting-only drift."""
     left = " ".join(token_count_token for token_count_token in fixture_tokens(left_text))
     right = " ".join(token_count_token for token_count_token in fixture_tokens(right_text))
     return round(difflib.SequenceMatcher(None, left, right).ratio(), 4)
 
 
 def fixture_tokens(text: str) -> list[str]:
+    """Tokenize fixture text into lowercased units for contamination comparisons."""
     return [token.lower() for token in tokenize(text)]
 
 
@@ -416,6 +444,7 @@ def build_contamination_report(
     run_id: str,
     generated_at: str,
 ):
+    """Detect duplicate and near-duplicate fixtures across split boundaries in the active corpus."""
     duplicates = []
     near_duplicates = []
     leakage_flags = []
@@ -428,6 +457,7 @@ def build_contamination_report(
             right_split = right_entry.get("split", "test")
             if left_split == right_split:
                 continue
+            # Cross-split reuse is the contamination case that matters here; same-split similarity is expected.
             if left_hash == right_entry["hash"]:
                 duplicates.append(
                     {
@@ -468,6 +498,7 @@ def build_contamination_report(
 
 
 def cluster_rows(rows: list[dict]):
+    """Group failing and warning rows by diagnostic code for summary reporting."""
     counts: dict[str, int] = {}
     for row in rows:
         if row["status"] not in {"fail", "warn"}:
@@ -479,12 +510,14 @@ def cluster_rows(rows: list[dict]):
 
 
 def safe_ratio(numerator: int, denominator: int) -> float:
+    """Return a rounded ratio without forcing callers to special-case empty denominators."""
     if denominator == 0:
         return 0.0
     return round(numerator / denominator, 4)
 
 
 def status_counts(rows: list[dict]) -> dict[str, int]:
+    """Count pass, warn, fail, and skip rows in one collection."""
     counts = {"pass": 0, "warn": 0, "fail": 0, "skip": 0}
     for row in rows:
         counts[row["status"]] = counts.get(row["status"], 0) + 1
@@ -492,6 +525,7 @@ def status_counts(rows: list[dict]) -> dict[str, int]:
 
 
 def diagnostic_frequency(rows: list[dict]) -> dict[str, int]:
+    """Count diagnostic codes across rows so summaries can report churn and concentration."""
     counts: dict[str, int] = {}
     for row in rows:
         for code in row["diagnostic_codes"]:
@@ -500,6 +534,7 @@ def diagnostic_frequency(rows: list[dict]) -> dict[str, int]:
 
 
 def metric_snapshot(rows: list[dict]) -> dict:
+    """Collapse a row set into the aggregate metrics used for summaries and regression comparison."""
     active_rows = [row for row in rows if row["status"] != "skip"]
     preservation_rows = [row for row in rows if row["preservation_observed"] is not None]
     opaque_values = [row["opaque_fraction"] for row in rows if row["opaque_fraction"] is not None]
@@ -519,6 +554,7 @@ def metric_snapshot(rows: list[dict]) -> dict:
 
 
 def metric_delta(metric: str, baseline, current, *, key: str | None = None):
+    """Package a metric comparison so regression and baseline summaries share one delta format."""
     payload = {
         "metric": metric,
         "baseline": baseline,
@@ -532,6 +568,7 @@ def metric_delta(metric: str, baseline, current, *, key: str | None = None):
 
 
 def compare_with_previous(current_payload: dict, previous_payload: dict):
+    """Compare the current sweep payload against a prior run to detect regressions and improvements."""
     current_rows = current_payload["rows"]
     previous_rows = previous_payload.get("rows", [])
     previous_map = {(row["artifact_id"], row["stage"]): row for row in previous_rows}
@@ -610,6 +647,7 @@ def compare_with_previous(current_payload: dict, previous_payload: dict):
 
 
 def avg(rows: list[dict], key: str) -> float:
+    """Average a numeric row field while ignoring missing values."""
     values = [row[key] for row in rows if row.get(key) is not None]
     if not values:
         return 0.0
@@ -617,6 +655,7 @@ def avg(rows: list[dict], key: str) -> float:
 
 
 def slice_score(rows: list[dict]) -> float:
+    """Compute the retained composite score used to rank sweep slices."""
     snapshot = metric_snapshot(rows)
     preservation_rows = [row for row in rows if row["preservation_observed"] is not None]
     preservation_correctness_rate = safe_ratio(
@@ -634,6 +673,7 @@ def slice_score(rows: list[dict]) -> float:
 
 
 def summarize_group(rows: list[dict], *, name_key: str, name_value: str):
+    """Summarize one stage, construct family, or slice using the common slice-report schema."""
     counts = status_counts(rows)
     preservation_rows = [row for row in rows if row["preservation_observed"] is not None]
     return {
@@ -653,6 +693,7 @@ def summarize_group(rows: list[dict], *, name_key: str, name_value: str):
 
 
 def build_preservation_stage_breakdown(rows: list[dict]):
+    """Re-key row-level preservation data by artifact so drift is readable per fixture."""
     breakdown = {}
     for row in rows:
         breakdown.setdefault(row["artifact_id"], {})
@@ -666,6 +707,7 @@ def build_preservation_stage_breakdown(rows: list[dict]):
 
 
 def build_summary(result_payload: dict, regression_summary: dict | None = None) -> dict:
+    """Build the machine-readable sweep summary and optional regression-aware slice rankings."""
     rows = result_payload["rows"]
     stage_summary = [
         summarize_group(stage_rows, name_key="stage", name_value=stage)
@@ -774,6 +816,7 @@ def build_summary(result_payload: dict, regression_summary: dict | None = None) 
 
 
 def comparison_key_for_baseline(baseline_name: str) -> str:
+    """Map a baseline name onto the stable comparison-summary field used in JSON artifacts."""
     if baseline_name == SOURCE_BASELINE_NAME:
         return "delta_vs_source"
     if baseline_name == TYPED_AST_BASELINE_NAME:
@@ -784,6 +827,7 @@ def comparison_key_for_baseline(baseline_name: str) -> str:
 
 
 def comparison_failure(metric_name: str, delta: float, tolerance: float | None) -> bool:
+    """Decide whether a baseline delta crosses the metric-specific claim tolerance."""
     if tolerance is None:
         return False
     if metric_name.startswith("LCR"):
@@ -792,6 +836,7 @@ def comparison_failure(metric_name: str, delta: float, tolerance: float | None) 
 
 
 def build_comparison_summary(result_payload: dict, baseline_rows: list[dict], contamination_report: dict) -> dict:
+    """Build the cross-baseline comparison artifact for the current sweep run."""
     scir_rows = result_payload["rows"]
     slice_ids = sorted({row["slice_id"] for row in scir_rows})
     baselines = [SOURCE_BASELINE_NAME, TYPED_AST_BASELINE_NAME, NORMALIZED_BASELINE_NAME]
@@ -866,6 +911,7 @@ def build_comparison_summary(result_payload: dict, baseline_rows: list[dict], co
 
 
 def build_summary_markdown(summary_payload: dict) -> str:
+    """Render the machine summary into the human-readable markdown artifact emitted by the sweep."""
     lines = [
         f"# Sweep Summary: {summary_payload['sweep_id']}",
         "",
@@ -910,6 +956,7 @@ def build_summary_markdown(summary_payload: dict) -> str:
 
 
 def build_comparison_markdown(comparison_summary: dict) -> str:
+    """Render the comparison artifact into markdown for quick review without opening JSON."""
     lines = [
         "# Comparison Summary",
         "",
@@ -941,6 +988,7 @@ def build_comparison_markdown(comparison_summary: dict) -> str:
 
 
 def build_regression_markdown(regression_summary: dict | None) -> str:
+    """Render the regression comparison into markdown, including the no-baseline case."""
     if regression_summary is None:
         return "# Regression Summary\n\n- baseline unavailable\n"
     lines = [
@@ -990,6 +1038,7 @@ def regression_gate_failures(
     comparison_summary: dict | None = None,
     contamination_report: dict | None = None,
 ) -> list[str]:
+    """Turn regression, comparison, and contamination findings into CLI gate failures."""
     failures = []
     if regression_summary is not None and regression_summary["added_failures"]:
         failures.append("added failing stage rows were introduced versus the baseline sweep")
@@ -1010,6 +1059,7 @@ def regression_gate_failures(
 
 
 def run_sweep(root: pathlib.Path, sweep_manifest_rel: str, *, compare_path: pathlib.Path | None = None):
+    """Run the full sweep: validate manifests, execute the pipeline, assemble rows, and build summaries."""
     sweep_manifest = load_json(root / sweep_manifest_rel)
     manifest_failures = schema_failures(root, sweep_manifest, SWEEP_MANIFEST_SCHEMA, sweep_manifest_rel)
     if manifest_failures:
@@ -1128,6 +1178,7 @@ def write_outputs(
     comparison_summary: dict,
     contamination_report: dict,
 ):
+    """Write the sweep's JSON and markdown artifacts, replacing any prior output directory atomically."""
     if output_dir.exists():
         shutil.rmtree(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -1157,6 +1208,7 @@ def write_outputs(
 
 
 def parse_args():
+    """Parse the sweep CLI contract for manifest, output, comparison, and regression-gate options."""
     parser = argparse.ArgumentParser(description="Run a slice-based SCIR sweep over a fixed corpus manifest.")
     parser.add_argument("--manifest", required=True, help="Relative path to a sweep manifest.")
     parser.add_argument(
@@ -1170,6 +1222,7 @@ def parse_args():
 
 
 def main():
+    """Execute the sweep CLI, print failures or summaries, and return a process exit code."""
     args = parse_args()
     root = pathlib.Path(args.root).resolve() if args.root else ROOT
     compare_path = pathlib.Path(args.compare).resolve() if args.compare else None

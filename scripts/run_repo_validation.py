@@ -1,3 +1,9 @@
+"""File: scripts/run_repo_validation.py
+Purpose: Run the repository's canonical validation gate and report which optional slices executed.
+Role in system: This is the Windows-safe orchestration entrypoint named by root repo governance docs.
+Key dependencies: argparse, subprocess, rust_toolchain helpers, and the repository validation scripts.
+Side effects: Executes child processes, inspects Rust toolchain availability, prints JSON status, and exits non-zero on validation failure.
+"""
 from __future__ import annotations
 
 import argparse
@@ -15,12 +21,40 @@ VALIDATION_BENCHMARK_OUTPUT_DIR = "artifacts/validation/benchmark-smoke"
 
 
 def run_command(command: list[str], *, env: dict[str, str] | None = None) -> None:
+    """Purpose: Run one validation command inside the repo root and fail fast on non-zero exit.
+
+    Inputs:
+      - command: list[str] shell-safe argv for the child validation step.
+      - env: dict[str, str] | None environment overrides for toolchain-specific runs.
+    Outputs:
+      - None. The subprocess output streams directly to the caller's terminal.
+    Side Effects:
+      - Spawns a child process with the repository root as cwd.
+      - Raises SystemExit when the command fails.
+    Assumptions:
+      - command targets a checked-in script or module that is valid relative to ROOT.
+    Failure Modes:
+      - Propagates the child process exit code via SystemExit.
+    """
     completed = subprocess.run(command, cwd=ROOT, check=False, env=env)
     if completed.returncode != 0:
         raise SystemExit(completed.returncode)
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """Purpose: Define the supported validation toggles without changing the default repo gate.
+
+    Inputs:
+      - None.
+    Outputs:
+      - argparse.ArgumentParser configured for the canonical validation entrypoint.
+    Side Effects:
+      - None beyond parser construction.
+    Assumptions:
+      - Optional Rust and Track C work must stay opt-in under repository policy.
+    Failure Modes:
+      - argparse handles invalid CLI usage by printing help and exiting.
+    """
     parser = argparse.ArgumentParser(
         description="Run the canonical SCIR validation baseline with optional Rust enforcement."
     )
@@ -38,6 +72,23 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    """Purpose: Execute the preserved validation sequence and emit a machine-readable status summary.
+
+    Inputs:
+      - CLI flags parsed from sys.argv.
+    Outputs:
+      - int process status code for the orchestration run.
+    Side Effects:
+      - Runs repository validation scripts and tests.
+      - Reads the Rust toolchain state to decide whether the deep Rust slice is allowed.
+      - Prints a JSON summary consumed by operators and automation.
+    Assumptions:
+      - The repository root contains the checked-in scripts referenced by the validation contract.
+      - The default gate must stay Python-first, with deeper Rust and Track C slices remaining explicit opt-ins.
+    Failure Modes:
+      - Returns 1 when --require-rust is set but a usable toolchain cannot be resolved.
+      - Exits early through run_command if any required validation step fails.
+    """
     args = build_arg_parser().parse_args()
     rust_resolution = resolve_rust_toolchain()
     rust_available = bool(rust_resolution["available"])
@@ -52,6 +103,8 @@ def main() -> int:
     if args.include_track_c_pilot:
         benchmark_command.append("--include-track-c-pilot")
 
+    # Keep the default gate aligned with VALIDATION_STRATEGY.md: execute the
+    # preserved baseline surfaces first, then widen only when explicitly asked.
     baseline_commands = [
         [sys.executable, "scripts/validate_repo_contracts.py", "--mode", "validate"],
         [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_scirhc_doctrine.py"],
@@ -90,6 +143,8 @@ def main() -> int:
     if args.include_track_c_pilot:
         conditional_track_c_status = "executed"
 
+    # Emit a stable summary so CI and local operators can tell which preserved
+    # support lanes actually ran without scraping human-oriented logs.
     print(
         json.dumps(
             {

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Rust safe-subset importer for the bounded SCIR MVP corpus.
-
-This importer is intentionally importer-first: it emits canonical `SCIR-H` for a
-small fixed Rust subset and keeps unsupported ownership, macro, and self-pin
-surfaces explicit instead of widening executable claims.
+"""File: scripts/scir_rust_bootstrap.py
+Purpose: Import the fixed Rust proof-loop corpus into canonical SCIR-H bundles and governance metadata.
+Role in system: This is the executable authority for the admitted Rust bootstrap cases consumed by conformance checks and the bootstrap pipeline.
+Key dependencies: `scir_h_bootstrap_model`, fixed Rust source fixtures, and in-repo importer metadata.
+Side effects: Rebuilds importer bundles from checked-in Rust fixtures and writes artifacts when invoked as a CLI.
 """
 from __future__ import annotations
 
@@ -574,6 +574,7 @@ SCIRH_MODULES = {
 
 
 def make_summary(items: list[dict[str, str]]) -> dict[str, int]:
+    """Count Rust feature-tier items so emitted reports stay synchronized with item-level metadata."""
     summary = {"A": 0, "B": 0, "C": 0, "D": 0}
     for item in items:
         summary[item["tier"]] += 1
@@ -581,6 +582,7 @@ def make_summary(items: list[dict[str, str]]) -> dict[str, int]:
 
 
 def derive_case_name(source_path: pathlib.Path) -> str:
+    """Resolve a source path into one fixed Rust corpus case and reject anything outside that corpus."""
     if source_path.name != "lib.rs":
         raise ImporterError(f"{source_path}: expected a crate source file named lib.rs")
     try:
@@ -593,6 +595,7 @@ def derive_case_name(source_path: pathlib.Path) -> str:
 
 
 def relative_source_path(root: pathlib.Path, source_path: pathlib.Path) -> str:
+    """Return a repo-relative source path so emitted manifests remain machine-independent."""
     try:
         return source_path.relative_to(root).as_posix()
     except ValueError as exc:
@@ -600,6 +603,7 @@ def relative_source_path(root: pathlib.Path, source_path: pathlib.Path) -> str:
 
 
 def expected_cargo_text(case_name: str) -> str:
+    """Render the canonical Cargo manifest text for one fixed Rust fixture crate."""
     return CARGO_TOML.format(crate_name=case_name)
 
 
@@ -675,12 +679,14 @@ def build_bundle(root: pathlib.Path, source_path: pathlib.Path) -> Bundle:
 
 
 def write_bundle(bundle: Bundle, output_dir: pathlib.Path):
+    """Write a regenerated Rust importer bundle to the requested output directory."""
     output_dir.mkdir(parents=True, exist_ok=True)
     for name, contents in bundle.files.items():
         (output_dir / name).write_text(contents, encoding="utf-8")
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse the small CLI contract for one Rust fixture source and one output directory."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", required=True)
     parser.add_argument("--output-dir", required=True)
@@ -689,6 +695,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main():
+    """Rebuild one Rust importer bundle and exit nonzero when the fixed-corpus contract is violated."""
     args = parse_args()
     root = pathlib.Path(args.root).resolve() if args.root else pathlib.Path(__file__).resolve().parents[1]
     source_path = pathlib.Path(args.source).resolve()

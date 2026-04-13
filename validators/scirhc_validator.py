@@ -1,9 +1,8 @@
-"""Doctrine checks for derived `SCIR-Hc` artifacts and claim-bearing reports.
-
-The validator here protects the governance boundary around compressed evidence.
-It rejects hidden semantics, authority escalation, lineage drift, and benchmark
-claims that would let `SCIR-Hc` imply more than the canonical `SCIR-H` evidence
-actually supports.
+"""File: validators/scirhc_validator.py
+Purpose: Enforce the doctrine that derived SCIR-Hc artifacts remain subordinate to canonical SCIR-H evidence.
+Role in system: This validator protects benchmark and reporting surfaces from treating compression artifacts as semantic authority.
+Key dependencies: _internal.scirhc_transform, scir_h_bootstrap_model normalization helpers, and benchmark report field contracts.
+Side effects: Raises doctrine errors when SCIR-Hc artifacts, metrics, or reports exceed the repository's allowed claim surface.
 """
 from __future__ import annotations
 
@@ -39,6 +38,13 @@ HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 class ScirHcDoctrineError(ValueError):
+    """Represents: A hard governance failure in SCIR-Hc derivation, reporting, or claim scoping.
+
+    Invariants:
+      - Raised only when a derived artifact or report violates the SCIR-Hc doctrine contract.
+    Relationships:
+      - Used by all validator helpers in this module to signal blocking failures.
+    """
     pass
 
 
@@ -98,6 +104,19 @@ SCIRHC_DISALLOWED_REPORT_FIELDS = (
 
 
 def _walk_hc_statements(body):
+    """Purpose: Traverse nested SCIR-Hc statement bodies so local provenance checks see every branch and loop body.
+
+    Inputs:
+      - body: iterable statement sequence from an HcFunctionDecl or nested control-flow node.
+    Outputs:
+      - Generator of statements in depth-first order.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Only IfStmt, LoopStmt, and TryStmt introduce nested statement suites in the active subset.
+    Failure Modes:
+      - None.
+    """
     for stmt in body:
         yield stmt
         if isinstance(stmt, IfStmt):
@@ -111,15 +130,56 @@ def _walk_hc_statements(body):
 
 
 def _require(condition: bool, message: str) -> None:
+    """Purpose: Raise the module's doctrine-specific error type instead of generic assertion failures.
+
+    Inputs:
+      - condition: bool predicate that must hold.
+      - message: str blocking diagnostic to surface on failure.
+    Outputs:
+      - None.
+    Side Effects:
+      - Raises ScirHcDoctrineError when the condition is false.
+    Assumptions:
+      - Doctrine validation must fail with stable, domain-specific diagnostics.
+    Failure Modes:
+      - Raises ScirHcDoctrineError.
+    """
     if not condition:
         raise ScirHcDoctrineError(message)
 
 
 def _contains_term(text: str, term: str) -> bool:
+    """Purpose: Check for whole-word policy terms without matching substrings accidentally.
+
+    Inputs:
+      - text: str normalized text to scan.
+      - term: str policy term that must be matched as a word boundary.
+    Outputs:
+      - bool whether the term appears as a word or phrase boundary match.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Claim-scope filters should catch semantic overreach terms without false positives from substrings.
+    Failure Modes:
+      - None.
+    """
     return re.search(r"\b" + re.escape(term) + r"\b", text) is not None
 
 
 def _normalize_scirhc(scirhc: HcModule) -> HcModule:
+    """Purpose: Normalize SCIR-Hc with doctrine-specific error wrapping.
+
+    Inputs:
+      - scirhc: HcModule candidate derived artifact.
+    Outputs:
+      - HcModule normalized SCIR-Hc artifact.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Model-layer normalization failures should be surfaced as doctrine failures at this layer.
+    Failure Modes:
+      - Raises ScirHcDoctrineError when normalization fails.
+    """
     try:
         return normalize_hc_module(scirhc)
     except ScirHModelError as exc:
@@ -127,6 +187,21 @@ def _normalize_scirhc(scirhc: HcModule) -> HcModule:
 
 
 def _require_scoped_claim_text(text: str, claim_class: str, label: str) -> None:
+    """Purpose: Reject free-text claim language that overstates what SCIR-Hc evidence is allowed to show.
+
+    Inputs:
+      - text: str claim or statement text to validate.
+      - claim_class: str declared benchmark claim class.
+      - label: str field label used in diagnostics.
+    Outputs:
+      - None.
+    Side Effects:
+      - Raises ScirHcDoctrineError on empty, forbidden, or authority-escalating language.
+    Assumptions:
+      - Claim text must stay inside the narrow evidence class declared for the report.
+    Failure Modes:
+      - Raises ScirHcDoctrineError.
+    """
     _require(isinstance(text, str) and text, f"benchmark report {label} must be non-empty")
     lowered = text.lower()
     _require(
@@ -140,6 +215,20 @@ def _require_scoped_claim_text(text: str, claim_class: str, label: str) -> None:
 
 
 def _lineage_reference_failures(lineage_references, *, label: str) -> list[str]:
+    """Purpose: Collect structural problems in the canonical-lineage references attached to SCIR-Hc artifacts or reports.
+
+    Inputs:
+      - lineage_references: candidate lineage map payload.
+      - label: str diagnostic prefix naming the checked surface.
+    Outputs:
+      - list[str] lineage validation failures. Empty means the structure is acceptable.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Each lineage entry must carry a canonical semantic lineage id and normalized canonical hash.
+    Failure Modes:
+      - None; returns failures instead of raising so callers can batch diagnostics.
+    """
     if not isinstance(lineage_references, dict) or not lineage_references:
         return [f"{label} must declare canonical SCIR-H lineage references"]
     failures = []
@@ -160,6 +249,19 @@ def _lineage_reference_failures(lineage_references, *, label: str) -> list[str]:
 
 
 def _metric_items(report: dict) -> list[tuple[str, dict]]:
+    """Purpose: Flatten the metric-bearing sections of a report into one iterable for downstream checks.
+
+    Inputs:
+      - report: dict benchmark report payload.
+    Outputs:
+      - list[tuple[str, dict]] tagged metric items from claim_gate and claims sections.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Metric validation must treat evaluated conditions and claims as one combined evidence surface.
+    Failure Modes:
+      - Skips malformed non-dict entries rather than raising here.
+    """
     items: list[tuple[str, dict]] = []
     claim_gate = report.get("claim_gate")
     if isinstance(claim_gate, dict):
@@ -173,6 +275,19 @@ def _metric_items(report: dict) -> list[tuple[str, dict]]:
 
 
 def _lineage_references(report: dict):
+    """Purpose: Read lineage references from whichever report field name the surface legitimately uses.
+
+    Inputs:
+      - report: dict SCIR-Hc artifact or benchmark report payload.
+    Outputs:
+      - tuple[value, label] lineage-reference payload plus the logical surface label.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Benchmark reports and raw SCIR-Hc artifacts expose lineage references under different field names.
+    Failure Modes:
+      - Returns (None, label) when neither lineage field is present.
+    """
     if "scir_h_lineage_references" in report:
         return report["scir_h_lineage_references"], "benchmark report"
     if "lineage_references" in report:
@@ -181,6 +296,19 @@ def _lineage_references(report: dict):
 
 
 def assert_not_semantic_authority(scirhc: HcModule) -> None:
+    """Purpose: Enforce the derived-only authority marker on a normalized SCIR-Hc artifact.
+
+    Inputs:
+      - scirhc: HcModule candidate derived artifact.
+    Outputs:
+      - None.
+    Side Effects:
+      - Raises ScirHcDoctrineError when the authority boundary marker is wrong.
+    Assumptions:
+      - Every valid SCIR-Hc artifact must carry SCIRHC_AUTHORITY_BOUNDARY.
+    Failure Modes:
+      - Raises ScirHcDoctrineError.
+    """
     normalized = _normalize_scirhc(scirhc)
     _require(
         normalized.authority_boundary == SCIRHC_AUTHORITY_BOUNDARY,
@@ -189,6 +317,19 @@ def assert_not_semantic_authority(scirhc: HcModule) -> None:
 
 
 def assert_no_semantic_authority(scirhc_obj) -> None:
+    """Purpose: Reject any SCIR-Hc artifact or report surface that claims more than derived-only evidence allows.
+
+    Inputs:
+      - scirhc_obj: HcModule or dict report payload.
+    Outputs:
+      - None.
+    Side Effects:
+      - Raises ScirHcDoctrineError on authority escalation, forbidden fields, or invalid claim-class structure.
+    Assumptions:
+      - Raw HcModule validation and benchmark-report validation share the same no-authority rule.
+    Failure Modes:
+      - Raises ScirHcDoctrineError.
+    """
     if isinstance(scirhc_obj, HcModule):
         assert_not_semantic_authority(scirhc_obj)
         return
@@ -251,7 +392,19 @@ def assert_no_semantic_authority(scirhc_obj) -> None:
 
 
 def assert_no_hidden_semantics(scirhc: HcModule) -> None:
-    """Require every omission in `SCIR-Hc` to be provenance-justified and semantically subordinate."""
+    """Purpose: Require every SCIR-Hc omission to be provenance-justified and semantically subordinate.
+
+    Inputs:
+      - scirhc: HcModule candidate derived artifact.
+    Outputs:
+      - None.
+    Side Effects:
+      - Raises ScirHcDoctrineError when omitted fields or compression origins do not line up.
+    Assumptions:
+      - Compression may only remove information that canonical inference can recover without minting semantics.
+    Failure Modes:
+      - Raises ScirHcDoctrineError.
+    """
 
     normalized = _normalize_scirhc(scirhc)
     assert_no_semantic_authority(normalized)
@@ -314,7 +467,20 @@ def assert_no_hidden_semantics(scirhc: HcModule) -> None:
 
 
 def assert_deterministic_derivation(scirh: Module, scirhc: HcModule) -> None:
-    """Ensure `SCIR-Hc` is a deterministic derivation of canonical `SCIR-H`, not an alternative authoring form."""
+    """Purpose: Prove that one SCIR-Hc artifact is the deterministic result of canonical SCIR-H derivation.
+
+    Inputs:
+      - scirh: Module canonical SCIR-H source.
+      - scirhc: HcModule candidate derived artifact.
+    Outputs:
+      - None.
+    Side Effects:
+      - Opens the internal transform access gate for authorized derivation or reconstruction checks.
+    Assumptions:
+      - SCIR-Hc must never become an alternative authoring form with multiple valid encodings.
+    Failure Modes:
+      - Raises ScirHcDoctrineError when derivation, idempotence, or reconstruction drift is detected.
+    """
 
     normalized_scirh = normalize_module(scirh)
     normalized_scirhc = _normalize_scirhc(scirhc)
@@ -334,6 +500,19 @@ def assert_deterministic_derivation(scirh: Module, scirhc: HcModule) -> None:
 
 
 def assert_semantic_idempotence(scirh: Module) -> None:
+    """Purpose: Verify that deriving then reconstructing SCIR-Hc returns the same normalized canonical SCIR-H.
+
+    Inputs:
+      - scirh: Module canonical SCIR-H source.
+    Outputs:
+      - None.
+    Side Effects:
+      - Uses the internal transform access gate to derive and reconstruct SCIR-Hc.
+    Assumptions:
+      - Canonical SCIR-H should be stable under the derived-only projection.
+    Failure Modes:
+      - Raises ScirHcDoctrineError when normalization changes across the round trip.
+    """
     normalized = normalize_module(scirh)
     ctx = build_scirhc_generation_context(normalized)
     with internal_scirhc_transform_access():
@@ -344,6 +523,19 @@ def assert_semantic_idempotence(scirh: Module) -> None:
 
 
 def assert_round_trip_integrity(scirh: Module) -> None:
+    """Purpose: Validate the full SCIR-H -> SCIR-Hc text -> SCIR-H round trip for one canonical module.
+
+    Inputs:
+      - scirh: Module canonical SCIR-H source.
+    Outputs:
+      - None.
+    Side Effects:
+      - Derives, formats, parses, and reconstructs SCIR-Hc inside an authorized transform scope.
+    Assumptions:
+      - Stability requires equal normalized modules, preserved lineage ids, preserved canonical formatting, and deterministic re-derivation.
+    Failure Modes:
+      - Raises ScirHcDoctrineError when any stage of the round trip drifts.
+    """
     normalized = normalize_module(scirh)
     ctx = build_scirhc_generation_context(normalized)
     with internal_scirhc_transform_access():
@@ -372,7 +564,20 @@ def assert_round_trip_integrity(scirh: Module) -> None:
 
 
 def assert_lineage_integrity(report: dict, canonical_registry: dict[str, Module] | None = None) -> None:
-    """Bind every compressed claim surface back to canonical module lineage and normalized hashes."""
+    """Purpose: Bind every SCIR-Hc report surface back to canonical module lineage and normalized hashes.
+
+    Inputs:
+      - report: dict artifact or benchmark report payload carrying lineage references.
+      - canonical_registry: dict[str, Module] | None optional canonical modules used for exact lineage verification.
+    Outputs:
+      - None.
+    Side Effects:
+      - Raises ScirHcDoctrineError when lineage coverage is missing or mismatched.
+    Assumptions:
+      - Every metric or claim that mentions SCIR-Hc evidence must point back to declared canonical module lineage.
+    Failure Modes:
+      - Raises ScirHcDoctrineError.
+    """
 
     _require(isinstance(report, dict), "SCIR-Hc lineage validation requires an object payload")
     lineage_references, label = _lineage_references(report)
@@ -402,6 +607,19 @@ def assert_lineage_integrity(report: dict, canonical_registry: dict[str, Module]
 
 
 def implies_semantic_authority(metric: dict) -> bool:
+    """Purpose: Detect metric names or statements that imply semantic-authority claims.
+
+    Inputs:
+      - metric: dict metric or claim payload.
+    Outputs:
+      - bool whether the metric text implies forbidden semantic authority.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Semantic overreach can appear in either the metric key or the human-readable statement text.
+    Failure Modes:
+      - None.
+    """
     metric_name = metric.get("metric")
     statement = metric.get("statement")
     fragments = []
@@ -414,6 +632,20 @@ def implies_semantic_authority(metric: dict) -> bool:
 
 
 def assert_metric_authority(metrics: list[dict], claim_gate: dict) -> None:
+    """Purpose: Ensure metric metadata does not introduce authority claims outside the evaluated benchmark surface.
+
+    Inputs:
+      - metrics: list[dict] combined metric-bearing claim and condition payloads.
+      - claim_gate: dict benchmark report claim gate.
+    Outputs:
+      - None.
+    Side Effects:
+      - Raises ScirHcDoctrineError when causal metrics or metric text exceed policy.
+    Assumptions:
+      - Causal metrics are only valid when explicitly evaluated and tied to SCIR-H evidence.
+    Failure Modes:
+      - Raises ScirHcDoctrineError.
+    """
     _require(isinstance(claim_gate, dict), "benchmark report claim_gate must be present")
     evaluated = claim_gate.get("evaluated_conditions")
     _require(isinstance(evaluated, list), "benchmark report claim_gate.evaluated_conditions must be a list")
@@ -433,7 +665,20 @@ def assert_metric_authority(metrics: list[dict], claim_gate: dict) -> None:
 
 
 def assert_claim_scope_compliance(report: dict, canonical_registry: dict[str, Module] | None = None) -> None:
-    """Reject benchmark reports that use `SCIR-Hc` evidence outside the declared claim/evidence class."""
+    """Purpose: Reject benchmark reports that use SCIR-Hc evidence outside the declared claim and evidence classes.
+
+    Inputs:
+      - report: dict benchmark report payload.
+      - canonical_registry: dict[str, Module] | None optional canonical lineage registry for exact binding checks.
+    Outputs:
+      - None.
+    Side Effects:
+      - Raises ScirHcDoctrineError when the report leaks metrics, evidence ids, or lineage beyond the declared claim class.
+    Assumptions:
+      - Claim scope is valid only when evidence_class, evaluated conditions, satisfied conditions, claims, metrics, and lineage all agree.
+    Failure Modes:
+      - Raises ScirHcDoctrineError.
+    """
 
     _require(isinstance(report, dict), "benchmark report must be an object")
     claim_class = report.get("claim_class")

@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""Executable SCIR bootstrap proof loop and report generation surface.
-
-This file stitches import, validation, derived compression, lowering,
-reconstruction, Wasm emission, and benchmark reporting into the active MVP
-pipeline. It must preserve the authority order `SCIR-H` -> derived views and
-must reject any path that would let `SCIR-Hc` or `SCIR-L` become a semantic
-source of truth.
+"""File: scripts/scir_bootstrap_pipeline.py
+Purpose: Execute the active SCIR proof-loop pipeline from canonical `SCIR-H` validation through lowering, reconstruction, Wasm emission, and benchmark/report artifacts.
+Role in system: Acts as the repository's main orchestration surface for the MVP bootstrap path, enforcing authority order and assembling the outputs consumed by validation, sweep, and benchmark scripts.
+Key dependencies: canonical model helpers from `scir_h_bootstrap_model`, authorized `SCIR-Hc` transforms from `_internal.scirhc_transform`, importer bootstrap metadata, validators, and benchmark or Wasm metadata.
+Side effects: Reads and writes repository artifacts, runs subprocess-backed toolchain checks, executes reconstructed programs, and emits diagnostics, reports, and benchmark outputs under artifacts directories.
 """
 from __future__ import annotations
 
@@ -148,14 +146,20 @@ ACTIVE_PROOF_LOOP_CORPUS_REL = "tests/corpora/python_proof_loop_corpus.json"
 
 
 class PipelineError(Exception):
+    """Represents: A general failure in the executable bootstrap pipeline."""
+
     pass
 
 
 class ForbiddenPathError(PipelineError):
+    """Represents: A call path that crosses a forbidden authority or stage boundary."""
+
     pass
 
 
 class PipelineViolationError(ForbiddenPathError):
+    """Represents: A doctrinal pipeline violation such as derived input gaining semantic authority."""
+
     pass
 
 
@@ -163,7 +167,7 @@ SCIRHC_ALLOWED_REPORT_CONTEXTS = {"validation_report", "benchmark_output"}
 
 
 def assert_canonical_pipeline_input(input_representation: str, stage: str) -> None:
-    """Block derived representations from entering stages that require canonical semantics."""
+    """Purpose: Block derived representations from entering stages that require canonical semantics."""
 
     if input_representation == "SCIR-Hc":
         raise PipelineViolationError(f"{stage}: SCIR-Hc cannot be used as pipeline input")
@@ -172,6 +176,7 @@ def assert_canonical_pipeline_input(input_representation: str, stage: str) -> No
 
 
 def assert_scirhc_report_context(report_context: str) -> None:
+    """Purpose: Restrict `SCIR-Hc` generation to the explicitly admitted report surfaces."""
     if report_context not in SCIRHC_ALLOWED_REPORT_CONTEXTS:
         raise PipelineViolationError(
             f"SCIR-Hc generation is limited to report surfaces; got {report_context!r}"
@@ -179,12 +184,27 @@ def assert_scirhc_report_context(report_context: str) -> None:
 
 
 def make_scirhc_generation_context(module: Module, *, report_context: str):
+    """Purpose: Create the authorized `SCIR-Hc` generation context after verifying the caller is on an allowed report surface."""
     assert_scirhc_report_context(report_context)
     return build_scirhc_generation_context(module)
 
 
 def generate_scirhc_report_artifact(module: Module, *, ctx, boundary_contracts=None):
-    """Generate report-scoped `SCIR-Hc` evidence plus the lineage data needed to contain its claims."""
+    """Purpose: Generate report-scoped `SCIR-Hc` evidence plus the lineage data needed to contain its claims.
+
+    Inputs:
+      - module: Canonical module being summarized for reporting.
+      - ctx: Authorized transform context produced by the internal gate.
+      - boundary_contracts: Optional opaque-boundary contracts that constrain derived transport output.
+    Outputs:
+      - tuple: Derived module, serialized `SCIR-Hc` text, normalization stats, lineage references, and diff audit bundle.
+    Side Effects:
+      - Calls into the internal transform gate and constructs report artifacts in memory.
+    Assumptions:
+      - `SCIR-Hc` is evidence only; lineage references are emitted alongside it so downstream consumers cannot treat it as standalone authority.
+    Failure Modes:
+      - Propagates doctrine and transform errors if the internal gate rejects the conversion.
+    """
 
     with internal_scirhc_transform_access():
         hc_module = scirh_to_scirhc(module, ctx=ctx, boundary_contracts=boundary_contracts)
@@ -219,6 +239,7 @@ PRESERVATION_STAGE_NAMES = [
 
 
 def make_diagnostic(code: str, message: str, *, severity: str = "error", location: str | None = None):
+    """Purpose: Build a standard diagnostic record used across validation, lowering, reconstruction, and benchmark stages."""
     diagnostic = {
         "code": code,
         "severity": severity,
@@ -230,24 +251,29 @@ def make_diagnostic(code: str, message: str, *, severity: str = "error", locatio
 
 
 def path_exists(root: pathlib.Path, relative_path: str) -> bool:
+    """Purpose: Check for one repo-relative artifact without forcing callers to join paths repeatedly."""
     return (root / relative_path).exists()
 
 
 def read_text(root: pathlib.Path, relative_path: str) -> str:
+    """Purpose: Read one UTF-8 repo-relative text artifact."""
     return (root / relative_path).read_text(encoding="utf-8")
 
 
 def is_builtin_type_name(type_name: str) -> bool:
+    """Purpose: Recognize built-in or special pipeline type names that do not require user-declared record definitions."""
     return type_name in {"int", "Callable", "Error", "ValueError", "ForeignResult"}
 
 
 def unwrap_named_type(type_name: str) -> str | None:
+    """Purpose: Remove one wrapper layer from a named type when checking record semantics or field access."""
     if type_name.endswith(">") and "<" in type_name:
         return type_name.split("<", 1)[1][:-1]
     return type_name
 
 
 def root_place_name(place):
+    """Purpose: Recover the root local name behind a nested field-place chain."""
     current = place
     while isinstance(current, FieldPlace):
         current = current.base
@@ -259,6 +285,7 @@ def root_place_name(place):
 
 
 def boundary_contract_symbol(contract: dict) -> str | None:
+    """Purpose: Extract the canonical symbol name from an opaque-boundary contract when one is declared."""
     signature = contract.get("signature")
     if isinstance(signature, str):
         match = re.search(r"([A-Za-z_][A-Za-z0-9_]*)\(", signature)
@@ -271,6 +298,7 @@ def boundary_contract_symbol(contract: dict) -> str | None:
 
 
 def normalize_boundary_contracts(boundary_contracts) -> dict[str, dict]:
+    """Purpose: Normalize the boundary-contract input surface into a symbol-keyed lookup table."""
     if not boundary_contracts:
         return {}
     items = boundary_contracts if isinstance(boundary_contracts, (list, tuple)) else [boundary_contracts]
@@ -285,6 +313,7 @@ def normalize_boundary_contracts(boundary_contracts) -> dict[str, dict]:
 
 
 def contract_effects(contract: dict) -> set[str]:
+    """Purpose: Collect the effect names declared by one boundary contract."""
     effects = contract.get("effects", [])
     if not isinstance(effects, list):
         return set()
@@ -292,28 +321,34 @@ def contract_effects(contract: dict) -> set[str]:
 
 
 def preservation_rank(level: str | None) -> int | None:
+    """Purpose: Map preservation labels onto an ordering so reports can compare expected and observed strength."""
     if level not in PRESERVATION_LEVEL_ORDER:
         return None
     return PRESERVATION_LEVEL_ORDER.index(level)
 
 
 def is_borrow_type(type_name: str) -> bool:
+    """Purpose: Recognize borrow types when validating ownership-sensitive places and boundaries."""
     return isinstance(type_name, str) and type_name.startswith("borrow<")
 
 
 def is_borrow_mut_type(type_name: str) -> bool:
+    """Purpose: Recognize mutable-borrow types when validating ownership-sensitive writes."""
     return isinstance(type_name, str) and type_name.startswith("borrow_mut<")
 
 
 def is_opaque_type(type_name: str) -> bool:
+    """Purpose: Recognize opaque capability-bearing types that mark host or foreign boundaries."""
     return isinstance(type_name, str) and type_name.startswith("opaque<")
 
 
 def provenance_origin_matches_module(module_id: str, origin: str | None) -> bool:
+    """Purpose: Check whether recorded provenance origin text still names the expected module root."""
     return isinstance(origin, str) and origin.startswith(f"{module_id}::")
 
 
 def import_sort_key_from_line(line: str) -> tuple[str, str]:
+    """Purpose: Derive the canonical sort key for import lines when checking deterministic storage."""
     fields = line.split()
     if len(fields) != 4:
         return ("", "")
@@ -321,6 +356,7 @@ def import_sort_key_from_line(line: str) -> tuple[str, str]:
 
 
 def has_nondeterministic_storage_markers(scirh_text: str) -> bool:
+    """Purpose: Detect storage-level editorial variance that canonical formatting should have removed."""
     stripped_lines = [line for line in scirh_text.splitlines() if line.strip()]
     import_lines = [line for line in stripped_lines if line.startswith("import ")]
     if import_lines != sorted(import_lines, key=import_sort_key_from_line):
@@ -341,6 +377,7 @@ def has_nondeterministic_storage_markers(scirh_text: str) -> bool:
 
 
 def diagnose_scirh_parse_failure(artifact: str, exc: Exception):
+    """Purpose: Convert a parse exception into a standard diagnostic record tied to one artifact path."""
     message = str(exc)
     lower_message = message.lower()
     if "unsupported statement" in lower_message and ("select" in lower_message or "finally" in lower_message):
@@ -353,6 +390,7 @@ def diagnose_scirh_parse_failure(artifact: str, exc: Exception):
 
 
 def record_type_map(module: Module):
+    """Purpose: Build a record-type field map for semantic validation of field reads, writes, and reconstruction."""
     type_fields = {}
     for type_decl in module.type_decls:
         if isinstance(type_decl.type_expr, RecordType):
@@ -361,6 +399,7 @@ def record_type_map(module: Module):
 
 
 def resolve_record_type(binding_type: str, type_fields: dict[str, set[str]]) -> str | None:
+    """Purpose: Resolve a binding type to its record declaration name when field semantics depend on it."""
     candidate = unwrap_named_type(binding_type)
     if candidate in type_fields:
         return candidate
@@ -374,7 +413,22 @@ def validate_scirh_module_semantics(
     boundary_contracts=None,
     canonical_text: str | None = None,
 ):
-    """Enforce the active `SCIR-H` doctrine instead of inferring convenience semantics."""
+    """Purpose: Enforce the active `SCIR-H` doctrine instead of inferring convenience semantics.
+
+    Inputs:
+      - artifact: Human-readable artifact label used in diagnostics.
+      - module: Canonical module being validated.
+      - boundary_contracts: Optional opaque-boundary contracts used to validate imported foreign calls.
+      - canonical_text: Optional serialized text used to verify parse-format normalization.
+    Outputs:
+      - list[dict]: Structured diagnostics describing semantic violations.
+    Side Effects:
+      - None.
+    Assumptions:
+      - This stage validates canonical `SCIR-H`, not derived or lowered forms.
+    Failure Modes:
+      - Returns diagnostics for unresolved names, implicit effects, invalid field places, boundary drift, ownership violations, and storage non-determinism.
+    """
 
     diagnostics = []
     contract_map = normalize_boundary_contracts(boundary_contracts)
@@ -766,18 +820,34 @@ def validate_scirh_module_semantics(
 
 
 def repo_root(root_arg: str | None) -> pathlib.Path:
+    """Purpose: Resolve the repository root used by all file-backed validation and artifact checks.
+
+    Inputs:
+      - root_arg: Optional CLI override for the repo root.
+    Outputs:
+      - pathlib.Path: Absolute repository root path.
+    Side Effects:
+      - Resolves the supplied path against the filesystem.
+    Assumptions:
+      - When no override is supplied, this script lives under `<repo>/scripts/`.
+    Failure Modes:
+      - Path resolution can raise filesystem-related exceptions from `pathlib`.
+    """
     return pathlib.Path(root_arg).resolve() if root_arg else pathlib.Path(__file__).resolve().parents[1]
 
 
 def load_json(path: pathlib.Path):
+    """Purpose: Load a UTF-8 JSON document from disk for schema, manifest, and artifact checks."""
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def load_schema(root: pathlib.Path, schema_rel: str):
+    """Purpose: Resolve and load a repository schema relative to the active repo root."""
     return load_json(root / schema_rel)
 
 
 def validate_instance(root: pathlib.Path, instance, schema_rel: str, label: str):
+    """Purpose: Validate a JSON-like instance against a named repo schema and flatten failures."""
     failures = []
     schema = load_schema(root, schema_rel)
     for location, message in collect_instance_validation_errors(instance, schema):
@@ -786,22 +856,27 @@ def validate_instance(root: pathlib.Path, instance, schema_rel: str, label: str)
 
 
 def slug(case_name: str) -> str:
+    """Purpose: Convert underscore-heavy case names into stable report-id fragments."""
     return case_name.replace("_", "-")
 
 
 def fixture_source(root: pathlib.Path, case_name: str) -> pathlib.Path:
+    """Purpose: Locate the canonical Python source fixture for an importer test case."""
     return root / "tests" / "python_importer" / "cases" / case_name / "source.py"
 
 
 def case_name_from_module(module: Module) -> str:
+    """Purpose: Recover the fixture case name from a canonical module identifier."""
     return module.module_id.rsplit(".", 1)[-1]
 
 
 def case_name_from_artifact_id(artifact_id: str) -> str:
+    """Purpose: Recover the fixture case name from a report or artifact identifier."""
     return artifact_id.rsplit(".", 1)[-1]
 
 
 def load_import_artifacts(root: pathlib.Path, case_name: str):
+    """Purpose: Load the importer bundle for a fixture and JSON-decode structured artifact members."""
     bundle = build_python_bundle(root, fixture_source(root, case_name))
     parsed = {}
     for name, contents in bundle.files.items():
@@ -813,16 +888,31 @@ def load_import_artifacts(root: pathlib.Path, case_name: str):
 
 
 def file_sha256(root: pathlib.Path, relative_path: str) -> str:
+    """Purpose: Compute the repository-relative SHA-256 digest used in artifact integrity checks."""
     digest = hashlib.sha256()
     digest.update((root / relative_path).read_bytes())
     return f"sha256:{digest.hexdigest()}"
 
 
 def load_corpus_manifest(root: pathlib.Path, relative_path: str):
+    """Purpose: Load a validation corpus manifest without duplicating repo-root resolution logic."""
     return load_json(root / relative_path)
 
 
 def validate_negative_scirh_corpus(root: pathlib.Path):
+    """Purpose: Prove invalid `SCIR-H` fixtures fail with the expected diagnostic-code families.
+
+    Inputs:
+      - root: Repository root used to locate the negative corpus manifest and fixture files.
+    Outputs:
+      - list[str]: Human-readable failures for fixtures that either pass unexpectedly or emit the wrong codes.
+    Side Effects:
+      - Reads fixture source files and optional boundary-contract artifacts from disk.
+    Assumptions:
+      - The invalid corpus manifest enumerates intentionally broken fixtures plus expected diagnostic codes.
+    Failure Modes:
+      - Returns failure strings when a fixture parses or validates more permissively than doctrine allows.
+    """
     manifest = load_corpus_manifest(root, INVALID_SCIRH_MANIFEST_REL)
     failures = []
     for entry in manifest["fixtures"]:
@@ -842,6 +932,7 @@ def validate_negative_scirh_corpus(root: pathlib.Path):
                 boundary_contracts=boundary_contracts,
                 canonical_text=scirh_text,
             )
+        # The negative corpus is authoritative about which doctrine family should reject each fixture.
         if not diagnostics:
             failures.append(f"{entry['id']}: expected SCIR-H validation failure")
             continue
@@ -856,6 +947,7 @@ def validate_negative_scirh_corpus(root: pathlib.Path):
 
 
 def validate_negative_scirl_corpus(root: pathlib.Path):
+    """Purpose: Prove invalid `SCIR-L` fixtures still fail the lowered-form validator with known codes."""
     manifest = load_corpus_manifest(root, INVALID_SCIRL_MANIFEST_REL)
     failures = []
     for entry in manifest["fixtures"]:
@@ -875,6 +967,21 @@ def validate_negative_scirl_corpus(root: pathlib.Path):
 
 
 def validate_import_bundle(root: pathlib.Path, case_name: str, artifacts: dict):
+    """Purpose: Validate importer-emitted artifact bundles against schema and opaque-boundary contracts.
+
+    Inputs:
+      - root: Repository root used to resolve schemas.
+      - case_name: Fixture identifier used in failure labels.
+      - artifacts: Parsed importer bundle members keyed by emitted filename.
+    Outputs:
+      - list[str]: Flattened schema and contract failures for the import bundle.
+    Side Effects:
+      - Reads JSON schemas from disk.
+    Assumptions:
+      - `artifacts` contains the standard importer bundle contract produced by `build_python_bundle`.
+    Failure Modes:
+      - Returns failures when reports drift from their schemas or when opaque boundary capabilities disagree.
+    """
     failures = []
     module_manifest = artifacts["module_manifest.json"]
     failures.extend(
@@ -925,6 +1032,21 @@ def validate_import_bundle(root: pathlib.Path, case_name: str, artifacts: dict):
 
 
 def validate_scirh_case(case_name: str, scirh_text: str, *, boundary_contracts=None):
+    """Purpose: Validate one canonical `SCIR-H` fixture and build its validator report artifact.
+
+    Inputs:
+      - case_name: Fixture identifier used in reports and diagnostics.
+      - scirh_text: Canonical `SCIR-H` text to parse and validate.
+      - boundary_contracts: Optional opaque-boundary contract set for imported foreign calls.
+    Outputs:
+      - tuple[list[str], Module | None, dict]: Failure messages, parsed module when available, and validator report JSON.
+    Side Effects:
+      - None.
+    Assumptions:
+      - `PYTHON_SCIRH_MODULES` contains the frozen bootstrap model for each importer fixture.
+    Failure Modes:
+      - Converts parse failures, semantic violations, and model drift into structured diagnostics.
+    """
     try:
         parsed = parse_module(scirh_text)
     except ScirHModelError as exc:
@@ -947,6 +1069,7 @@ def validate_scirh_case(case_name: str, scirh_text: str, *, boundary_contracts=N
             )
 
     report = {
+        # Report ids are part of the retained validation artifact surface consumed by downstream audits.
         "report_id": f"scir-h-validation-{slug(case_name)}",
         "artifact": f"fixture.python_importer.{case_name}",
         "layer": "scir_h",
@@ -966,6 +1089,23 @@ def validate_scirhc_case(
     artifact_prefix: str = "fixture.python_importer",
     boundary_contracts=None,
 ):
+    """Purpose: Validate the derived `SCIR-Hc` projection for one canonical module and emit its report.
+
+    Inputs:
+      - case_name: Fixture identifier used in diagnostics and report ids.
+      - module: Canonical `SCIR-H` module to project into `SCIR-Hc`.
+      - artifact_prefix: Artifact namespace prefix used by the emitted validation report.
+      - boundary_contracts: Optional opaque-boundary contracts forwarded into report generation.
+    Outputs:
+      - tuple[list[str], Module | None, str | None, dict, dict, dict | None, dict]:
+        Failure messages, compressed module/text, normalization stats, lineage references, diff audit, and validator report.
+    Side Effects:
+      - None.
+    Assumptions:
+      - `SCIR-Hc` remains derived-only and must be generated through the internal context gate.
+    Failure Modes:
+      - Converts doctrine failures, compression failures, and context misuse into validator diagnostics.
+    """
     try:
         ctx = make_scirhc_generation_context(module, report_context="validation_report")
         hc_module, hc_text, stats, lineage_references, diff_audit = generate_scirhc_report_artifact(
@@ -988,6 +1128,7 @@ def validate_scirhc_case(
             except ScirHcDoctrineError as exc:
                 message = str(exc)
                 code = default_code
+                # These remaps preserve the historical validator-code contract even when doctrine checks share helpers.
                 if "parse-format equality" in message:
                     code = "HC001"
                 elif "deterministic derivation output" in message:
@@ -1027,10 +1168,24 @@ def validate_scirhc_case(
 
 
 def is_local_place(value, expected: str) -> bool:
+    """Purpose: Compare a place against its canonical textual form when matching frozen fixture shapes."""
     return format_place(value) == expected
 
 
 def lower_basic_function(module: Module):
+    """Purpose: Lower the canonical `a_basic_function` fixture into the frozen SCIR-L control-flow graph.
+
+    Inputs:
+      - module: Canonical `SCIR-H` module for the `a_basic_function` fixture.
+    Outputs:
+      - dict: Lowered `SCIR-L` module artifact for this fixture.
+    Side Effects:
+      - None.
+    Assumptions:
+      - The fixture shape is intentionally exact so the bootstrap lowering remains auditable and deterministic.
+    Failure Modes:
+      - Raises `PipelineError` when the canonical fixture drifts from the admitted proof-loop shape.
+    """
     function = module.functions[0]
     body = list(function.body)
     if len(body) != 3:
@@ -1153,6 +1308,7 @@ def lower_basic_function(module: Module):
 
 
 def lower_async_module(module: Module):
+    """Purpose: Lower the admitted async-await proof-loop fixtures into their canonical SCIR-L form."""
     case_name = case_name_from_module(module)
     if len(module.functions) != 2 or module.imports:
         raise PipelineError(f"{case_name}: unsupported compact SCIR-H shape for lowering")
@@ -1267,6 +1423,7 @@ def lower_async_module(module: Module):
 
 
 def lower_if_else_return_module(module: Module):
+    """Purpose: Lower the `b_if_else_return` fixture into a branch-structured SCIR-L module."""
     function = module.functions[0]
     if not (
         len(module.functions) == 1
@@ -1349,6 +1506,7 @@ def lower_if_else_return_module(module: Module):
 
 
 def match_while_call_update_module(module: Module) -> FunctionDecl | None:
+    """Purpose: Recognize the exact while-loop fixture shape used by the call-update lowering path."""
     if len(module.functions) != 1 or module.imports:
         return None
     function = module.functions[0]
@@ -1391,6 +1549,7 @@ def match_while_call_update_module(module: Module) -> FunctionDecl | None:
 
 
 def lower_while_call_update_module(module: Module):
+    """Purpose: Lower the supported while-call-update fixture once its canonical loop shape has been matched."""
     function = match_while_call_update_module(module)
     if function is None:
         raise PipelineError("b_while_call_update: unsupported compact SCIR-H shape for lowering")
@@ -1513,6 +1672,7 @@ def lower_while_call_update_module(module: Module):
 
 
 def match_while_break_continue_module(module: Module) -> FunctionDecl | None:
+    """Purpose: Recognize the exact break/continue loop fixture admitted by the bootstrap lowering contract."""
     if len(module.functions) != 1 or module.imports:
         return None
     function = module.functions[0]
@@ -1562,6 +1722,7 @@ def match_while_break_continue_module(module: Module) -> FunctionDecl | None:
 
 
 def lower_while_break_continue_module(module: Module):
+    """Purpose: Lower the supported break/continue fixture into the frozen loop-oriented SCIR-L graph."""
     function = match_while_break_continue_module(module)
     if function is None:
         raise PipelineError("b_while_break_continue: unsupported compact SCIR-H shape for lowering")
@@ -1707,6 +1868,7 @@ def lower_while_break_continue_module(module: Module):
 
 
 def lower_direct_call_module(module: Module):
+    """Purpose: Lower the direct-call fixture that proves ordinary call sites preserve identity-flow semantics."""
     identity, call_identity = module.functions
     if not (
         len(module.functions) == 2
@@ -1768,6 +1930,7 @@ def lower_direct_call_module(module: Module):
 
 
 def lower_opaque_module(module: Module):
+    """Purpose: Lower the opaque-boundary fixture into the explicit `opaque.call` SCIR-L boundary form."""
     function = module.functions[0]
     if not (
         len(module.imports) == 1
@@ -1810,6 +1973,7 @@ def lower_opaque_module(module: Module):
 
 
 def match_class_init_module(module: Module) -> tuple[FunctionDecl, FunctionDecl] | None:
+    """Purpose: Recognize the record-init fixture shape before emitting field-address and store operations."""
     if len(module.imports) != 0 or len(module.type_decls) != 1 or len(module.functions) != 2:
         return None
     type_decl = module.type_decls[0]
@@ -1851,6 +2015,7 @@ def match_class_init_module(module: Module) -> tuple[FunctionDecl, FunctionDecl]
 
 
 def match_class_field_update_module(module: Module) -> tuple[FunctionDecl, FunctionDecl] | None:
+    """Purpose: Recognize the field-update fixture shape before lowering method-driven mutation through a record field."""
     if len(module.imports) != 0 or len(module.type_decls) != 1 or len(module.functions) != 2:
         return None
     type_decl = module.type_decls[0]
@@ -1907,6 +2072,7 @@ def match_class_field_update_module(module: Module) -> tuple[FunctionDecl, Funct
 
 
 def lower_class_init_module(module: Module):
+    """Purpose: Lower the class-init fixture into explicit field-address and load or store SCIR-L steps."""
     matched = match_class_init_module(module)
     if matched is None:
         raise PipelineError("b_class_init_method: unsupported compact SCIR-H shape for lowering")
@@ -1986,6 +2152,7 @@ def lower_class_init_module(module: Module):
 
 
 def lower_class_field_update_module(module: Module):
+    """Purpose: Lower the class-field-update fixture into explicit field-address, call, store, and reload steps."""
     matched = match_class_field_update_module(module)
     if matched is None:
         raise PipelineError("b_class_field_update: unsupported compact SCIR-H shape for lowering")
@@ -2086,6 +2253,7 @@ def lower_class_field_update_module(module: Module):
 
 
 def match_try_except_module(module: Module) -> FunctionDecl | None:
+    """Purpose: Recognize the exact try/catch fixture admitted by the bootstrap exception-lowering path."""
     if module.imports or module.type_decls or len(module.functions) != 1:
         return None
     function = module.functions[0]
@@ -2121,6 +2289,7 @@ def match_try_except_module(module: Module) -> FunctionDecl | None:
 
 
 def lower_try_except_module(module: Module):
+    """Purpose: Lower the supported try/except fixture into an invoke-plus-catch SCIR-L control-flow pattern."""
     function = match_try_except_module(module)
     if function is None:
         raise PipelineError("d_try_except: unsupported compact SCIR-H shape for lowering")
@@ -2188,10 +2357,24 @@ def lower_try_except_module(module: Module):
 
 
 def lower_supported_module(module: Module, *, input_representation: str = "SCIR-H"):
-    """Lower only the admitted proof-loop cases and only from canonical `SCIR-H`."""
+    """Purpose: Dispatch lowering only for the explicitly admitted proof-loop fixtures and only from canonical `SCIR-H`.
+
+    Inputs:
+      - module: Canonical module to lower.
+      - input_representation: Claimed source representation for the lowering request.
+    Outputs:
+      - dict: Lowered `SCIR-L` module for one supported fixture.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Lowering is intentionally whitelist-based; unsupported fixtures must fail rather than receive inferred semantics.
+    Failure Modes:
+      - Raises `PipelineError` when no explicit lowering contract exists for the case.
+    """
 
     assert_canonical_pipeline_input(input_representation, "lowering")
     case_name = case_name_from_module(module)
+    # This dispatch table is the active proof-loop support boundary; adding a case here is a semantics decision.
     if case_name == "a_basic_function":
         return lower_basic_function(module)
     if case_name in {"a_async_await", "b_async_arg_await"}:
@@ -2216,6 +2399,7 @@ def lower_supported_module(module: Module, *, input_representation: str = "SCIR-
 
 
 def validate_operand(operand, known_values: set[str]):
+    """Purpose: Validate that one SCIR-L operand is either literal, symbolic, or already in SSA/token scope."""
     if isinstance(operand, int):
         return []
     if not isinstance(operand, str):
@@ -2228,6 +2412,7 @@ def validate_operand(operand, known_values: set[str]):
 
 
 def token_prefix(value: str) -> str | None:
+    """Purpose: Classify token-like SSA names by resource lane so validator checks can enforce token discipline."""
     if value.startswith("mem"):
         return "mem"
     if value.startswith("eff"):
@@ -2236,6 +2421,7 @@ def token_prefix(value: str) -> str | None:
 
 
 def scirl_diagnostic_code(message: str) -> str:
+    """Purpose: Map textual SCIR-L validator failures onto the retained diagnostic-code families."""
     lower_message = message.lower()
     if any(marker in lower_message for marker in ["missing entry block", "duplicate block", "unknown target block", "unsupported kind"]):
         return "L001"
@@ -2257,11 +2443,24 @@ def scirl_diagnostic_code(message: str) -> str:
 
 
 def is_token_with_prefix(value, prefix: str) -> bool:
+    """Purpose: Check that a value belongs to the expected token lane without duplicating prefix logic."""
     return isinstance(value, str) and token_prefix(value) == prefix
 
 
 def validate_scirl_module(module: dict):
-    """Reject any lowered artifact that exceeds the frozen derivative `SCIR-L` subset."""
+    """Purpose: Reject any lowered artifact that exceeds the frozen derivative `SCIR-L` subset.
+
+    Inputs:
+      - module: Lowered SCIR-L artifact represented as JSON-like data.
+    Outputs:
+      - tuple[list[str], dict]: Human-readable failures plus the validator report artifact.
+    Side Effects:
+      - None.
+    Assumptions:
+      - `SCIR-L` remains a small derivative subset with explicit provenance, token discipline, and lowering-rule accounting.
+    Failure Modes:
+      - Returns failures for unsupported ops, malformed CFG edges, token misuse, provenance drift, and lowering-rule mismatches.
+    """
 
     failures = []
     allowed_ops = {
@@ -2342,6 +2541,7 @@ def validate_scirl_module(module: dict):
                         f"{module['module_id']}::{name}::{block['id']}::{instruction['id']}: {item}"
                         for item in validate_operand(operand, known_values)
                     )
+                # Each op family carries a frozen token contract so derivative artifacts cannot smuggle implicit effects.
                 if instruction["op"] == "alloc":
                     if len(instruction["operands"]) != 1 or not is_token_with_prefix(instruction["operands"][0], "mem"):
                         failures.append(
@@ -2543,6 +2743,7 @@ def validate_scirl_module(module: dict):
 
 
 def format_value(value):
+    """Purpose: Render one SCIR-L operand in the textual pretty form used by reports and debugging output."""
     if isinstance(value, int):
         return str(value)
     if value.startswith("sym:"):
@@ -2551,6 +2752,7 @@ def format_value(value):
 
 
 def render_scirl_module(module: dict):
+    """Purpose: Render a lowered SCIR-L artifact into a stable human-readable text view for audits and diagnostics."""
     lines = [f"lmodule {module['module_id']} {{"]
     for function in module["functions"]:
         params = ", ".join(f"%{name}" for name in function["params"])
@@ -2592,6 +2794,7 @@ def render_scirl_module(module: dict):
 
 
 def compare_lowering_instruction(actual: dict, expected: dict, *, label: str):
+    """Purpose: Compare one lowered instruction against the frozen fixture contract for alignment checks."""
     failures = []
     for key in ["id", "op", "operands", "origin", "lowering_rule"]:
         if actual.get(key) != expected[key]:
@@ -2600,6 +2803,7 @@ def compare_lowering_instruction(actual: dict, expected: dict, *, label: str):
 
 
 def compare_lowering_terminator(actual: dict, expected: dict, *, label: str):
+    """Purpose: Compare one block terminator against the frozen lowering contract for a fixture."""
     failures = []
     for key, value in expected.items():
         if actual.get(key) != value:
@@ -2608,6 +2812,20 @@ def compare_lowering_terminator(actual: dict, expected: dict, *, label: str):
 
 
 def validate_lowering_alignment(case_name: str, lowered: dict):
+    """Purpose: Prove each admitted fixture still lowers to the exact retained SCIR-L contract.
+
+    Inputs:
+      - case_name: Fixture identifier whose lowering contract is being checked.
+      - lowered: Lowered SCIR-L artifact for that fixture.
+    Outputs:
+      - list[str]: Alignment failures describing drift from the frozen expected lowering.
+    Side Effects:
+      - None.
+    Assumptions:
+      - The active proof loop is fixture-specific, so exact block, operand, origin, and lowering-rule equality is intentional.
+    Failure Modes:
+      - Returns failures whenever the emitted SCIR-L shape, token flow, provenance, or rules differ from the retained contract.
+    """
     failures = []
     if case_name == "a_basic_function":
         functions = lowered["functions"]
@@ -3249,7 +3467,20 @@ def validate_lowering_alignment(case_name: str, lowered: dict):
 
 
 def validate_translation_report(case_name: str, report: dict):
-    """Check that `H -> L` reports do not silently strengthen profile or preservation claims."""
+    """Purpose: Check that `H -> L` reports do not silently strengthen profile or preservation claims.
+
+    Inputs:
+      - case_name: Fixture identifier whose translation report is being checked.
+      - report: Translation preservation report emitted by the bootstrap pipeline.
+    Outputs:
+      - list[str]: Failures describing profile, preservation, evidence, or observable-contract drift.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Preservation claims are frozen per fixture and may not be upgraded by editorial or implementation drift.
+    Failure Modes:
+      - Returns failures when reports strengthen preservation, add opaque accounting unexpectedly, or change exact evidence strings.
+    """
 
     failures = []
     expected = RECONSTRUCTION_EXPECTATIONS[case_name]
@@ -3332,6 +3563,19 @@ def validate_translation_report(case_name: str, report: dict):
 
 
 def translation_report(case_name: str):
+    """Purpose: Build the retained `SCIR-H -> SCIR-L` preservation report for one admitted fixture.
+
+    Inputs:
+      - case_name: Fixture identifier in the active proof-loop corpus.
+    Outputs:
+      - dict: Translation preservation report consumed by validation and benchmark surfaces.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Report contents are part of the retained contract and intentionally fixture-specific.
+    Failure Modes:
+      - Raises `KeyError` if a caller requests a case without a defined translation-report contract.
+    """
     if case_name == "c_opaque_call":
         return {
             "report_id": f"translation-preservation-{slug(case_name)}",
@@ -3411,7 +3655,20 @@ def translation_report(case_name: str):
 
 
 def build_source_to_h_preservation_report(case_name: str, artifacts: dict):
-    """Summarize importer preservation without claiming more than the fixture contract allows."""
+    """Purpose: Summarize importer preservation without claiming more than the fixture contract allows.
+
+    Inputs:
+      - case_name: Fixture identifier whose importer artifacts are being summarized.
+      - artifacts: Importer-emitted bundle members for that fixture.
+    Outputs:
+      - dict: Source-to-SCIR-H preservation report consumed by stage observation and benchmark surfaces.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Importer preservation is bounded by checked fixture artifacts and any explicit opaque boundary count.
+    Failure Modes:
+      - Raises `KeyError` if required importer artifacts are missing.
+    """
 
     module_manifest = artifacts["module_manifest.json"]
     validation_report = artifacts["validation_report.json"]
@@ -3466,6 +3723,7 @@ def make_stage_observation(
     boundary_annotation_count: int = 0,
     unsupported_count: int = 0,
 ):
+    """Purpose: Normalize one stage result into the compact observation shape used by preservation enforcement."""
     diagnostic_codes = list(diagnostic_codes or [])
     return {
         "status": status,
@@ -3485,6 +3743,7 @@ def make_stage_observation(
 
 
 def preservation_expectation_status(observation: dict | None, stage_expectation: dict | None):
+    """Purpose: Compare an observed stage outcome against the corpus-declared preservation expectation."""
     if observation is None:
         return "missing_observation"
     if not isinstance(stage_expectation, dict):
@@ -3505,6 +3764,7 @@ def preservation_expectation_status(observation: dict | None, stage_expectation:
 
 
 def build_case_stage_observations(case_name: str, artifacts: dict, outputs: dict):
+    """Purpose: Assemble the per-stage preservation observation record for one active proof-loop fixture."""
     observations = {}
     source_report = outputs["source_to_h_reports"][case_name]
     import_validation = artifacts["validation_report.json"]
@@ -3565,6 +3825,21 @@ def build_case_stage_observations(case_name: str, artifacts: dict, outputs: dict
 
 
 def validate_active_corpus_preservation(root: pathlib.Path, manifest_rel: str, outputs: dict):
+    """Purpose: Enforce corpus-declared preservation ceilings and stage expectations across the active fixture set.
+
+    Inputs:
+      - root: Repository root used to load the active corpus manifest.
+      - manifest_rel: Repository-relative manifest path for the active corpus.
+      - outputs: Aggregated pipeline outputs keyed by stage and case name.
+    Outputs:
+      - list[str]: Failures describing preservation overclaims, missing observations, or stage expectation drift.
+    Side Effects:
+      - Reads the active corpus manifest from disk.
+    Assumptions:
+      - The manifest is authoritative about per-stage expectations and the maximum claim ceiling for each fixture.
+    Failure Modes:
+      - Returns failures when any stage observation exceeds the declared ceiling or disagrees with expected behavior.
+    """
     manifest = load_corpus_manifest(root, manifest_rel)
     failures = []
     for entry in manifest["fixtures"]:
@@ -3576,6 +3851,7 @@ def validate_active_corpus_preservation(root: pathlib.Path, manifest_rel: str, o
         stage_expectations = entry.get("expected_preservation_stage_behavior", {})
         ceiling = entry["expected_preservation_ceiling"]
         ceiling_rank = preservation_rank(ceiling)
+        # Active corpus expectations are normative; missing or stronger-than-allowed observations are contract failures.
         for stage in entry.get("pipeline_stages", []):
             observation = stage_observations.get(stage)
             stage_expectation = stage_expectations.get(stage)
@@ -3604,10 +3880,12 @@ def validate_active_corpus_preservation(root: pathlib.Path, manifest_rel: str, o
 
 
 def render_wasm_param(param_name: str) -> str:
+    """Purpose: Render one scalar Wasm parameter clause in the fixed helper-free text format."""
     return f"(param ${param_name} i32)"
 
 
 def validate_wasm_scalar_signature(module: Module):
+    """Purpose: Reject modules that exceed the active helper-free scalar Wasm signature contract."""
     for type_decl in module.type_decls:
         raise PipelineError(
             f"{module.module_id}: Wasm emission does not support type declaration {type_decl.name!r}"
@@ -3633,6 +3911,7 @@ def validate_wasm_scalar_signature(module: Module):
 
 
 def is_wasm_record_cell_candidate(module: Module, lowered: dict):
+    """Purpose: Detect the one admitted record-cell escape hatch within the otherwise scalar-only Wasm path."""
     if case_name_from_module(module) != "a_struct_field_borrow_mut":
         return False
     if len(module.imports) != 0 or len(module.functions) != 1 or len(lowered["functions"]) != 1:
@@ -3655,6 +3934,7 @@ def is_wasm_record_cell_candidate(module: Module, lowered: dict):
 
 
 def detect_wasm_field_place_layout_blocker(module: Module, lowered: dict):
+    """Purpose: Fail field-address lowerings unless they match the explicitly admitted record-cell layout case."""
     has_field_addr = any(
         instruction["op"] == "field.addr"
         for function in lowered["functions"]
@@ -3671,6 +3951,7 @@ def detect_wasm_field_place_layout_blocker(module: Module, lowered: dict):
 
 
 def emit_wasm_const_ret_function(module: Module, function: FunctionDecl, lowered_function: dict):
+    """Purpose: Emit helper-free WAT for the admitted constant-return lowering shape."""
     blocks = lowered_function["blocks"]
     if len(blocks) != 1 or blocks[0]["id"] != "entry":
         raise PipelineError(
@@ -3708,6 +3989,7 @@ def emit_wasm_const_ret_function(module: Module, function: FunctionDecl, lowered
 
 
 def emit_wasm_local_slot_function(module: Module, function: FunctionDecl, lowered_function: dict):
+    """Purpose: Emit helper-free WAT for the clamp-style local-slot lowering shape."""
     blocks = lowered_function["blocks"]
     if len(function.params) != 1:
         raise PipelineError(
@@ -3821,6 +4103,7 @@ def emit_wasm_local_slot_function(module: Module, function: FunctionDecl, lowere
 
 
 def emit_wasm_passthrough_function(module: Module, function: FunctionDecl, lowered_function: dict):
+    """Purpose: Emit helper-free WAT for the direct parameter passthrough lowering shape."""
     if len(function.params) != 1:
         raise PipelineError(
             f"{module.module_id}::{function.name}: passthrough Wasm emission requires exactly one int parameter"
@@ -3859,6 +4142,7 @@ def emit_wasm_passthrough_function(module: Module, function: FunctionDecl, lower
 
 
 def emit_wasm_direct_local_call_function(module: Module, function: FunctionDecl, lowered_function: dict):
+    """Purpose: Emit helper-free WAT for the fixed same-module direct-call lowering shape."""
     if len(function.params) != 1:
         raise PipelineError(
             f"{module.module_id}::{function.name}: direct-call Wasm emission requires exactly one int parameter"
@@ -3903,6 +4187,7 @@ def emit_wasm_direct_local_call_function(module: Module, function: FunctionDecl,
 
 
 def emit_wasm_if_else_return_function(module: Module, function: FunctionDecl, lowered_function: dict):
+    """Purpose: Emit helper-free WAT for the admitted if/else-return branch shape."""
     if len(function.params) != 1:
         raise PipelineError(
             f"{module.module_id}::{function.name}: if/else-return Wasm emission requires exactly one int parameter"
@@ -3980,6 +4265,7 @@ def emit_wasm_if_else_return_function(module: Module, function: FunctionDecl, lo
 
 
 def emit_wasm_record_cell_function(module: Module, function: FunctionDecl, lowered_function: dict):
+    """Purpose: Emit helper-free WAT for the one admitted field-address record-cell lowering shape."""
     blocks = lowered_function["blocks"]
     if [block["id"] for block in blocks] != ["entry", "neg", "retread"]:
         raise PipelineError(
@@ -4070,6 +4356,21 @@ def emit_wasm_record_cell_function(module: Module, function: FunctionDecl, lower
 
 
 def emit_wasm_function(module: Module, function: FunctionDecl, lowered_function: dict):
+    """Purpose: Dispatch helper-free WAT emission only for the lowered op shapes admitted by backend metadata.
+
+    Inputs:
+      - module: Canonical SCIR-H module that owns the lowered function.
+      - function: Canonical function declaration paired with the lowered function.
+      - lowered_function: Lowered SCIR-L function artifact.
+    Outputs:
+      - list[str]: WAT lines for the emitted function body.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Wasm emission is whitelist-based and governed by `WASM_BACKEND_METADATA`.
+    Failure Modes:
+      - Raises `PipelineError` when lowering rules, ops, or CFG shapes fall outside the admitted helper-free subset.
+    """
     admitted_rules = set(WASM_BACKEND_METADATA["admitted_lowering_rules"])
     non_emittable_rules = set(WASM_BACKEND_METADATA["non_emittable_lowering_rules"])
     lowering_rules = [
@@ -4098,6 +4399,7 @@ def emit_wasm_function(module: Module, function: FunctionDecl, lowered_function:
         raise PipelineError(
             f"{module.module_id}::{function.name}: unsupported terminator in helper-free Wasm emission"
         )
+    # Lowered-op sequences are the backend support boundary; new shapes require an explicit metadata and proof decision.
     if lowered_ops == ["const"]:
         return emit_wasm_const_ret_function(module, function, lowered_function)
     if lowered_ops == []:
@@ -4116,6 +4418,7 @@ def emit_wasm_function(module: Module, function: FunctionDecl, lowered_function:
 
 
 def build_wasm_preservation_report(module: Module, lowered: dict):
+    """Purpose: Build the retained preservation report for helper-free Wasm emission from one lowered module."""
     lowered_ops = {
         instruction["op"]
         for function in lowered["functions"]
@@ -4187,6 +4490,21 @@ def build_wasm_preservation_report(module: Module, lowered: dict):
 
 
 def emit_wasm_module(module: Module, lowered: dict, *, input_representation: str = "SCIR-H"):
+    """Purpose: Emit helper-free WAT and its preservation report from canonical-input lowering results.
+
+    Inputs:
+      - module: Canonical SCIR-H module whose lowered form is being emitted.
+      - lowered: Lowered SCIR-L artifact for that module.
+      - input_representation: Claimed source representation for backend emission.
+    Outputs:
+      - tuple[str, dict]: WAT text plus the Wasm preservation report.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Backend emission remains canonical-input-only and helper-free within the admitted subset.
+    Failure Modes:
+      - Raises `PipelineError` when function order, signature shape, or lowered ops exceed the current Wasm contract.
+    """
     assert_canonical_pipeline_input(input_representation, "backend emission")
     detect_wasm_field_place_layout_blocker(module, lowered)
     is_record_cell_candidate = is_wasm_record_cell_candidate(module, lowered)
@@ -4212,6 +4530,7 @@ def emit_wasm_module(module: Module, lowered: dict, *, input_representation: str
 
 
 def validate_wasm_preservation_report(module: Module, lowered: dict, report: dict):
+    """Purpose: Verify that the emitted Wasm preservation report matches backend metadata and lowered evidence."""
     failures = []
     if report["path"] != WASM_BACKEND_METADATA["report_path"]:
         failures.append(f"{module.module_id}: expected Wasm preservation path {WASM_BACKEND_METADATA['report_path']}")
@@ -4285,6 +4604,7 @@ def validate_wasm_preservation_report(module: Module, lowered: dict, report: dic
 
 
 def validate_wasm_artifacts(module: Module, lowered: dict, wat_text: str, report: dict):
+    """Purpose: Validate emitted WAT text plus its preservation report against the helper-free backend contract."""
     failures = []
     if not wat_text.startswith("(module\n"):
         failures.append(f"{module.module_id}: emitted WAT must start with a module header")
@@ -4310,6 +4630,7 @@ def validate_wasm_artifacts(module: Module, lowered: dict, wat_text: str, report
 
 
 def validate_wasm_not_emittable(module: Module, lowered: dict):
+    """Purpose: Prove unsupported lowered modules fail helper-free Wasm emission instead of slipping through."""
     try:
         emit_wasm_module(module, lowered)
     except PipelineError:
@@ -4318,11 +4639,13 @@ def validate_wasm_not_emittable(module: Module, lowered: dict):
 
 
 def reconstruction_profile(case_name: str):
+    """Purpose: Retrieve the frozen reconstruction profile and preservation level for one fixture."""
     expected = RECONSTRUCTION_EXPECTATIONS[case_name]
     return expected["profile"], expected["preservation_level"]
 
 
 def expected_provenance_map(scirh_text: str):
+    """Purpose: Build the canonical line-granular provenance map expected for reconstructed outputs."""
     return {
         str(index): line
         for index, line in enumerate(scirh_text.splitlines(), start=1)
@@ -4331,15 +4654,18 @@ def expected_provenance_map(scirh_text: str):
 
 
 def build_provenance_map(scirh_text: str):
+    """Purpose: Materialize the provenance map recorded in reconstruction evidence artifacts."""
     return expected_provenance_map(scirh_text)
 
 
 def provenance_map_matches_canonical_lines(scirh_text: str, provenance_map: dict[str, str]):
+    """Purpose: Check whether a provenance map covers every non-empty canonical SCIR-H line exactly."""
     expected = expected_provenance_map(scirh_text)
     return provenance_map == expected
 
 
 def render_python_expr(expr, import_aliases: dict[str, str]):
+    """Purpose: Render one canonical SCIR-H expression back into the restricted Python reconstruction subset."""
     if isinstance(expr, NameExpr):
         return import_aliases.get(expr.name, expr.name)
     if isinstance(expr, PlaceExpr):
@@ -4361,6 +4687,7 @@ def render_python_expr(expr, import_aliases: dict[str, str]):
 
 
 def render_python_stmt(stmt, indent: int, import_aliases: dict[str, str]):
+    """Purpose: Render one canonical SCIR-H statement back into the restricted Python reconstruction subset."""
     prefix = " " * indent
     if isinstance(stmt, VarDecl):
         return [f"{prefix}{stmt.name} = {render_python_expr(stmt.value, import_aliases)}"]
@@ -4381,6 +4708,7 @@ def render_python_stmt(stmt, indent: int, import_aliases: dict[str, str]):
 
 
 def reconstruct_while_call_update_source(module: Module) -> str:
+    """Purpose: Reconstruct the admitted while-call-update fixture into its checked Python source form."""
     function = match_while_call_update_module(module)
     if function is None:
         raise PipelineError("b_while_call_update: unsupported compact SCIR-H shape for reconstruction")
@@ -4393,6 +4721,7 @@ def reconstruct_while_call_update_source(module: Module) -> str:
 
 
 def reconstruct_while_break_continue_source(module: Module) -> str:
+    """Purpose: Reconstruct the admitted break/continue loop fixture into its checked Python source form."""
     function = match_while_break_continue_module(module)
     if function is None:
         raise PipelineError("b_while_break_continue: unsupported compact SCIR-H shape for reconstruction")
@@ -4408,6 +4737,7 @@ def reconstruct_while_break_continue_source(module: Module) -> str:
 
 
 def reconstruct_class_init_source(module: Module) -> str:
+    """Purpose: Reconstruct the admitted class-init fixture into its checked Python source form."""
     matched = match_class_init_module(module)
     if matched is None:
         raise PipelineError("b_class_init_method: unsupported compact SCIR-H shape for reconstruction")
@@ -4422,6 +4752,7 @@ def reconstruct_class_init_source(module: Module) -> str:
 
 
 def reconstruct_class_field_update_source(module: Module) -> str:
+    """Purpose: Reconstruct the admitted class-field-update fixture into its checked Python source form."""
     matched = match_class_field_update_module(module)
     if matched is None:
         raise PipelineError("b_class_field_update: unsupported compact SCIR-H shape for reconstruction")
@@ -4437,6 +4768,7 @@ def reconstruct_class_field_update_source(module: Module) -> str:
 
 
 def reconstruct_try_except_source(module: Module) -> str:
+    """Purpose: Reconstruct the admitted try/except fixture into its checked Python source form."""
     function = match_try_except_module(module)
     if function is None:
         raise PipelineError("d_try_except: unsupported compact SCIR-H shape for reconstruction")
@@ -4450,6 +4782,7 @@ def reconstruct_try_except_source(module: Module) -> str:
 
 
 def import_aliases(module: Module):
+    """Purpose: Recover import alias mappings needed to reconstruct Python import references faithfully."""
     aliases = {}
     for item in module.imports:
         if item.ref.startswith("python:"):
@@ -4458,6 +4791,7 @@ def import_aliases(module: Module):
 
 
 def reconstruct_python_source(module: Module, *, input_representation: str = "SCIR-H"):
+    """Purpose: Reconstruct Python source only for the admitted canonical SCIR-H slice."""
     assert_canonical_pipeline_input(input_representation, "reconstruction")
     if case_name_from_module(module) == "b_while_call_update":
         return reconstruct_while_call_update_source(module)
@@ -4491,6 +4825,7 @@ def reconstruct_python_source(module: Module, *, input_representation: str = "SC
 
 
 def execute_module(case_name: str, source_text: str):
+    """Purpose: Execute one fixture-specific Python harness so reconstruction can be checked behaviorally."""
     namespace = {"__builtins__": __builtins__}
     if case_name == "a_basic_function":
         exec(compile(source_text, f"<{case_name}>", "exec"), namespace)
@@ -4567,6 +4902,7 @@ def execute_module(case_name: str, source_text: str):
 
 
 def evaluate_reconstruction(case_name: str, reconstructed_text: str):
+    """Purpose: Measure whether reconstructed Python both compiles and matches the fixture execution harness."""
     try:
         compile(reconstructed_text, f"<reconstructed:{case_name}>", "exec")
     except SyntaxError:
@@ -4580,6 +4916,7 @@ def evaluate_reconstruction(case_name: str, reconstructed_text: str):
 
 
 def build_reconstruction_outputs(module: Module):
+    """Purpose: Build reconstructed source, provenance, and paired reconstruction reports for one fixture."""
     case_name = case_name_from_module(module)
     reconstructed_text = reconstruct_python_source(module)
     scirh_text = format_module(module)
@@ -4654,6 +4991,7 @@ def validate_reconstruction_report(
     provenance_map: dict[str, str],
     report: dict,
 ):
+    """Purpose: Verify the reconstruction evidence report against compile, test, and provenance reality."""
     failures = []
     profile, preservation_level = reconstruction_profile(case_name)
     if report["source_language"] != "python":
@@ -4697,6 +5035,7 @@ def validate_reconstruction_report(
 
 
 def validate_reconstruction_preservation_report(case_name: str, reconstruction_report: dict, report: dict):
+    """Purpose: Verify that reconstruction preservation claims are justified by reconstruction evidence."""
     failures = []
     profile, preservation_level = reconstruction_profile(case_name)
     if report["path"] != "h_to_python":
@@ -4743,6 +5082,7 @@ def validate_reconstruction_artifacts(
     reconstruction_report: dict,
     preservation_report: dict,
 ):
+    """Purpose: Validate the paired reconstruction evidence and preservation artifacts for one fixture."""
     failures = []
     failures.extend(
         validate_reconstruction_report(
@@ -4764,6 +5104,7 @@ def validate_reconstruction_artifacts(
 
 
 def validate_executable_output_set(outputs: dict):
+    """Purpose: Enforce which pipeline outputs supported, importer-only, and rejected cases are allowed to emit."""
     failures = []
     for case_name in SUPPORTED_CASES:
         if case_name not in outputs["scir_hc_reports"]:
@@ -4803,6 +5144,7 @@ def validate_executable_output_set(outputs: dict):
 
 
 def compare_imported_feature_totals(root: pathlib.Path):
+    """Purpose: Summarize importer feature-tier totals used by benchmark and claim-gating logic."""
     total = 0
     opaque = 0
     tier_counts = {"A": 0, "B": 0, "C": 0, "D": 0}
@@ -4817,10 +5159,12 @@ def compare_imported_feature_totals(root: pathlib.Path):
 
 
 def count_tokens(text: str):
+    """Purpose: Count coarse lexical tokens for compactness and benchmark surface comparisons."""
     return len(re.findall(r"[A-Za-z_]+|\d+|[^\s]", text))
 
 
 def scirh_header_and_body_tokens(text: str):
+    """Purpose: Split SCIR-H token counts into header versus body regions for benchmark analysis."""
     header = 0
     body = 0
     for line in text.splitlines():
@@ -4835,6 +5179,7 @@ def scirh_header_and_body_tokens(text: str):
 
 
 def source_body_tokens(text: str):
+    """Purpose: Count only executable or body-like source tokens, excluding import and header lines."""
     total = 0
     for line in text.splitlines():
         stripped = line.strip()
@@ -4847,6 +5192,7 @@ def source_body_tokens(text: str):
 
 
 def corpus_hash(case_names: list[str]):
+    """Purpose: Compute the canonical corpus hash used by smoke outputs and benchmark reproducibility blocks."""
     digest = hashlib.sha256()
     for case_name in case_names:
         digest.update(PYTHON_SOURCE_TEXTS[case_name].encode("utf-8"))
@@ -4924,6 +5270,7 @@ TRACK_C_REPAIR_CASE_CONFIG = {
 
 
 def track_c_typed_ast_surface(case_name: str, source_text: str):
+    """Purpose: Derive the typed-AST comparison surface used by Track C reporting for one fixture."""
     tree = ast.parse(source_text)
     if case_name == "a_basic_function":
         node = tree.body[0].body[1]
@@ -4953,6 +5300,7 @@ def track_c_typed_ast_surface(case_name: str, source_text: str):
 
 
 def track_patch_composability_metrics():
+    """Purpose: Summarize patch-composability metrics across Track C repair surfaces for the active corpus."""
     source_ratios = []
     typed_ast_ratios = []
     regularized_core_ratios = []
@@ -4992,6 +5340,7 @@ def track_patch_composability_metrics():
 
 
 def evaluate_track_c_seeded_repair(case_name: str):
+    """Purpose: Measure one seeded repair example for Track C without promoting it into the default gate."""
     config = TRACK_C_REPAIR_CASE_CONFIG[case_name]
     seed_bug = config["seed_bug"]
     if seed_bug is None:
@@ -5130,6 +5479,7 @@ def run_track_c_pilot(root: pathlib.Path):
 
 
 def run_track_a(root: pathlib.Path, *, outputs: dict):
+    """Purpose: Compute Track A benchmark rows and summary metrics from the active pipeline outputs."""
     track_contract = benchmark_track_contract("A")
     scirh_texts = [load_import_artifacts(root, case_name)["expected.scirh"] for case_name in BENCHMARK_CASES]
     scirhc_texts = [outputs["scir_hc_reports"][case_name]["text"] for case_name in BENCHMARK_CASES]
@@ -5266,6 +5616,7 @@ def run_track_a(root: pathlib.Path, *, outputs: dict):
 
 
 def run_track_b(root: pathlib.Path, reconstruction_reports: dict[str, dict]):
+    """Purpose: Compute Track B compile or test evidence metrics from reconstruction reports."""
     track_contract = benchmark_track_contract("B")
     opaque_nodes, total_nodes, tier_counts = compare_imported_feature_totals(root)
     opaque_fraction = opaque_nodes / total_nodes
@@ -5335,6 +5686,7 @@ def run_track_b(root: pathlib.Path, reconstruction_reports: dict[str, dict]):
 
 
 def run_pipeline(root: pathlib.Path):
+    """Purpose: Execute the canonical Python proof-loop pipeline end to end for the active fixture set."""
     failures = []
     outputs = {
         "source_to_h_reports": {},
@@ -5533,6 +5885,7 @@ def run_benchmark_suite(root: pathlib.Path):
 
 
 def run_self_tests(root: pathlib.Path):
+    """Purpose: Execute mutation-style self-tests that prove the pipeline and report contracts fail when drifted."""
     failures = []
     old_syntax = (
         "module fixture.python_importer.a_basic_function {\n"
@@ -5927,10 +6280,12 @@ def run_self_tests(root: pathlib.Path):
 
 
 def rust_fixture_source(root: pathlib.Path, case_name: str) -> pathlib.Path:
+    """Return the canonical Rust fixture source path for one importer case."""
     return root / "tests" / "rust_importer" / "cases" / case_name / "input" / "src" / "lib.rs"
 
 
 def load_rust_import_artifacts(root: pathlib.Path, case_name: str):
+    """Load the Rust importer bundle and decode JSON artifacts eagerly for validation."""
     bundle = build_rust_bundle(root, rust_fixture_source(root, case_name))
     parsed = {}
     for name, contents in bundle.files.items():
@@ -5942,12 +6297,14 @@ def load_rust_import_artifacts(root: pathlib.Path, case_name: str):
 
 
 def require_rust_toolchain():
+    """Reject Rust-path work when the retained Rust toolchain surface is unavailable."""
     resolution = resolve_rust_toolchain()
     if not resolution["available"]:
         raise PipelineError(f"Rust Phase 6A requires a usable Rust toolchain: {resolution['reason']}")
 
 
 def run_rust_command(command: list[str], *, cwd: pathlib.Path, capture_output: bool = False, text: bool = False):
+    """Run a Rust toolchain command under the repository's canonical environment contract."""
     require_rust_toolchain()
     return subprocess.run(
         command,
@@ -5960,6 +6317,7 @@ def run_rust_command(command: list[str], *, cwd: pathlib.Path, capture_output: b
 
 
 def validate_rust_scirh_case(case_name: str, scirh_text: str, *, boundary_contracts=None):
+    """Validate one imported Rust SCIR-H artifact against the canonical parser and semantics gate."""
     try:
         parsed = parse_module(scirh_text)
     except ScirHModelError as exc:
@@ -5995,10 +6353,12 @@ def validate_rust_scirh_case(case_name: str, scirh_text: str, *, boundary_contra
 
 
 def lower_rust_mut_local(module: Module):
+    """Lower the Rust mutable-local fixture through the shared compact lowering shape."""
     return lower_basic_function(module)
 
 
 def lower_rust_struct_field_module(module: Module):
+    """Lower the Rust borrowed-field fixture into explicit field-address and memory-token form."""
     function = module.functions[0]
     body = list(function.body)
     if len(body) != 2:
@@ -6116,10 +6476,12 @@ def lower_rust_struct_field_module(module: Module):
 
 
 def lower_rust_async_module(module: Module):
+    """Lower the Rust async fixture through the shared await-resume lowering path."""
     return lower_async_module(module)
 
 
 def lower_rust_unsafe_module(module: Module):
+    """Lower the Rust unsafe fixture as an explicit opaque boundary rather than hidden codegen."""
     function = module.functions[0]
     if not (
         len(module.imports) == 1
@@ -6161,8 +6523,11 @@ def lower_rust_unsafe_module(module: Module):
 
 
 def lower_rust_supported_module(module: Module, *, input_representation: str = "SCIR-H"):
+    """Dispatch only the admitted Rust proof-loop fixtures into their frozen lowering rules."""
     assert_canonical_pipeline_input(input_representation, "lowering")
     case_name = case_name_from_module(module)
+    # This dispatcher is the active Rust support boundary; new cases are unsupported until
+    # they receive an explicit matcher, lowering contract, and validation surface.
     if case_name == "a_mut_local":
         return lower_rust_mut_local(module)
     if case_name == "a_struct_field_borrow_mut":
@@ -6175,6 +6540,7 @@ def lower_rust_supported_module(module: Module, *, input_representation: str = "
 
 
 def validate_rust_lowering_alignment(case_name: str, lowered: dict):
+    """Check that each admitted Rust lowering matches its exact retained derivative contract."""
     if case_name == "a_mut_local":
         function = lowered["functions"][0]
         blocks = function["blocks"]
@@ -6290,6 +6656,7 @@ def validate_rust_lowering_alignment(case_name: str, lowered: dict):
 
 
 def rust_translation_report(case_name: str):
+    """Build the frozen Rust H-to-L preservation report for one supported importer case."""
     preserved = {
         "a_mut_local": ["function boundaries", "mutable local semantics", "branch behavior"],
         "a_struct_field_borrow_mut": ["function boundaries", "borrowed field mutation semantics"],
@@ -6335,6 +6702,7 @@ def rust_translation_report(case_name: str):
 
 
 def validate_rust_translation_report(case_name: str, report: dict):
+    """Validate that a Rust translation report does not overclaim profile or preservation scope."""
     failures = []
     expected = RUST_TRANSLATION_EXPECTATIONS[case_name]
     if report["path"] != "h_to_l":
@@ -6381,6 +6749,7 @@ def validate_rust_translation_report(case_name: str, report: dict):
 
 
 def validate_rust_output_set(outputs: dict):
+    """Ensure supported, rejected, and Wasm-emittable Rust cases emit only the allowed artifacts."""
     failures = []
     for case_name in RUST_SUPPORTED_CASES:
         if case_name not in outputs["scir_hc_reports"]:
@@ -6412,6 +6781,7 @@ def validate_rust_output_set(outputs: dict):
 
 
 def run_rust_pipeline(root: pathlib.Path):
+    """Run the retained Rust importer-first validation path over all admitted Rust cases."""
     require_rust_toolchain()
     failures = []
     outputs = {
@@ -6490,6 +6860,7 @@ def run_rust_pipeline(root: pathlib.Path):
 
 
 def run_rust_self_tests(root: pathlib.Path):
+    """Exercise negative checks that prove the Rust importer contracts fail when they should."""
     failures = []
     old_syntax = (
         "module fixture.rust_importer.a_struct_field_borrow_mut {\n"
@@ -6576,6 +6947,7 @@ def run_rust_self_tests(root: pathlib.Path):
 
 
 def print_validation_success():
+    """Print the canonical success summary for the Python bootstrap validation path."""
     print("[pipeline] bootstrap validation passed")
     print(
         "Validated importer outputs, compact canonical SCIR-H parsing and formatting, "
@@ -6586,6 +6958,7 @@ def print_validation_success():
 
 
 def print_rust_validation_success():
+    """Print the canonical success summary for the Rust importer-first validation path."""
     print("[pipeline] Rust importer-first validation passed")
     print(
         "Validated Rust importer outputs, compact canonical SCIR-H parsing and formatting, "
@@ -6595,6 +6968,7 @@ def print_rust_validation_success():
 
 
 def print_test_success():
+    """Print the canonical success summary for the Python bootstrap self-test path."""
     print("[pipeline] bootstrap self-tests passed")
     print(
         "Negative checks covered legacy SCIR-H syntax, unsupported SCIR-L ops, "
@@ -6606,6 +6980,7 @@ def print_test_success():
 
 
 def print_rust_test_success():
+    """Print the canonical success summary for the Rust importer-first self-test path."""
     print("[pipeline] Rust importer-first self-tests passed")
     print(
         "Negative checks covered legacy Rust SCIR-H syntax, field.addr alignment, unsafe-boundary "
@@ -6615,6 +6990,7 @@ def print_rust_test_success():
 
 
 def parse_args():
+    """Parse the small CLI contract for validation versus self-test mode and language lane."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", default="validate")
     parser.add_argument("--language", default="python", choices=["python", "rust"])
@@ -6623,6 +6999,7 @@ def parse_args():
 
 
 def main():
+    """Run the selected Python or Rust bootstrap lane and map failures onto the small CLI contract."""
     args = parse_args()
     root = repo_root(args.root)
 

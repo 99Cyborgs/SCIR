@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Frozen metadata for the bounded Wasm reference-backend MVP slice.
-
-This file records what the current helper-free Wasm path may emit and why that
-path remains contract-bounded rather than semantically complete. Other scripts
-consume it as the authoritative boundary for preservation wording and admitted
-lowering rules.
+"""File: scripts/wasm_backend_metadata.py
+Purpose: Record the frozen metadata and contract wording for the bounded helper-free Wasm reference-backend slice.
+Role in system: This module is the authoritative executable boundary for what the repo may claim about Wasm emission.
+Key dependencies: scir_python_bootstrap and scir_rust_bootstrap metadata plus the validation and pipeline scripts that import this contract.
+Side effects: Raises validation errors at import time when Wasm metadata drifts from importer contract facts.
 """
 from __future__ import annotations
 
@@ -68,7 +67,19 @@ WASM_BACKEND_METADATA = {
 
 
 def wasm_emittable_module_ids() -> list[str]:
-    """Return the exact fixture module ids admitted into the current Wasm slice."""
+    """Purpose: Return the exact module ids admitted into the current Wasm-emittable slice.
+
+    Inputs:
+      - None.
+    Outputs:
+      - list[str] canonical fixture module ids for Python and Rust cases allowed into the Wasm path.
+    Side Effects:
+      - None.
+    Assumptions:
+      - The Wasm slice is defined entirely by the metadata lists in WASM_BACKEND_METADATA.
+    Failure Modes:
+      - None.
+    """
 
     return [
         *(f"fixture.python_importer.{case_name}" for case_name in WASM_BACKEND_METADATA["emittable_python_cases"]),
@@ -77,7 +88,19 @@ def wasm_emittable_module_ids() -> list[str]:
 
 
 def _validate_wasm_backend_metadata():
-    """Keep Wasm metadata synchronized with importer contracts so executable claims cannot silently widen."""
+    """Purpose: Keep Wasm metadata synchronized with importer contracts so executable claims cannot silently widen.
+
+    Inputs:
+      - None.
+    Outputs:
+      - None.
+    Side Effects:
+      - Raises ValueError during import when Wasm metadata diverges from importer-emittable case facts or frozen contract values.
+    Assumptions:
+      - Import-time validation is the safest way to prevent downstream scripts from running with widened or inconsistent Wasm claims.
+    Failure Modes:
+      - Raises ValueError on case drift, overlapping lowering-rule classifications, or contract field drift.
+    """
 
     expected_python_cases = [
         case_name
