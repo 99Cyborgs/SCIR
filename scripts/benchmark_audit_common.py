@@ -100,7 +100,9 @@ def canonical_json_hash(payload: Any) -> str:
 
 
 def file_sha256(path: Path) -> str:
-    return f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
+    # Benchmark corpus fixtures are tracked as text and their manifest hashes are
+    # line-ending-stable across Windows and Unix checkouts.
+    return f"sha256:{hashlib.sha256(path.read_bytes().replace(b'\r\n', b'\n')).hexdigest()}"
 
 
 def environment_snapshot(root: Path) -> dict[str, str]:

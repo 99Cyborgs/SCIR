@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sys
+import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
@@ -15,6 +16,8 @@ if str(ROOT) not in sys.path:
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
+from benchmark_audit_common import file_sha256  # noqa: E402
+from benchmark_repro import manifest_drift_failures, resolve_run_dir  # noqa: E402
 from _internal.scirhc_transform import (  # noqa: E402
     ScirhcGenerationContext,
     build_scirhc_generation_context,
@@ -251,6 +254,60 @@ class ScirHcDoctrineTests(unittest.TestCase):
     def test_pipeline_context_builder_rejects_non_report_surface(self) -> None:
         with self.assertRaises(PipelineViolationError):
             make_scirhc_generation_context(sample_module(), report_context="lowering_pass")
+
+    def test_benchmark_file_sha256_normalizes_crlf(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            lf_path = root / "lf.py"
+            crlf_path = root / "crlf.py"
+            logical_source = "def f():\n    return 1\n"
+            lf_path.write_text(logical_source, encoding="utf-8", newline="\n")
+            crlf_path.write_text(logical_source, encoding="utf-8", newline="\r\n")
+
+            self.assertEqual(file_sha256(lf_path), file_sha256(crlf_path))
+
+    def test_benchmark_repro_accepts_crlf_fixture_checkout(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            fixture_rel = "tests/python_importer/cases/a_basic_function/source.py"
+            fixture_path = root / fixture_rel
+            fixture_path.parent.mkdir(parents=True, exist_ok=True)
+            logical_source = "def f():\n    return 1\n"
+            fixture_path.write_text(logical_source, encoding="utf-8", newline="\r\n")
+
+            lf_path = root / "lf_reference.py"
+            lf_path.write_text(logical_source, encoding="utf-8", newline="\n")
+            locked_manifest = {
+                "manifest": {
+                    "fixtures": [
+                        {
+                            "path": fixture_rel,
+                            "hash": file_sha256(lf_path),
+                        }
+                    ]
+                }
+            }
+
+            self.assertEqual(manifest_drift_failures(root, locked_manifest), [])
+
+    def test_benchmark_repro_resolves_default_claim_directory_by_run_id(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            claim_dir = root / "artifacts" / "benchmark_runs" / "claim"
+            claim_dir.mkdir(parents=True, exist_ok=True)
+            (claim_dir / "benchmark_run_context.json").write_text(
+                json.dumps({"run_id": "python-proof-loop-full-20260413T160008Z"}) + "\n",
+                encoding="utf-8",
+            )
+            (claim_dir / "manifest_lock.json").write_text(
+                json.dumps({"manifest": {"fixtures": []}}) + "\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                resolve_run_dir(root, "python-proof-loop-full-20260413T160008Z"),
+                claim_dir,
+            )
 
 
 if __name__ == "__main__":

@@ -37,10 +37,38 @@ def manifest_drift_failures(root: Path, locked_manifest: dict) -> list[str]:
     return failures
 
 
+def resolve_run_dir(root: Path, run_id: str) -> Path | None:
+    benchmark_root = root / "artifacts" / "benchmark_runs"
+    direct_match = benchmark_root / run_id
+    if (direct_match / "benchmark_run_context.json").exists() and (direct_match / "manifest_lock.json").exists():
+        return direct_match
+    if not benchmark_root.exists():
+        return None
+    for candidate in sorted(path for path in benchmark_root.iterdir() if path.is_dir()):
+        context_path = candidate / "benchmark_run_context.json"
+        manifest_lock_path = candidate / "manifest_lock.json"
+        if not context_path.exists() or not manifest_lock_path.exists():
+            continue
+        try:
+            context = load_json(context_path)
+        except json.JSONDecodeError:
+            continue
+        if context.get("run_id") == run_id:
+            return candidate
+    return None
+
+
 def main() -> int:
     args = build_arg_parser().parse_args()
     root = Path(args.root).resolve() if args.root else ROOT
-    run_dir = root / "artifacts" / "benchmark_runs" / args.run_id
+    run_dir = resolve_run_dir(root, args.run_id)
+    if run_dir is None:
+        print(
+            f"missing benchmark run context for run_id {args.run_id} under "
+            f"{root / 'artifacts' / 'benchmark_runs'}",
+            file=sys.stderr,
+        )
+        return 1
     context_path = run_dir / "benchmark_run_context.json"
     manifest_lock_path = run_dir / "manifest_lock.json"
     if not context_path.exists():
