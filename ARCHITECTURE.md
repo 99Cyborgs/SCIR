@@ -41,7 +41,8 @@ validated SCIR-H
   -> Track A / Track B benchmarks
 ```
 
-Rust remains importer-first evidence aligned to the same `SCIR-H` contract.
+Rust remains importer-first evidence aligned to the same `SCIR-H` contract and is not an auto-activating post-Phase-2 implementation lane.
+Wasm remains a retained bounded backend surface aligned to the same derivative `SCIR-L` contract and is not an auto-activating post-proof-loop implementation lane.
 
 ## Active `SCIR-H` subset
 
@@ -65,12 +66,13 @@ The executable bootstrap subset currently admits:
 - intrinsic scalar comparisons
 
 Anything broader remains deferred or unsupported until the parser, validator, and tests all agree.
+The active proof loop now includes one exact executable `try/catch` slice: a direct call in the `try` body with a fixed `ValueError` fallback that returns `0`.
 
 ## Derived and backend posture
 
 - `SCIR-Hc` is a derived compression view over validated `SCIR-H`, never semantic authority.
 - `SCIR-L` remains derivative-only and subset-bound.
-- Wasm remains a bounded reference backend, not a parity claim.
+- Wasm remains a bounded retained reference backend, not a parity claim or the current widening target.
 - Benchmarking remains a retained audit surface, not the current implementation driver.
 
 ## Architecture change protocol

@@ -32,7 +32,7 @@ The active subset contains:
 - blocks
 - block parameters
 - the op set `const`, `cmp`, `alloc`, `store`, `load`, `field.addr`, `call`, `async.resume`, `opaque.call`
-- the terminators `ret`, `br`, `cond_br`
+- the terminators `ret`, `br`, `cond_br`, `invoke`
 
 ## Text rendering contract
 
@@ -50,6 +50,7 @@ Instr     ::= "%" SsaId "=" Op OperandList ";"
 Terminator::= "br" BlockRef "(" ArgList? ")" ";"
             | "cond_br" SsaId "," BlockRef "(" ArgList? ")" "," BlockRef "(" ArgList? ")" ";"
             | "ret" SsaId ";"
+            | "invoke" Ref "(" ArgList? ")" "->" SsaId "," BlockRef "(" ArgList? ")" "," "catch" Type BlockRef "(" ArgList? ")" ";"
 Op        ::= "const" | "cmp" | "alloc" | "store" | "load"
             | "field.addr" | "call" | "async.resume" | "opaque.call"
 ```
@@ -69,10 +70,20 @@ Every semantically meaningful op must carry:
 
 See `LOWERING_CONTRACT.md`.
 
+## Active bounded exception slice
+
+The active subset admits exactly one exceptional CFG form:
+
+- the `invoke` terminator for the fixed `d_try_except` proof-loop slice,
+- one direct symbolic callee,
+- one `ValueError` catch edge,
+- one carried normal return value,
+- no standalone `throw`, rethrow, finally, or multi-handler semantics.
+
 ## Deferred from the active subset
 
-- exception lowering
 - loop lowering for importer-only loop cases
+- broader exception lowering
 - witness or interface ops
 - backend dialect ops
 - optimizer-only semantics

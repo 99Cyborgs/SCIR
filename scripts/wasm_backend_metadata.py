@@ -19,6 +19,7 @@ WASM_BACKEND_METADATA = {
     "emittable_python_cases": [
         "a_basic_function",
         "b_direct_call",
+        "b_if_else_return",
     ],
     "emittable_rust_cases": [
         "a_mut_local",
@@ -39,6 +40,7 @@ WASM_BACKEND_METADATA = {
     "non_emittable_lowering_rules": [
         "H_AWAIT_RESUME",
         "H_OPAQUE_CALL",
+        "H_TRY_INVOKE",
     ],
     "scalar_signature_constraint": "helper-free scalar Wasm emission remains limited to scalar int params and int returns with no record type declarations",
     "record_cell_shape_constraint": "the first post-scalar Wasm slice remains limited to the fixed record-cell ABI for a single borrowed mutable int-field record",

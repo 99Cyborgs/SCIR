@@ -9,21 +9,49 @@
   "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
   "generated_at": "2026-04-03T17:00:00+00:00",
   "scir_h_lineage_references": {
-    "fixture.python_importer.a_basic_function": {
-      "semantic_lineage_id": "3c587f53a4b9d222de6d7d030596f12f8a39099043b9ac1a71676944527aeeb4",
-      "normalized_canonical_hash": "f7c16683b3d22b81971418a219d4c8086bbf42f4d6dc02bc3ec6cd9a69b0d35e"
-    },
     "fixture.python_importer.a_async_await": {
       "semantic_lineage_id": "a98fe0c337795cf2ba3402bfbfa922b148e80c5523cb607e04b24d6ebc8c3621",
-      "normalized_canonical_hash": "3d7c0ad673d1a7c0f1dfe0970e95afc65d8fa9bc0ad1213fd7f02f7957336990"
+      "normalized_canonical_hash": "6e8964fe70a9042ca8a380ae2368c8fb158f0d38961afecaeed7d9751f26a80d"
+    },
+    "fixture.python_importer.a_basic_function": {
+      "semantic_lineage_id": "3c587f53a4b9d222de6d7d030596f12f8a39099043b9ac1a71676944527aeeb4",
+      "normalized_canonical_hash": "86137dfe16e2e3c3adcaa519a6e3e4dadb1278c15d6312dc7d133057b73d8e8a"
     },
     "fixture.python_importer.b_direct_call": {
       "semantic_lineage_id": "32009e343204bc239d85132dc1f12a65d5ea6a26142aea581aae370f373a1aa8",
-      "normalized_canonical_hash": "51e8a0939caea3ef7f393f0e5ec05cf0761384ef019b77f5f6233eff6d8c7f41"
+      "normalized_canonical_hash": "48439b8a2176c9799913384e0ec741f803c477532460174bea3b4c559098c7e2"
     },
     "fixture.python_importer.c_opaque_call": {
       "semantic_lineage_id": "5c5cd930bece6767ffe7f7c773154b77e4c2f1a95d3c577a5dae9f7d5855e9f3",
-      "normalized_canonical_hash": "7f5f1bf1a8f8901d80d6de8bd38b307f84d8bb9757f1320f4d2968cc6f66f3f2"
+      "normalized_canonical_hash": "4e6709db6556d10523eb0c0ba9f6b6cf511c6795219650605071a7e007ac40d1"
+    },
+    "fixture.python_importer.b_if_else_return": {
+      "semantic_lineage_id": "9a539dd1f7f6c16284b7c69406045e05a2801b0230d1617dbadc0d17c6f3924f",
+      "normalized_canonical_hash": "eb8827ae95babedb00768bca49966e3a5f5031ec8e34ee5cc2237f548bb02fce"
+    },
+    "fixture.python_importer.b_async_arg_await": {
+      "semantic_lineage_id": "2822cc24677ef4a604d4f0aa3cdad19057946d4d4ce0c0d22aa7e7733af3ea12",
+      "normalized_canonical_hash": "53993e07e71bed9c9c1565ab7d0794fe0547c0b44854013c3d5b3e8f21e86e43"
+    },
+    "fixture.python_importer.b_while_call_update": {
+      "semantic_lineage_id": "dcc0f7d342b2df78ce59ff5b412c9dcf0bc530e664c7cc8bf6fb051e8cec9685",
+      "normalized_canonical_hash": "283ad705291d46ed09937f16985be21954e9a4cb762798e2c8c1709b3996611d"
+    },
+    "fixture.python_importer.b_while_break_continue": {
+      "semantic_lineage_id": "4eedd0d7856b45a9182393f676daa9fc0ba0cd58c499e441010c98c34cd1dedc",
+      "normalized_canonical_hash": "29c25acd1b9855dbb0615e0aaf4e518dee90f08166ad40869c88bbb624b26582"
+    },
+    "fixture.python_importer.b_class_init_method": {
+      "semantic_lineage_id": "64f6dcacd870f54cd2df64d07a624c4df9a66a137da97623a091290715ff525d",
+      "normalized_canonical_hash": "61964bcf64200980d8d6c9a3b4a965dafa1a93b31fc53f89ea8471410453c342"
+    },
+    "fixture.python_importer.b_class_field_update": {
+      "semantic_lineage_id": "ab04fb896682f4883c97d20dda1270173d3691c4c56e830ee6791ca754865c36",
+      "normalized_canonical_hash": "04fc6e4a6dcf56a9f8647e1ea4f5ca8570e56466e68c206da1fbce94d988fb3d"
+    },
+    "fixture.python_importer.d_try_except": {
+      "semantic_lineage_id": "8fe0a10f34d07b80800794b9ce26c3ec23405e59844ede689b9f7c708ddccedb",
+      "normalized_canonical_hash": "45e3cbea4fb9d3051072e000aaf08f0b9294a327ff65d1f2624b3eec7bab1e65"
     }
   },
   "tracks": {
@@ -60,10 +88,17 @@
         "metric": "LCR_scirhc",
         "metric_class": "DESCRIPTIVE",
         "scir_h_evidence": [
-          "fixture.python_importer.a_async_await",
           "fixture.python_importer.a_basic_function",
+          "fixture.python_importer.a_async_await",
           "fixture.python_importer.b_direct_call",
-          "fixture.python_importer.c_opaque_call"
+          "fixture.python_importer.c_opaque_call",
+          "fixture.python_importer.b_if_else_return",
+          "fixture.python_importer.b_async_arg_await",
+          "fixture.python_importer.b_while_call_update",
+          "fixture.python_importer.b_while_break_continue",
+          "fixture.python_importer.b_class_init_method",
+          "fixture.python_importer.b_class_field_update",
+          "fixture.python_importer.d_try_except"
         ],
         "observed_value": 1.5061,
         "baseline_value": 6.7672,
@@ -89,10 +124,17 @@
         "metric": "LCR_scirhc",
         "metric_class": "DESCRIPTIVE",
         "scir_h_evidence": [
-          "fixture.python_importer.a_async_await",
           "fixture.python_importer.a_basic_function",
+          "fixture.python_importer.a_async_await",
           "fixture.python_importer.b_direct_call",
-          "fixture.python_importer.c_opaque_call"
+          "fixture.python_importer.c_opaque_call",
+          "fixture.python_importer.b_if_else_return",
+          "fixture.python_importer.b_async_arg_await",
+          "fixture.python_importer.b_while_call_update",
+          "fixture.python_importer.b_while_break_continue",
+          "fixture.python_importer.b_class_init_method",
+          "fixture.python_importer.b_class_field_update",
+          "fixture.python_importer.d_try_except"
         ],
         "observed_value": 1.5061,
         "baseline_value": 6.7672,

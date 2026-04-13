@@ -16,12 +16,14 @@ Status: Normative
 - unsupported active grammar in canonical `SCIR-H`
 - `SCIR-Hc` parse-format instability, missing generation context, authority-boundary drift, hidden-semantics drift, deterministic-derivation drift, lineage-integrity drift, semantic-idempotence drift, or semantic round-trip drift
 - missing path, profile, or preservation level
+- missing required downgrade evidence for active `P2` or `P3` preservation reports
 - missing opaque-boundary contract where required
 - missing or mismatched boundary capability metadata
 - unused active effect rows or borrow-mode mutation violations
 - missing `origin` or `lowering_rule` on active `SCIR-L`
 - `origin` that no longer points back into the emitting `SCIR-H` module
 - `SCIR-L` op outside the active subset
+- admitted proof-loop lowering shape, provenance labels, or translation-report observables/evidence drifting from the fixed bootstrap contract
 - `SCIR-Hc` entering lowering, reconstruction, or backend emission directly
 - `benchmark_report` claim scope leaking `SCIR-Hc` evidence across claim classes, lineage coverage, or metric-class authority boundaries
 - active TypeScript or `D-JS` claim
@@ -32,7 +34,7 @@ Status: Normative
 
 - reject pretty views as canonical storage
 - reject any active construct not listed in `SPEC_COMPLETENESS_CHECKLIST.md`
-- reject standalone `throw` syntax or broader `throw` effect discharge outside the importer-only Tier `B` `try/catch` slice
+- reject standalone `throw` syntax or broader `throw` effect discharge outside the exact bounded `d_try_except` `try/catch` slice
 - reject preservation overclaims or unexplained downgrades against the active corpus expectations
 - reject `SCIR-Hc` nodes that omit canonical information without `compression_origin` provenance
 - reject `benchmark_report` claim/evidence mixes that generalize `SCIR-Hc` beyond the declared claim class

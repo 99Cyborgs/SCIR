@@ -3,21 +3,21 @@
   "subject": "fixture.python_importer.b_class_field_update",
   "source_language": "python",
   "summary": {
-    "A": 0,
-    "B": 2,
+    "A": 2,
+    "B": 0,
     "C": 0,
     "D": 0
   },
   "items": [
     {
       "feature": "bounded record-like class import with field update method",
-      "tier": "B",
-      "rationale": "A single plain class with one explicit instance field and one fixed field-update method can normalize into a canonical record declaration plus plain functions, but this slice remains importer-only and does not widen executable claims."
+      "tier": "A",
+      "rationale": "A single plain class with one explicit instance field and one fixed field-update method now participates in the active Python proof loop through exact-shape lowering, reconstruction, and benchmark evidence without widening into generalized object semantics."
     },
     {
       "feature": "explicit instance-field read/write normalization through a direct local call",
-      "tier": "B",
-      "rationale": "The fixed self.value = step(self.value) method body reuses canonical field-place and direct-call syntax while broader Python object semantics remain deferred."
+      "tier": "A",
+      "rationale": "The fixed self.value = step(self.value) method body now participates in the active Python proof loop through the bounded record-field lowering subset while broader Python object semantics remain deferred."
     }
   ]
 }

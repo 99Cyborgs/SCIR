@@ -3,16 +3,17 @@
   "subject": "fixture.typescript_importer.a_interface_local_witness_use",
   "source_language": "typescript",
   "summary": {
-    "A": 1,
+    "A": 0,
     "B": 0,
     "C": 0,
-    "D": 0
+    "D": 1
   },
   "items": [
     {
-      "feature": "reserved module-local witness-use placeholder bundle",
-      "tier": "A",
-      "rationale": "This admitted first-slice TypeScript case is checked in only as reserved placeholder evidence for the published bundle shape; it is not a live importer result and does not widen executable claims."
+      "feature": "archived module-local witness-use placeholder residue",
+      "tier": "D",
+      "rationale": "This historical TypeScript case id is retained only as archived placeholder residue and archived placeholder evidence only. It does not record a live importer result and does not widen executable claims.",
+      "fallback": "reject"
     }
   ]
 }

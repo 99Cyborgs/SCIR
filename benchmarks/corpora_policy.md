@@ -19,6 +19,13 @@ It is not a new broad benchmark corpus and it does not widen the default executa
 - `a_async_await`
 - `b_direct_call`
 - `c_opaque_call`
+- `b_if_else_return`
+- `b_async_arg_await`
+- `b_while_call_update`
+- `b_while_break_continue`
+- `b_class_init_method`
+- `b_class_field_update`
+- `d_try_except`
 
 ## Rules
 

@@ -4,9 +4,8 @@
   "source_language": "typescript",
   "source_path": "tests/typescript_importer/cases/a_interface_decl/source.ts",
   "declared_profiles": [
-    "R",
     "D-JS"
   ],
-  "declared_tier": "A",
+  "declared_tier": "D",
   "dependencies": []
 }

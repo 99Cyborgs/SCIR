@@ -27,7 +27,7 @@ These remain validated and preserved on disk, but they are not the current widen
 - derived `SCIR-Hc`
 - derivative `SCIR-L`
 - bounded `SCIR-H -> SCIR-L` lowering
-- bounded Rust importer evidence
+- bounded Rust importer-first evidence
 - bounded Wasm reference backend
 - Track `A` and Track `B` benchmark harnesses
 

@@ -9,7 +9,7 @@ Current state:
 - the fixed first-slice TypeScript case directories still contain placeholder bundle files only
 - `scripts/typescript_importer_conformance.py` remains deferred and is not part of the active MVP gate
 - no live TypeScript fixtures are checked in
-- admitted placeholder cases carry `expected.scirh`; rejected placeholder cases intentionally omit `expected.scirh`
+- all archived placeholder bundles remain `Tier D` residue with no canonical `SCIR-H`
 - the subtree is non-executable and non-authoritative
 
 Future corpus root:

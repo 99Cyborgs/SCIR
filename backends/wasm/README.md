@@ -1,13 +1,13 @@
-# Wasm Backend MVP
+# Wasm Backend Boundary
 Status: Normative
 
 ## Purpose
 
-Wasm is the first reference execution target for the SCIR MVP.
+Wasm is the retained helper-free reference backend surface for the current MVP boundary.
 
 ## Active scope
 
-The active Wasm backend is limited to helper-free stable WAT emission for the smallest admitted `SCIR-L` subset:
+The retained helper-free Wasm backend is limited to stable WAT emission for the smallest admitted `SCIR-L` subset:
 
 - synchronous `int -> int` or `() -> int` functions in the scalar slice, plus the fixed `borrow_mut<Counter> -> int` record-cell slice
 - `const`
@@ -24,6 +24,7 @@ The active Wasm backend is limited to helper-free stable WAT emission for the sm
 
 - `fixture.python_importer.a_basic_function`
 - `fixture.python_importer.b_direct_call`
+- `fixture.python_importer.b_if_else_return`
 
 ### Admitted Rust emitted modules
 
@@ -47,6 +48,7 @@ The active Wasm backend is limited to helper-free stable WAT emission for the sm
 
 - `H_AWAIT_RESUME`
 - `H_OPAQUE_CALL`
+- `H_TRY_INVOKE`
 
 ### Additional non-emittable backend shapes
 
@@ -94,6 +96,10 @@ Wasm emission does not imply:
 - native parity
 - host-runtime parity
 - support for deferred constructs
+- a broader active backend-expansion lane inside the MVP
+
+It remains validated and preserved on disk, but it is not the current widening target.
+It must not be presented as an active backend-expansion or benchmark lane unless a post-MVP reactivation decision updates the root roadmap, benchmark strategy, target-profile and preservation docs, and repo-contract surfaces together.
 
 ## Required report path
 

@@ -17,7 +17,7 @@ Status: Normative
 | `loop` | yes | yes | validator-only | no | no | yes | canonical parser/validator surface only | kept as importer-only `SCIR-H` surface beyond parser/validator |
 | `break` | yes | yes | validator-only | no | no | yes | canonical parser/validator surface only | kept as importer-only `SCIR-H` surface beyond parser/validator |
 | `continue` | yes | yes | validator-only | no | no | yes | canonical parser/validator surface only | kept as importer-only `SCIR-H` surface beyond parser/validator |
-| single-handler `try` / `catch name Type` | yes | yes | validator-only | no | no | yes | canonical parser/validator surface only | kept as importer-only `SCIR-H` surface beyond parser/validator |
+| single-handler `try` / `catch name Type` | yes | yes | yes | yes for the exact `d_try_except` slice | yes for the exact `d_try_except` slice | yes | subset-bound executable support | kept as an exact-shape proof-loop slice; broader forms remain deferred |
 | direct call `f(args)` | yes | yes | yes | subset-bound yes | yes for Python subset | yes | fully supported in MVP | kept |
 | `await` | yes | yes | yes | yes | yes for Python subset | yes | fully supported in MVP | kept |
 | intrinsic scalar comparison | yes | yes | yes | yes | yes | yes | fully supported in MVP | kept |
@@ -26,7 +26,7 @@ Status: Normative
 | `iface` declarations | no | no | no | no | no | no | not MVP and removed from active claims | deferred |
 | `witness` declarations | no | no | no | no | no | no | not MVP and removed from active claims | deferred |
 | capability signatures and `using` clauses | no | no | no | no | no | no | not MVP and removed from active claims | deferred |
-| importer-only `!throw` effect marker on bounded `try/catch` evidence | yes | yes | validator-only | no | no | yes | canonical parser/validator surface only | kept as an importer-only effect marker; standalone `throw` syntax remains deferred |
+| explicit `!throw` effect marker on the exact bounded `try/catch` slice | yes | yes | yes | yes for the exact `d_try_except` slice | yes for the exact `d_try_except` slice | yes | subset-bound executable support | kept as an exact-shape proof-loop effect marker; standalone `throw` syntax remains deferred |
 | `throw` expression or statement | no | no | no | no | no | no | not MVP and removed from active claims | deferred outside the importer-only `!throw` effect marker |
 | `match` | no | no | no | no | no | no | not MVP and removed from active claims | deferred |
 | `select` | no | no | no | no | no | no | not MVP and removed from active claims | deferred |

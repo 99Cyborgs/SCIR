@@ -4,12 +4,12 @@
   "layer": "scir_h",
   "validator": "typescript-phase7-placeholder-bundle",
   "spec_version": "v0.1-draft",
-  "status": "warn",
+  "status": "fail",
   "diagnostics": [
     {
       "code": "TS-PH002",
-      "severity": "warn",
-      "message": "No live TypeScript importer, SCIR-H validation, SCIR-L, reconstruction, benchmark, or executable D-JS path has run for this reserved Phase 7 placeholder bundle.",
+      "severity": "error",
+      "message": "This archived TypeScript placeholder remains outside the active SCIR boundary; canonical SCIR-H is intentionally absent and no live TypeScript importer, validation, lowering, reconstruction, benchmark, or executable D-JS path has run.",
       "location": "source.ts:1"
     }
   ]

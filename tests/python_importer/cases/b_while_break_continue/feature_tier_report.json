@@ -3,26 +3,26 @@
   "subject": "fixture.python_importer.b_while_break_continue",
   "source_language": "python",
   "summary": {
-    "A": 0,
-    "B": 3,
+    "A": 3,
+    "B": 0,
     "C": 0,
     "D": 0
   },
   "items": [
     {
       "feature": "fixed-shape while-loop guard normalization",
-      "tier": "B",
-      "rationale": "A bounded while loop can normalize into canonical loop plus explicit guard-and-break structure, but this slice remains importer-only and adds no executable downstream claim."
+      "tier": "A",
+      "rationale": "A bounded while loop with one guard and one nested escape path now participates in the active Python proof loop through exact-shape lowering, reconstruction, and benchmark evidence."
     },
     {
       "feature": "explicit break normalization",
-      "tier": "B",
-      "rationale": "A fixed nested break site can normalize into canonical break syntax with a deterministic loop id, but this remains importer-only evidence."
+      "tier": "A",
+      "rationale": "The fixed nested break site now participates in the active Python proof loop without widening into generalized loop-exit lowering."
     },
     {
       "feature": "explicit continue normalization",
-      "tier": "B",
-      "rationale": "A fixed continue site can normalize into canonical continue syntax with a deterministic loop id, while executable lowering remains out of scope."
+      "tier": "A",
+      "rationale": "The fixed continue site now participates in the active Python proof loop without widening into generalized loop-control support."
     }
   ]
 }

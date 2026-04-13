@@ -1,0 +1,5 @@
+module invalid.ambiguous_top_level_name
+import sym helper python:builtins.helper
+
+fn helper -> int !
+  return 1

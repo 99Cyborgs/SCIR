@@ -1,0 +1,6 @@
+module invalid.opaque_projection
+import sym foreign_api_ping python:foreign_api.ping
+
+fn read_field -> int !opaque
+  var result opaque<ForeignResult> foreign_api_ping()
+  return result.value

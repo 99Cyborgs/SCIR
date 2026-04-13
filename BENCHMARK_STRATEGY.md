@@ -13,12 +13,17 @@ Track `A` therefore measures both canonical explicit `SCIR-H` and compressed der
 
 Track `C` is conditional.
 Track `D` is deferred.
+Track `C` remains a retained non-default diagnostic pilot for the remainder of the MVP.
+It is not an auto-activating post-Phase-5 benchmark lane.
+Promotion into the default executable gate or a broader benchmark claim surface requires a post-MVP reactivation decision that updates roadmap, benchmark doctrine, and repo-contract surfaces together.
 
 See `benchmarks/tracks.md`.
 
 The active executable benchmark corpus is frozen by the checked-in proof-loop corpus manifests under `tests/corpora/`.
 Those manifests are retained inputs, not benchmark result claims by themselves.
 Generated sweep artifacts belong under ignored `artifacts/` and are not part of the live repository surface.
+Rust importer evidence remains outside the active benchmark corpus and outside active benchmark claims for the MVP.
+Helper-free Wasm evidence remains outside the active benchmark corpus and outside active benchmark claims for the MVP.
 
 ### Active executable benchmark cases
 
@@ -26,6 +31,13 @@ Generated sweep artifacts belong under ignored `artifacts/` and are not part of 
 - `a_async_await`
 - `b_direct_call`
 - `c_opaque_call`
+- `b_if_else_return`
+- `b_async_arg_await`
+- `b_while_call_update`
+- `b_while_break_continue`
+- `b_class_init_method`
+- `b_class_field_update`
+- `d_try_except`
 
 ## Mandatory baselines
 
@@ -96,6 +108,7 @@ Canonical thresholds live in `benchmarks/success_failure_gates.md`.
 For Track `A`:
 
 - evaluate the source half of `S3` and `K2` on canonical `SCIR-H` median token ratios,
+- treat positive `semantic_explicitness_gain` as the current compensating-gains signal for `K2`,
 - evaluate the typed-AST half of `S3` on compressed `SCIR-Hc` median token ratios,
 - keep aggregate ratios diagnostic only,
 - keep structural-redundancy removal and patch-composability deltas diagnostic but published,
@@ -117,6 +130,15 @@ Track `C` may exist only as a minimal pilot after:
 
 The first Track `C` pilot is restricted to Python single-function repair over the fixed executable Python proof-loop cases.
 It remains non-default, and the checked-in sample artifacts stay outside the default executable benchmark gate.
+For the remainder of the MVP, Track `C` remains a retained non-default diagnostic pilot.
+It is not an auto-activating post-Phase-5 benchmark lane.
+Promotion into the default executable gate or a broader benchmark claim surface requires a post-MVP reactivation decision that updates roadmap, benchmark doctrine, and repo-contract surfaces together.
+
+### Conditional Track C MVP posture
+
+- `retain bounded diagnostic pilot for the remainder of the MVP`
+- `not an auto-activating post-Phase-5 benchmark lane`
+- `promotion into the default executable gate or broader benchmark claim surface requires a post-MVP reactivation decision`
 
 ### Conditional Track C pilot task family
 
@@ -128,6 +150,13 @@ It remains non-default, and the checked-in sample artifacts stay outside the def
 - `a_async_await`
 - `b_direct_call`
 - `c_opaque_call`
+- `b_if_else_return`
+- `b_async_arg_await`
+- `b_while_call_update`
+- `b_while_break_continue`
+- `b_class_init_method`
+- `b_class_field_update`
+- `d_try_except`
 
 ### Conditional Track C artifact posture
 
@@ -149,7 +178,7 @@ It remains non-default, and the checked-in sample artifacts stay outside the def
 
 - `gate_S2_ready must remain true`
 - `gate_K1_hit must remain false`
-- `accepted_case_count must remain 3`
+- `accepted_case_count must remain 10`
 - `boundary_only_case_count must remain 1`
 - `status must remain mixed or pass`
 
@@ -157,7 +186,7 @@ It remains non-default, and the checked-in sample artifacts stay outside the def
 
 - `retire if gate_S2_ready becomes false`
 - `retire if gate_K1_hit becomes true`
-- `retire if accepted_case_count drops below 3`
+- `retire if accepted_case_count drops below 10`
 - `retire if boundary_only_case_count differs from 1`
 - `retire if status becomes fail`
 
@@ -165,7 +194,7 @@ It remains non-default, and the checked-in sample artifacts stay outside the def
 
 - `checked-in sample manifest must equal the current opt-in pilot manifest`
 - `checked-in sample result must equal the current opt-in pilot result`
-- `checked-in sample result must keep accepted_case_count 3 and boundary_only_case_count 1`
+- `checked-in sample result must keep accepted_case_count 10 and boundary_only_case_count 1`
 - `checked-in sample result must keep gate_S2_ready true, gate_K1_hit false, and status mixed or pass`
 
 ### Conditional Track C sample posture re-decision triggers

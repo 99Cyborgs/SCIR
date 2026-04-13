@@ -108,6 +108,21 @@
       ]
     },
     {
+      "id": "invalid_scir_l.lowering.missing_terminator_rule",
+      "language": "scir_l",
+      "path": "tests/invalid_scir_l/invalid_missing_terminator_lowering_rule.json",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "missing terminator lowering rule"
+      ],
+      "hash": "sha256:4c0e72076d6eeecfd0bd570e6938adc0ae1cbc29f0f55dca76d39c9cc1eba2bc",
+      "expected_diagnostic_codes": [
+        "L006"
+      ]
+    },
+    {
       "id": "invalid_scir_l.unsupported.op",
       "language": "scir_l",
       "path": "tests/invalid_scir_l/invalid_unsupported_op.json",
@@ -120,6 +135,21 @@
       "hash": "sha256:3f9301fd6866b4d1875c268be9c4204bf605bfcae1c34a654a3f0098bd6db1af",
       "expected_diagnostic_codes": [
         "L007"
+      ]
+    },
+    {
+      "id": "invalid_scir_l.cfg.unsupported_terminator_kind",
+      "language": "scir_l",
+      "path": "tests/invalid_scir_l/invalid_unsupported_terminator_kind.json",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "unsupported terminator kind"
+      ],
+      "hash": "sha256:4a58a21b91a3dac825c7c39e2e5fc3d33364d2306a34fd3d98b7596912c7b09a",
+      "expected_diagnostic_codes": [
+        "L001"
       ]
     },
     {

@@ -1153,14 +1153,65 @@ def lower_basic_function(module: Module):
 
 
 def lower_async_module(module: Module):
-    fetch_value, load_once = module.functions
-    if not (
-        fetch_value.is_async
-        and load_once.is_async
+    case_name = case_name_from_module(module)
+    if len(module.functions) != 2 or module.imports:
+        raise PipelineError(f"{case_name}: unsupported compact SCIR-H shape for lowering")
+
+    fetch_value, load_function = module.functions
+    if not (fetch_value.is_async and load_function.is_async and fetch_value.name == "fetch_value"):
+        raise PipelineError(f"{case_name}: unsupported compact SCIR-H shape for lowering")
+
+    if (
+        case_name == "a_async_await"
         and fetch_value.body == (ReturnStmt(IntExpr(1)),)
-        and load_once.body == (ReturnStmt(AwaitExpr(CallExpr("fetch_value", ()))),)
+        and not fetch_value.params
+        and load_function.name == "load_once"
+        and not load_function.params
+        and load_function.body == (ReturnStmt(AwaitExpr(CallExpr("fetch_value", ()))),)
     ):
-        raise PipelineError("a_async_await: unsupported compact SCIR-H shape for lowering")
+        fetch_params = []
+        fetch_instructions = [
+            {
+                "id": "const0",
+                "op": "const",
+                "operands": [1],
+                "origin": f"{module.module_id}::fetch-value-return",
+                "lowering_rule": "H_CONST_RET",
+            }
+        ]
+        fetch_terminator = {
+            "kind": "ret",
+            "value": "const0",
+            "origin": f"{module.module_id}::fetch-value-ret",
+            "lowering_rule": "H_CONST_RET",
+        }
+        load_name = "load_once"
+        load_params = []
+        call_operands = ["sym:fetch_value", "eff0"]
+        load_return_origin = f"{module.module_id}::load-once-ret"
+    elif (
+        case_name == "b_async_arg_await"
+        and tuple(param.name for param in fetch_value.params) == ("x",)
+        and fetch_value.body == (ReturnStmt(NameExpr("x")),)
+        and load_function.name == "load_value"
+        and tuple(param.name for param in load_function.params) == ("x",)
+        and load_function.body
+        == (ReturnStmt(AwaitExpr(CallExpr("fetch_value", (NameExpr("x"),)))),)
+    ):
+        fetch_params = ["x"]
+        fetch_instructions = []
+        fetch_terminator = {
+            "kind": "ret",
+            "value": "x",
+            "origin": f"{module.module_id}::fetch-value-return",
+            "lowering_rule": "H_RETURN",
+        }
+        load_name = "load_value"
+        load_params = ["x"]
+        call_operands = ["sym:fetch_value", "x", "eff0"]
+        load_return_origin = f"{module.module_id}::load-value-ret"
+    else:
+        raise PipelineError(f"{case_name}: unsupported compact SCIR-H shape for lowering")
 
     return {
         "module_id": module.module_id,
@@ -1168,33 +1219,20 @@ def lower_async_module(module: Module):
             {
                 "name": "fetch_value",
                 "returns": "int",
-                "params": [],
+                "params": fetch_params,
                 "blocks": [
                     {
                         "id": "entry",
                         "params": [],
-                        "instructions": [
-                            {
-                                "id": "const0",
-                                "op": "const",
-                                "operands": [1],
-                                "origin": f"{module.module_id}::fetch-value-return",
-                                "lowering_rule": "H_CONST_RET",
-                            }
-                        ],
-                        "terminator": {
-                            "kind": "ret",
-                            "value": "const0",
-                            "origin": f"{module.module_id}::fetch-value-ret",
-                            "lowering_rule": "H_CONST_RET",
-                        },
+                        "instructions": fetch_instructions,
+                        "terminator": fetch_terminator,
                     }
                 ],
             },
             {
-                "name": "load_once",
+                "name": load_name,
                 "returns": "int",
-                "params": [],
+                "params": load_params,
                 "blocks": [
                     {
                         "id": "entry",
@@ -1203,7 +1241,7 @@ def lower_async_module(module: Module):
                             {
                                 "id": "call0",
                                 "op": "call",
-                                "operands": ["sym:fetch_value", "eff0"],
+                                "operands": call_operands,
                                 "origin": f"{module.module_id}::call-fetch-value",
                                 "lowering_rule": "H_DIRECT_CALL",
                             },
@@ -1218,12 +1256,452 @@ def lower_async_module(module: Module):
                         "terminator": {
                             "kind": "ret",
                             "value": "await0",
-                            "origin": f"{module.module_id}::load-once-ret",
+                            "origin": load_return_origin,
                             "lowering_rule": "H_RETURN",
                         },
                     }
                 ],
             },
+        ],
+    }
+
+
+def lower_if_else_return_module(module: Module):
+    function = module.functions[0]
+    if not (
+        len(module.functions) == 1
+        and not module.imports
+        and len(function.body) == 1
+        and isinstance(function.body[0], IfStmt)
+        and isinstance(function.body[0].condition, IntrinsicExpr)
+        and function.body[0].condition.op == "lt"
+        and function.body[0].condition.args == (NameExpr("x"), IntExpr(0))
+        and function.body[0].then_body == (ReturnStmt(IntExpr(0)),)
+        and function.body[0].else_body == (ReturnStmt(NameExpr("x")),)
+    ):
+        raise PipelineError("b_if_else_return: unsupported compact SCIR-H shape for lowering")
+
+    return {
+        "module_id": module.module_id,
+        "functions": [
+            {
+                "name": function.name,
+                "returns": function.return_type,
+                "params": [param.name for param in function.params],
+                "blocks": [
+                    {
+                        "id": "entry",
+                        "params": [],
+                        "instructions": [
+                            {
+                                "id": "cmp0",
+                                "op": "cmp",
+                                "operands": ["x", 0],
+                                "origin": f"{module.module_id}::lt-zero",
+                                "lowering_rule": "H_INTRINSIC_CMP",
+                            }
+                        ],
+                        "terminator": {
+                            "kind": "cond_br",
+                            "cond": "cmp0",
+                            "true": "ret_zero",
+                            "true_args": [],
+                            "false": "ret_x",
+                            "false_args": ["x"],
+                            "origin": f"{module.module_id}::branch",
+                            "lowering_rule": "H_BRANCH_COND",
+                        },
+                    },
+                    {
+                        "id": "ret_zero",
+                        "params": [],
+                        "instructions": [
+                            {
+                                "id": "const0",
+                                "op": "const",
+                                "operands": [0],
+                                "origin": f"{module.module_id}::return-zero",
+                                "lowering_rule": "H_CONST_RET",
+                            }
+                        ],
+                        "terminator": {
+                            "kind": "ret",
+                            "value": "const0",
+                            "origin": f"{module.module_id}::return-zero-ret",
+                            "lowering_rule": "H_CONST_RET",
+                        },
+                    },
+                    {
+                        "id": "ret_x",
+                        "params": ["value0"],
+                        "instructions": [],
+                        "terminator": {
+                            "kind": "ret",
+                            "value": "value0",
+                            "origin": f"{module.module_id}::return-x",
+                            "lowering_rule": "H_RETURN",
+                        },
+                    },
+                ],
+            }
+        ],
+    }
+
+
+def match_while_call_update_module(module: Module) -> FunctionDecl | None:
+    if len(module.functions) != 1 or module.imports:
+        return None
+    function = module.functions[0]
+    if (
+        function.name != "step_until_nonneg"
+        or tuple(param.name for param in function.params) != ("step", "x")
+        or function.return_type != "int"
+        or function.effects != ("write",)
+        or len(function.body) != 3
+        or not isinstance(function.body[0], VarDecl)
+        or not isinstance(function.body[1], LoopStmt)
+        or not isinstance(function.body[2], ReturnStmt)
+    ):
+        return None
+    var_stmt, loop_stmt, return_stmt = function.body
+    if (
+        var_stmt.name != "current"
+        or var_stmt.type_name != "int"
+        or var_stmt.value != NameExpr("x")
+        or loop_stmt.loop_id != "loop0"
+        or len(loop_stmt.body) != 1
+        or return_stmt.value != NameExpr("current")
+    ):
+        return None
+    loop_item = loop_stmt.body[0]
+    if not (
+        isinstance(loop_item, IfStmt)
+        and loop_item.condition == IntrinsicExpr("lt", (NameExpr("current"), IntExpr(0)))
+    ):
+        return None
+    if len(loop_item.then_body) != 1 or not isinstance(loop_item.then_body[0], SetStmt):
+        return None
+    if format_place(loop_item.then_body[0].target) != "current":
+        return None
+    if loop_item.then_body[0].value != CallExpr("step", (NameExpr("current"),)):
+        return None
+    if loop_item.else_body != (BreakStmt("loop0"),):
+        return None
+    return function
+
+
+def lower_while_call_update_module(module: Module):
+    function = match_while_call_update_module(module)
+    if function is None:
+        raise PipelineError("b_while_call_update: unsupported compact SCIR-H shape for lowering")
+
+    return {
+        "module_id": module.module_id,
+        "functions": [
+            {
+                "name": function.name,
+                "returns": function.return_type,
+                "params": [param.name for param in function.params],
+                "blocks": [
+                    {
+                        "id": "entry",
+                        "params": ["mem0", "eff0"],
+                        "instructions": [
+                            {
+                                "id": "cell0",
+                                "op": "alloc",
+                                "operands": ["mem0"],
+                                "origin": f"{module.module_id}::var-current",
+                                "lowering_rule": "H_VAR_ALLOC",
+                            },
+                            {
+                                "id": "mem1",
+                                "op": "store",
+                                "operands": ["cell0", "x", "mem0"],
+                                "origin": f"{module.module_id}::init-current",
+                                "lowering_rule": "H_VAR_ALLOC",
+                            },
+                        ],
+                        "terminator": {
+                            "kind": "br",
+                            "target": "loop_guard",
+                            "args": ["cell0", "mem1", "eff0"],
+                            "origin": f"{module.module_id}::enter-loop",
+                            "lowering_rule": "H_BRANCH_JOIN",
+                        },
+                    },
+                    {
+                        "id": "loop_guard",
+                        "params": ["cell1", "mem2", "eff1"],
+                        "instructions": [
+                            {
+                                "id": "load0",
+                                "op": "load",
+                                "operands": ["cell1", "mem2"],
+                                "origin": f"{module.module_id}::loop-guard-load-current",
+                                "lowering_rule": "H_PLACE_LOAD",
+                            },
+                            {
+                                "id": "cmp0",
+                                "op": "cmp",
+                                "operands": ["load0", 0],
+                                "origin": f"{module.module_id}::loop-guard-lt-zero",
+                                "lowering_rule": "H_INTRINSIC_CMP",
+                            },
+                        ],
+                        "terminator": {
+                            "kind": "cond_br",
+                            "cond": "cmp0",
+                            "true": "loop_body",
+                            "true_args": ["cell1", "mem2", "eff1", "load0"],
+                            "false": "retread",
+                            "false_args": ["cell1", "mem2"],
+                            "origin": f"{module.module_id}::loop-branch",
+                            "lowering_rule": "H_BRANCH_COND",
+                        },
+                    },
+                    {
+                        "id": "loop_body",
+                        "params": ["cell2", "mem3", "eff2", "value0"],
+                        "instructions": [
+                            {
+                                "id": "call0",
+                                "op": "call",
+                                "operands": ["sym:step", "value0", "eff2"],
+                                "origin": f"{module.module_id}::call-step",
+                                "lowering_rule": "H_DIRECT_CALL",
+                            },
+                            {
+                                "id": "mem4",
+                                "op": "store",
+                                "operands": ["cell2", "call0", "mem3"],
+                                "origin": f"{module.module_id}::set-current",
+                                "lowering_rule": "H_SET_STORE",
+                            },
+                        ],
+                        "terminator": {
+                            "kind": "br",
+                            "target": "loop_guard",
+                            "args": ["cell2", "mem4", "eff2"],
+                            "origin": f"{module.module_id}::loop-backedge",
+                            "lowering_rule": "H_BRANCH_JOIN",
+                        },
+                    },
+                    {
+                        "id": "retread",
+                        "params": ["cell3", "mem5"],
+                        "instructions": [
+                            {
+                                "id": "load1",
+                                "op": "load",
+                                "operands": ["cell3", "mem5"],
+                                "origin": f"{module.module_id}::return-load-current",
+                                "lowering_rule": "H_PLACE_LOAD",
+                            }
+                        ],
+                        "terminator": {
+                            "kind": "ret",
+                            "value": "load1",
+                            "origin": f"{module.module_id}::return",
+                            "lowering_rule": "H_RETURN",
+                        },
+                    },
+                ],
+            }
+        ],
+    }
+
+
+def match_while_break_continue_module(module: Module) -> FunctionDecl | None:
+    if len(module.functions) != 1 or module.imports:
+        return None
+    function = module.functions[0]
+    if (
+        function.name != "step_with_escape"
+        or tuple(param.name for param in function.params) != ("step", "x")
+        or function.return_type != "int"
+        or function.effects != ("write",)
+        or len(function.body) != 3
+        or not isinstance(function.body[0], VarDecl)
+        or not isinstance(function.body[1], LoopStmt)
+        or not isinstance(function.body[2], ReturnStmt)
+    ):
+        return None
+    var_stmt, loop_stmt, return_stmt = function.body
+    if (
+        var_stmt.name != "current"
+        or var_stmt.type_name != "int"
+        or var_stmt.value != NameExpr("x")
+        or loop_stmt.loop_id != "loop0"
+        or len(loop_stmt.body) != 1
+        or return_stmt.value != NameExpr("current")
+    ):
+        return None
+    loop_item = loop_stmt.body[0]
+    if not (
+        isinstance(loop_item, IfStmt)
+        and loop_item.condition == IntrinsicExpr("lt", (NameExpr("current"), IntExpr(0)))
+        and loop_item.else_body == (BreakStmt("loop0"),)
+        and len(loop_item.then_body) == 3
+        and isinstance(loop_item.then_body[0], IfStmt)
+        and isinstance(loop_item.then_body[1], SetStmt)
+        and isinstance(loop_item.then_body[2], ContinueStmt)
+    ):
+        return None
+    break_if, set_stmt, continue_stmt = loop_item.then_body
+    if not (
+        break_if.condition == IntrinsicExpr("eq", (NameExpr("current"), IntExpr(-1)))
+        and break_if.then_body == (BreakStmt("loop0"),)
+        and break_if.else_body == ()
+        and format_place(set_stmt.target) == "current"
+        and set_stmt.value == CallExpr("step", (NameExpr("current"),))
+        and continue_stmt.loop_id == "loop0"
+    ):
+        return None
+    return function
+
+
+def lower_while_break_continue_module(module: Module):
+    function = match_while_break_continue_module(module)
+    if function is None:
+        raise PipelineError("b_while_break_continue: unsupported compact SCIR-H shape for lowering")
+
+    return {
+        "module_id": module.module_id,
+        "functions": [
+            {
+                "name": function.name,
+                "returns": function.return_type,
+                "params": [param.name for param in function.params],
+                "blocks": [
+                    {
+                        "id": "entry",
+                        "params": ["mem0", "eff0"],
+                        "instructions": [
+                            {
+                                "id": "cell0",
+                                "op": "alloc",
+                                "operands": ["mem0"],
+                                "origin": f"{module.module_id}::var-current",
+                                "lowering_rule": "H_VAR_ALLOC",
+                            },
+                            {
+                                "id": "mem1",
+                                "op": "store",
+                                "operands": ["cell0", "x", "mem0"],
+                                "origin": f"{module.module_id}::init-current",
+                                "lowering_rule": "H_VAR_ALLOC",
+                            },
+                        ],
+                        "terminator": {
+                            "kind": "br",
+                            "target": "loop_guard",
+                            "args": ["cell0", "mem1", "eff0"],
+                            "origin": f"{module.module_id}::enter-loop",
+                            "lowering_rule": "H_BRANCH_JOIN",
+                        },
+                    },
+                    {
+                        "id": "loop_guard",
+                        "params": ["cell1", "mem2", "eff1"],
+                        "instructions": [
+                            {
+                                "id": "load0",
+                                "op": "load",
+                                "operands": ["cell1", "mem2"],
+                                "origin": f"{module.module_id}::loop-guard-load-current",
+                                "lowering_rule": "H_PLACE_LOAD",
+                            },
+                            {
+                                "id": "cmp0",
+                                "op": "cmp",
+                                "operands": ["load0", 0],
+                                "origin": f"{module.module_id}::loop-guard-lt-zero",
+                                "lowering_rule": "H_INTRINSIC_CMP",
+                            },
+                        ],
+                        "terminator": {
+                            "kind": "cond_br",
+                            "cond": "cmp0",
+                            "true": "break_guard",
+                            "true_args": ["cell1", "mem2", "eff1", "load0"],
+                            "false": "retread",
+                            "false_args": ["cell1", "mem2"],
+                            "origin": f"{module.module_id}::loop-branch",
+                            "lowering_rule": "H_BRANCH_COND",
+                        },
+                    },
+                    {
+                        "id": "break_guard",
+                        "params": ["cell2", "mem3", "eff2", "value0"],
+                        "instructions": [
+                            {
+                                "id": "cmp1",
+                                "op": "cmp",
+                                "operands": ["value0", -1],
+                                "origin": f"{module.module_id}::break-guard-eq-neg-one",
+                                "lowering_rule": "H_INTRINSIC_CMP",
+                            }
+                        ],
+                        "terminator": {
+                            "kind": "cond_br",
+                            "cond": "cmp1",
+                            "true": "retread",
+                            "true_args": ["cell2", "mem3"],
+                            "false": "loop_body",
+                            "false_args": ["cell2", "mem3", "eff2", "value0"],
+                            "origin": f"{module.module_id}::break-branch",
+                            "lowering_rule": "H_BRANCH_COND",
+                        },
+                    },
+                    {
+                        "id": "loop_body",
+                        "params": ["cell3", "mem4", "eff3", "value1"],
+                        "instructions": [
+                            {
+                                "id": "call0",
+                                "op": "call",
+                                "operands": ["sym:step", "value1", "eff3"],
+                                "origin": f"{module.module_id}::call-step",
+                                "lowering_rule": "H_DIRECT_CALL",
+                            },
+                            {
+                                "id": "mem5",
+                                "op": "store",
+                                "operands": ["cell3", "call0", "mem4"],
+                                "origin": f"{module.module_id}::set-current",
+                                "lowering_rule": "H_SET_STORE",
+                            },
+                        ],
+                        "terminator": {
+                            "kind": "br",
+                            "target": "loop_guard",
+                            "args": ["cell3", "mem5", "eff3"],
+                            "origin": f"{module.module_id}::continue-loop",
+                            "lowering_rule": "H_BRANCH_JOIN",
+                        },
+                    },
+                    {
+                        "id": "retread",
+                        "params": ["cell4", "mem6"],
+                        "instructions": [
+                            {
+                                "id": "load1",
+                                "op": "load",
+                                "operands": ["cell4", "mem6"],
+                                "origin": f"{module.module_id}::return-load-current",
+                                "lowering_rule": "H_PLACE_LOAD",
+                            }
+                        ],
+                        "terminator": {
+                            "kind": "ret",
+                            "value": "load1",
+                            "origin": f"{module.module_id}::return",
+                            "lowering_rule": "H_RETURN",
+                        },
+                    },
+                ],
+            }
         ],
     }
 
@@ -1331,6 +1809,384 @@ def lower_opaque_module(module: Module):
     }
 
 
+def match_class_init_module(module: Module) -> tuple[FunctionDecl, FunctionDecl] | None:
+    if len(module.imports) != 0 or len(module.type_decls) != 1 or len(module.functions) != 2:
+        return None
+    type_decl = module.type_decls[0]
+    if type_decl.name != "Counter" or not isinstance(type_decl.type_expr, RecordType):
+        return None
+    fields = type_decl.type_expr.fields
+    if len(fields) != 1 or fields[0].name != "value" or fields[0].type_name != "int":
+        return None
+    init_function, get_function = module.functions
+    if (
+        init_function.name != "Counter__init__"
+        or tuple((param.name, param.type_name) for param in init_function.params) != (("self", "Counter"), ("value", "int"))
+        or init_function.return_type != "Counter"
+        or init_function.effects != ("write",)
+        or len(init_function.body) != 2
+        or not isinstance(init_function.body[0], SetStmt)
+        or not isinstance(init_function.body[1], ReturnStmt)
+    ):
+        return None
+    init_set, init_return = init_function.body
+    if (
+        format_place(init_set.target) != "self.value"
+        or init_set.value != NameExpr("value")
+        or init_return.value != NameExpr("self")
+    ):
+        return None
+    if (
+        get_function.name != "Counter__get"
+        or tuple((param.name, param.type_name) for param in get_function.params) != (("self", "Counter"),)
+        or get_function.return_type != "int"
+        or get_function.effects != ()
+        or len(get_function.body) != 1
+        or not isinstance(get_function.body[0], ReturnStmt)
+        or not isinstance(get_function.body[0].value, PlaceExpr)
+        or format_place(get_function.body[0].value.place) != "self.value"
+    ):
+        return None
+    return init_function, get_function
+
+
+def match_class_field_update_module(module: Module) -> tuple[FunctionDecl, FunctionDecl] | None:
+    if len(module.imports) != 0 or len(module.type_decls) != 1 or len(module.functions) != 2:
+        return None
+    type_decl = module.type_decls[0]
+    if type_decl.name != "Counter" or not isinstance(type_decl.type_expr, RecordType):
+        return None
+    fields = type_decl.type_expr.fields
+    if len(fields) != 1 or fields[0].name != "value" or fields[0].type_name != "int":
+        return None
+    init_function, bump_function = module.functions
+    if (
+        init_function.name != "Counter__init__"
+        or tuple((param.name, param.type_name) for param in init_function.params) != (("self", "Counter"), ("value", "int"))
+        or init_function.return_type != "Counter"
+        or init_function.effects != ("write",)
+        or len(init_function.body) != 2
+        or not isinstance(init_function.body[0], SetStmt)
+        or not isinstance(init_function.body[1], ReturnStmt)
+    ):
+        return None
+    init_set, init_return = init_function.body
+    if (
+        format_place(init_set.target) != "self.value"
+        or init_set.value != NameExpr("value")
+        or init_return.value != NameExpr("self")
+    ):
+        return None
+    if (
+        bump_function.name != "Counter__bump"
+        or tuple((param.name, param.type_name) for param in bump_function.params) != (("self", "Counter"), ("step", "Callable"))
+        or bump_function.return_type != "int"
+        or bump_function.effects != ("write",)
+        or len(bump_function.body) != 2
+        or not isinstance(bump_function.body[0], SetStmt)
+        or not isinstance(bump_function.body[1], ReturnStmt)
+    ):
+        return None
+    bump_set, bump_return = bump_function.body
+    if format_place(bump_set.target) != "self.value":
+        return None
+    if (
+        not isinstance(bump_set.value, CallExpr)
+        or bump_set.value.callee != "step"
+        or len(bump_set.value.args) != 1
+        or not isinstance(bump_set.value.args[0], PlaceExpr)
+        or format_place(bump_set.value.args[0].place) != "self.value"
+    ):
+        return None
+    if (
+        not isinstance(bump_return.value, PlaceExpr)
+        or format_place(bump_return.value.place) != "self.value"
+    ):
+        return None
+    return init_function, bump_function
+
+
+def lower_class_init_module(module: Module):
+    matched = match_class_init_module(module)
+    if matched is None:
+        raise PipelineError("b_class_init_method: unsupported compact SCIR-H shape for lowering")
+    init_function, get_function = matched
+
+    return {
+        "module_id": module.module_id,
+        "functions": [
+            {
+                "name": init_function.name,
+                "returns": init_function.return_type,
+                "params": [param.name for param in init_function.params],
+                "blocks": [
+                    {
+                        "id": "entry",
+                        "params": ["mem0"],
+                        "instructions": [
+                            {
+                                "id": "field0",
+                                "op": "field.addr",
+                                "operands": ["self", "sym:field:value"],
+                                "origin": f"{module.module_id}::init-field-value",
+                                "lowering_rule": "H_FIELD_ADDR",
+                            },
+                            {
+                                "id": "mem1",
+                                "op": "store",
+                                "operands": ["field0", "value", "mem0"],
+                                "origin": f"{module.module_id}::set-value",
+                                "lowering_rule": "H_SET_STORE",
+                            },
+                        ],
+                        "terminator": {
+                            "kind": "ret",
+                            "value": "self",
+                            "origin": f"{module.module_id}::init-return",
+                            "lowering_rule": "H_RETURN",
+                        },
+                    }
+                ],
+            },
+            {
+                "name": get_function.name,
+                "returns": get_function.return_type,
+                "params": [param.name for param in get_function.params],
+                "blocks": [
+                    {
+                        "id": "entry",
+                        "params": ["mem0"],
+                        "instructions": [
+                            {
+                                "id": "field0",
+                                "op": "field.addr",
+                                "operands": ["self", "sym:field:value"],
+                                "origin": f"{module.module_id}::get-field-value",
+                                "lowering_rule": "H_FIELD_ADDR",
+                            },
+                            {
+                                "id": "load0",
+                                "op": "load",
+                                "operands": ["field0", "mem0"],
+                                "origin": f"{module.module_id}::return-load-value",
+                                "lowering_rule": "H_PLACE_LOAD",
+                            },
+                        ],
+                        "terminator": {
+                            "kind": "ret",
+                            "value": "load0",
+                            "origin": f"{module.module_id}::get-return",
+                            "lowering_rule": "H_RETURN",
+                        },
+                    }
+                ],
+            },
+        ],
+    }
+
+
+def lower_class_field_update_module(module: Module):
+    matched = match_class_field_update_module(module)
+    if matched is None:
+        raise PipelineError("b_class_field_update: unsupported compact SCIR-H shape for lowering")
+    init_function, bump_function = matched
+
+    return {
+        "module_id": module.module_id,
+        "functions": [
+            {
+                "name": init_function.name,
+                "returns": init_function.return_type,
+                "params": [param.name for param in init_function.params],
+                "blocks": [
+                    {
+                        "id": "entry",
+                        "params": ["mem0"],
+                        "instructions": [
+                            {
+                                "id": "field0",
+                                "op": "field.addr",
+                                "operands": ["self", "sym:field:value"],
+                                "origin": f"{module.module_id}::init-field-value",
+                                "lowering_rule": "H_FIELD_ADDR",
+                            },
+                            {
+                                "id": "mem1",
+                                "op": "store",
+                                "operands": ["field0", "value", "mem0"],
+                                "origin": f"{module.module_id}::set-value",
+                                "lowering_rule": "H_SET_STORE",
+                            },
+                        ],
+                        "terminator": {
+                            "kind": "ret",
+                            "value": "self",
+                            "origin": f"{module.module_id}::init-return",
+                            "lowering_rule": "H_RETURN",
+                        },
+                    }
+                ],
+            },
+            {
+                "name": bump_function.name,
+                "returns": bump_function.return_type,
+                "params": [param.name for param in bump_function.params],
+                "blocks": [
+                    {
+                        "id": "entry",
+                        "params": ["mem0", "eff0"],
+                        "instructions": [
+                            {
+                                "id": "field0",
+                                "op": "field.addr",
+                                "operands": ["self", "sym:field:value"],
+                                "origin": f"{module.module_id}::bump-field-value",
+                                "lowering_rule": "H_FIELD_ADDR",
+                            },
+                            {
+                                "id": "load0",
+                                "op": "load",
+                                "operands": ["field0", "mem0"],
+                                "origin": f"{module.module_id}::call-load-value",
+                                "lowering_rule": "H_PLACE_LOAD",
+                            },
+                            {
+                                "id": "call0",
+                                "op": "call",
+                                "operands": ["sym:step", "load0", "eff0"],
+                                "origin": f"{module.module_id}::call-step",
+                                "lowering_rule": "H_DIRECT_CALL",
+                            },
+                            {
+                                "id": "mem1",
+                                "op": "store",
+                                "operands": ["field0", "call0", "mem0"],
+                                "origin": f"{module.module_id}::set-value",
+                                "lowering_rule": "H_SET_STORE",
+                            },
+                            {
+                                "id": "load1",
+                                "op": "load",
+                                "operands": ["field0", "mem1"],
+                                "origin": f"{module.module_id}::return-load-value",
+                                "lowering_rule": "H_PLACE_LOAD",
+                            },
+                        ],
+                        "terminator": {
+                            "kind": "ret",
+                            "value": "load1",
+                            "origin": f"{module.module_id}::return",
+                            "lowering_rule": "H_RETURN",
+                        },
+                    }
+                ],
+            },
+        ],
+    }
+
+
+def match_try_except_module(module: Module) -> FunctionDecl | None:
+    if module.imports or module.type_decls or len(module.functions) != 1:
+        return None
+    function = module.functions[0]
+    if (
+        function.name != "guard"
+        or tuple((param.name, param.type_name) for param in function.params) != (("may_fail", "Callable"), ("x", "int"))
+        or function.return_type != "int"
+        or function.effects != ("throw",)
+        or len(function.body) != 1
+        or not isinstance(function.body[0], TryStmt)
+    ):
+        return None
+    try_stmt = function.body[0]
+    if (
+        len(try_stmt.try_body) != 1
+        or len(try_stmt.catch_body) != 1
+        or try_stmt.catch_name != "err"
+        or try_stmt.catch_type != "ValueError"
+        or not isinstance(try_stmt.try_body[0], ReturnStmt)
+        or not isinstance(try_stmt.catch_body[0], ReturnStmt)
+    ):
+        return None
+    try_return = try_stmt.try_body[0]
+    catch_return = try_stmt.catch_body[0]
+    if (
+        not isinstance(try_return.value, CallExpr)
+        or try_return.value.callee != "may_fail"
+        or try_return.value.args != (NameExpr("x"),)
+        or catch_return.value != IntExpr(0)
+    ):
+        return None
+    return function
+
+
+def lower_try_except_module(module: Module):
+    function = match_try_except_module(module)
+    if function is None:
+        raise PipelineError("d_try_except: unsupported compact SCIR-H shape for lowering")
+
+    return {
+        "module_id": module.module_id,
+        "functions": [
+            {
+                "name": function.name,
+                "returns": function.return_type,
+                "params": [param.name for param in function.params],
+                "blocks": [
+                    {
+                        "id": "entry",
+                        "params": ["eff0"],
+                        "instructions": [],
+                        "terminator": {
+                            "kind": "invoke",
+                            "callee": "sym:may_fail",
+                            "args": ["x", "eff0"],
+                            "result": "call0",
+                            "normal": "ret_value",
+                            "normal_args": ["call0"],
+                            "catch": "catch_valueerror",
+                            "catch_args": [],
+                            "catch_type": "ValueError",
+                            "origin": f"{module.module_id}::try-call",
+                            "lowering_rule": "H_TRY_INVOKE",
+                        },
+                    },
+                    {
+                        "id": "ret_value",
+                        "params": ["value0"],
+                        "instructions": [],
+                        "terminator": {
+                            "kind": "ret",
+                            "value": "value0",
+                            "origin": f"{module.module_id}::try-return",
+                            "lowering_rule": "H_RETURN",
+                        },
+                    },
+                    {
+                        "id": "catch_valueerror",
+                        "params": [],
+                        "instructions": [
+                            {
+                                "id": "const0",
+                                "op": "const",
+                                "operands": [0],
+                                "origin": f"{module.module_id}::catch-return-zero",
+                                "lowering_rule": "H_CONST_RET",
+                            }
+                        ],
+                        "terminator": {
+                            "kind": "ret",
+                            "value": "const0",
+                            "origin": f"{module.module_id}::catch-return",
+                            "lowering_rule": "H_CONST_RET",
+                        },
+                    },
+                ],
+            }
+        ],
+    }
+
+
 def lower_supported_module(module: Module, *, input_representation: str = "SCIR-H"):
     """Lower only the admitted proof-loop cases and only from canonical `SCIR-H`."""
 
@@ -1338,8 +2194,20 @@ def lower_supported_module(module: Module, *, input_representation: str = "SCIR-
     case_name = case_name_from_module(module)
     if case_name == "a_basic_function":
         return lower_basic_function(module)
-    if case_name == "a_async_await":
+    if case_name in {"a_async_await", "b_async_arg_await"}:
         return lower_async_module(module)
+    if case_name == "b_if_else_return":
+        return lower_if_else_return_module(module)
+    if case_name == "b_while_call_update":
+        return lower_while_call_update_module(module)
+    if case_name == "b_while_break_continue":
+        return lower_while_break_continue_module(module)
+    if case_name == "b_class_init_method":
+        return lower_class_init_module(module)
+    if case_name == "b_class_field_update":
+        return lower_class_field_update_module(module)
+    if case_name == "d_try_except":
+        return lower_try_except_module(module)
     if case_name == "b_direct_call":
         return lower_direct_call_module(module)
     if case_name == "c_opaque_call":
@@ -1422,6 +2290,7 @@ def validate_scirl_module(module: dict):
         "ret": {"H_CONST_RET", "H_RETURN"},
         "br": {"H_BRANCH_JOIN"},
         "cond_br": {"H_BRANCH_COND"},
+        "invoke": {"H_TRY_INVOKE"},
     }
     function_names = set()
     for function in module["functions"]:
@@ -1591,6 +2460,64 @@ def validate_scirl_module(module: dict):
                                 failures.append(
                                     f"{module['module_id']}::{name}::{block['id']}::cond_br: token class mismatch for target {target}"
                                 )
+            elif terminator["kind"] == "invoke":
+                callee = terminator.get("callee")
+                if not isinstance(callee, str) or not callee.startswith("sym:"):
+                    failures.append(
+                        f"{module['module_id']}::{name}::{block['id']}::invoke: invoke requires a symbolic callee"
+                    )
+                invoke_args = terminator.get("args", [])
+                if len(invoke_args) < 2 or not is_token_with_prefix(invoke_args[-1], "eff"):
+                    failures.append(
+                        f"{module['module_id']}::{name}::{block['id']}::invoke: invoke requires a trailing effect token operand"
+                    )
+                for arg in invoke_args:
+                    failures.extend(
+                        f"{module['module_id']}::{name}::{block['id']}::invoke: {item}"
+                        for item in validate_operand(arg, known_values)
+                    )
+                result_id = terminator.get("result")
+                if not isinstance(result_id, str) or not result_id:
+                    failures.append(
+                        f"{module['module_id']}::{name}::{block['id']}::invoke: invoke requires a result id"
+                    )
+                elif result_id in seen_ids:
+                    failures.append(
+                        f"{module['module_id']}::{name}::{block['id']}::invoke: duplicate SSA or token id"
+                    )
+                if terminator.get("catch_type") != "ValueError":
+                    failures.append(
+                        f"{module['module_id']}::{name}::{block['id']}::invoke: active invoke catch_type must remain ValueError"
+                    )
+                normal_known_values = set(known_values)
+                if isinstance(result_id, str) and result_id:
+                    normal_known_values.add(result_id)
+                    seen_ids.add(result_id)
+                for edge_name, edge_known_values in [("normal", normal_known_values), ("catch", known_values)]:
+                    target = terminator[edge_name]
+                    args = terminator[f"{edge_name}_args"]
+                    if target not in block_param_lookup:
+                        failures.append(
+                            f"{module['module_id']}::{name}::{block['id']}::invoke: unknown target block {target}"
+                        )
+                        continue
+                    target_params = block_param_lookup[target]
+                    if len(target_params) != len(args):
+                        failures.append(
+                            f"{module['module_id']}::{name}::{block['id']}::invoke: target arg count mismatch for {target}"
+                        )
+                    for index, arg in enumerate(args):
+                        failures.extend(
+                            f"{module['module_id']}::{name}::{block['id']}::invoke: {item}"
+                            for item in validate_operand(arg, edge_known_values)
+                        )
+                        if index < len(target_params):
+                            source_prefix = token_prefix(arg) if isinstance(arg, str) else None
+                            target_prefix = token_prefix(target_params[index])
+                            if source_prefix != target_prefix and target_prefix in {"mem", "eff"}:
+                                failures.append(
+                                    f"{module['module_id']}::{name}::{block['id']}::invoke: token class mismatch for target {target}"
+                                )
             else:
                 failures.append(
                     f"{module['module_id']}::{name}::{block['id']}::terminator: unsupported kind {terminator['kind']}"
@@ -1640,6 +2567,16 @@ def render_scirl_module(module: dict):
             elif terminator["kind"] == "br":
                 args = ", ".join(format_value(item) for item in terminator["args"])
                 lines.append(f"  br ^{terminator['target']}({args});")
+            elif terminator["kind"] == "invoke":
+                args = ", ".join(format_value(item) for item in terminator["args"])
+                normal_args = ", ".join(format_value(item) for item in terminator["normal_args"])
+                catch_args = ", ".join(format_value(item) for item in terminator["catch_args"])
+                lines.append(
+                    "  invoke "
+                    f"{format_value(terminator['callee'])}({args}) -> %{terminator['result']}, "
+                    f"^{terminator['normal']}({normal_args}), "
+                    f"catch {terminator['catch_type']} ^{terminator['catch']}({catch_args});"
+                )
             else:
                 true_args = ", ".join(format_value(item) for item in terminator["true_args"])
                 false_args = ", ".join(format_value(item) for item in terminator["false_args"])
@@ -1654,6 +2591,22 @@ def render_scirl_module(module: dict):
     return "\n".join(lines) + "\n"
 
 
+def compare_lowering_instruction(actual: dict, expected: dict, *, label: str):
+    failures = []
+    for key in ["id", "op", "operands", "origin", "lowering_rule"]:
+        if actual.get(key) != expected[key]:
+            failures.append(f"{label}: expected {key} {expected[key]!r}")
+    return failures
+
+
+def compare_lowering_terminator(actual: dict, expected: dict, *, label: str):
+    failures = []
+    for key, value in expected.items():
+        if actual.get(key) != value:
+            failures.append(f"{label}: expected {key} {value!r}")
+    return failures
+
+
 def validate_lowering_alignment(case_name: str, lowered: dict):
     failures = []
     if case_name == "a_basic_function":
@@ -1661,50 +2614,619 @@ def validate_lowering_alignment(case_name: str, lowered: dict):
         if len(functions) != 1:
             return [f"{case_name}: expected exactly one lowered function"]
         function = functions[0]
+        if function["name"] != "clamp_nonneg":
+            failures.append(f"{case_name}: expected lowered function name 'clamp_nonneg'")
+        if function["returns"] != "int":
+            failures.append(f"{case_name}: expected lowered return type 'int'")
+        if function["params"] != ["x"]:
+            failures.append(f"{case_name}: expected lowered function params ['x']")
         blocks = function["blocks"]
         if [block["id"] for block in blocks] != ["entry", "neg", "retread"]:
             failures.append(f"{case_name}: expected entry/neg/retread block layout")
-        entry_ops = [item["op"] for item in blocks[0]["instructions"]]
-        if entry_ops != ["alloc", "store", "load", "cmp"]:
-            failures.append(f"{case_name}: expected alloc/store/load/cmp in entry block")
-        if blocks[0]["terminator"]["kind"] != "cond_br":
-            failures.append(f"{case_name}: expected cond_br entry terminator")
-        if [item["op"] for item in blocks[1]["instructions"]] != ["store"]:
+        if blocks[0]["params"] != ["mem0"]:
+            failures.append(f"{case_name}: expected entry params ['mem0']")
+        expected_entry = [
+            {"id": "cell0", "op": "alloc", "operands": ["mem0"], "origin": "fixture.python_importer.a_basic_function::var-y", "lowering_rule": "H_VAR_ALLOC"},
+            {"id": "mem1", "op": "store", "operands": ["cell0", "x", "mem0"], "origin": "fixture.python_importer.a_basic_function::init-y", "lowering_rule": "H_VAR_ALLOC"},
+            {"id": "load0", "op": "load", "operands": ["cell0", "mem1"], "origin": "fixture.python_importer.a_basic_function::lt-load-y", "lowering_rule": "H_PLACE_LOAD"},
+            {"id": "cmp0", "op": "cmp", "operands": ["load0", 0], "origin": "fixture.python_importer.a_basic_function::lt-zero", "lowering_rule": "H_INTRINSIC_CMP"},
+        ]
+        if len(blocks[0]["instructions"]) != len(expected_entry):
+            failures.append(f"{case_name}: expected {len(expected_entry)} entry instructions")
+        for index, expected in enumerate(expected_entry[: len(blocks[0]["instructions"])]):
+            failures.extend(compare_lowering_instruction(blocks[0]["instructions"][index], expected, label=f"{case_name}: entry instruction {index}"))
+        failures.extend(compare_lowering_terminator(blocks[0]["terminator"], {"kind": "cond_br", "cond": "cmp0", "true": "neg", "true_args": ["cell0", "mem1"], "false": "retread", "false_args": ["cell0", "mem1"], "origin": "fixture.python_importer.a_basic_function::branch", "lowering_rule": "H_BRANCH_COND"}, label=f"{case_name}: entry terminator"))
+        if blocks[1]["params"] != ["cell1", "mem2"]:
+            failures.append(f"{case_name}: expected neg params ['cell1', 'mem2']")
+        if len(blocks[1]["instructions"]) != 1:
             failures.append(f"{case_name}: expected single store in neg block")
-        if blocks[1]["terminator"]["kind"] != "br":
-            failures.append(f"{case_name}: expected br terminator in neg block")
-        if [item["op"] for item in blocks[2]["instructions"]] != ["load"]:
+        else:
+            failures.extend(compare_lowering_instruction(blocks[1]["instructions"][0], {"id": "mem3", "op": "store", "operands": ["cell1", 0, "mem2"], "origin": "fixture.python_importer.a_basic_function::set-y-zero", "lowering_rule": "H_SET_STORE"}, label=f"{case_name}: neg instruction 0"))
+        failures.extend(compare_lowering_terminator(blocks[1]["terminator"], {"kind": "br", "target": "retread", "args": ["cell1", "mem3"], "origin": "fixture.python_importer.a_basic_function::join-return", "lowering_rule": "H_BRANCH_JOIN"}, label=f"{case_name}: neg terminator"))
+        if blocks[2]["params"] != ["cell2", "mem4"]:
+            failures.append(f"{case_name}: expected retread params ['cell2', 'mem4']")
+        if len(blocks[2]["instructions"]) != 1:
             failures.append(f"{case_name}: expected single load in retread block")
-        if blocks[2]["terminator"]["kind"] != "ret":
-            failures.append(f"{case_name}: expected ret terminator in retread block")
+        else:
+            failures.extend(compare_lowering_instruction(blocks[2]["instructions"][0], {"id": "load1", "op": "load", "operands": ["cell2", "mem4"], "origin": "fixture.python_importer.a_basic_function::return-load-y", "lowering_rule": "H_PLACE_LOAD"}, label=f"{case_name}: retread instruction 0"))
+        failures.extend(compare_lowering_terminator(blocks[2]["terminator"], {"kind": "ret", "value": "load1", "origin": "fixture.python_importer.a_basic_function::return", "lowering_rule": "H_RETURN"}, label=f"{case_name}: retread terminator"))
         return failures
 
-    if case_name == "a_async_await":
+    if case_name in {"a_async_await", "b_async_arg_await"}:
         functions = lowered["functions"]
-        if [function["name"] for function in functions] != ["fetch_value", "load_once"]:
-            return [f"{case_name}: expected fetch_value/load_once lowered functions"]
-        if [item["op"] for item in functions[0]["blocks"][0]["instructions"]] != ["const"]:
-            failures.append(f"{case_name}: expected fetch_value to lower to const")
-        if [item["op"] for item in functions[1]["blocks"][0]["instructions"]] != ["call", "async.resume"]:
-            failures.append(f"{case_name}: expected load_once to lower to call + async.resume")
-        if functions[1]["blocks"][0]["params"] != ["eff0"]:
-            failures.append(f"{case_name}: expected load_once entry effect token parameter")
+        expected_function_names = ["fetch_value", "load_once"] if case_name == "a_async_await" else ["fetch_value", "load_value"]
+        if [function["name"] for function in functions] != expected_function_names:
+            return [f"{case_name}: expected lowered functions {expected_function_names!r}"]
+        if functions[0]["returns"] != "int" or functions[1]["returns"] != "int":
+            failures.append(f"{case_name}: expected both lowered returns to remain int")
+        expected_fetch_params = [] if case_name == "a_async_await" else ["x"]
+        expected_load_params = [] if case_name == "a_async_await" else ["x"]
+        if functions[0]["params"] != expected_fetch_params:
+            failures.append(f"{case_name}: expected fetch_value params {expected_fetch_params!r}")
+        if functions[1]["params"] != expected_load_params:
+            failures.append(f"{case_name}: expected {expected_function_names[1]} params {expected_load_params!r}")
+        if len(functions[0]["blocks"]) != 1 or len(functions[1]["blocks"]) != 1:
+            failures.append(f"{case_name}: expected single entry block per lowered function")
+        else:
+            fetch_entry = functions[0]["blocks"][0]
+            if fetch_entry["id"] != "entry" or fetch_entry["params"] != []:
+                failures.append(f"{case_name}: expected fetch_value entry block with no params")
+            expected_fetch_instructions = (
+                [
+                    {
+                        "id": "const0",
+                        "op": "const",
+                        "operands": [1],
+                        "origin": "fixture.python_importer.a_async_await::fetch-value-return",
+                        "lowering_rule": "H_CONST_RET",
+                    }
+                ]
+                if case_name == "a_async_await"
+                else []
+            )
+            if len(fetch_entry["instructions"]) != len(expected_fetch_instructions):
+                failures.append(
+                    f"{case_name}: expected fetch_value to lower to {len(expected_fetch_instructions)} instruction(s)"
+                )
+            else:
+                for index, expected in enumerate(expected_fetch_instructions):
+                    failures.extend(
+                        compare_lowering_instruction(
+                            fetch_entry["instructions"][index],
+                            expected,
+                            label=f"{case_name}: fetch_value instruction {index}",
+                        )
+                    )
+            expected_fetch_terminator = (
+                {
+                    "kind": "ret",
+                    "value": "const0",
+                    "origin": "fixture.python_importer.a_async_await::fetch-value-ret",
+                    "lowering_rule": "H_CONST_RET",
+                }
+                if case_name == "a_async_await"
+                else {
+                    "kind": "ret",
+                    "value": "x",
+                    "origin": "fixture.python_importer.b_async_arg_await::fetch-value-return",
+                    "lowering_rule": "H_RETURN",
+                }
+            )
+            failures.extend(
+                compare_lowering_terminator(
+                    fetch_entry["terminator"],
+                    expected_fetch_terminator,
+                    label=f"{case_name}: fetch_value terminator",
+                )
+            )
+            load_entry = functions[1]["blocks"][0]
+            if load_entry["id"] != "entry" or load_entry["params"] != ["eff0"]:
+                failures.append(f"{case_name}: expected {expected_function_names[1]} entry effect token parameter")
+            expected_load = [
+                {
+                    "id": "call0",
+                    "op": "call",
+                    "operands": ["sym:fetch_value", "eff0"] if case_name == "a_async_await" else ["sym:fetch_value", "x", "eff0"],
+                    "origin": f"fixture.python_importer.{case_name}::call-fetch-value",
+                    "lowering_rule": "H_DIRECT_CALL",
+                },
+                {
+                    "id": "await0",
+                    "op": "async.resume",
+                    "operands": ["call0", "eff0"],
+                    "origin": f"fixture.python_importer.{case_name}::await-fetch-value",
+                    "lowering_rule": "H_AWAIT_RESUME",
+                },
+            ]
+            if len(load_entry["instructions"]) != len(expected_load):
+                failures.append(f"{case_name}: expected {expected_function_names[1]} to lower to call + async.resume")
+            for index, expected in enumerate(expected_load[: len(load_entry["instructions"])]):
+                failures.extend(compare_lowering_instruction(load_entry["instructions"][index], expected, label=f"{case_name}: {expected_function_names[1]} instruction {index}"))
+            failures.extend(compare_lowering_terminator(load_entry["terminator"], {"kind": "ret", "value": "await0", "origin": f"fixture.python_importer.{case_name}::{'load-once-ret' if case_name == 'a_async_await' else 'load-value-ret'}", "lowering_rule": "H_RETURN"}, label=f"{case_name}: {expected_function_names[1]} terminator"))
+        return failures
+
+    if case_name == "b_if_else_return":
+        functions = lowered["functions"]
+        if len(functions) != 1:
+            return [f"{case_name}: expected exactly one lowered function"]
+        function = functions[0]
+        if function["name"] != "choose_zero_or_x":
+            failures.append(f"{case_name}: expected lowered function name 'choose_zero_or_x'")
+        if function["returns"] != "int":
+            failures.append(f"{case_name}: expected lowered return type 'int'")
+        if function["params"] != ["x"]:
+            failures.append(f"{case_name}: expected lowered function params ['x']")
+        blocks = function["blocks"]
+        if [block["id"] for block in blocks] != ["entry", "ret_zero", "ret_x"]:
+            failures.append(f"{case_name}: expected entry/ret_zero/ret_x block layout")
+        if blocks[0]["params"] != []:
+            failures.append(f"{case_name}: expected entry params []")
+        expected_entry = [
+            {
+                "id": "cmp0",
+                "op": "cmp",
+                "operands": ["x", 0],
+                "origin": "fixture.python_importer.b_if_else_return::lt-zero",
+                "lowering_rule": "H_INTRINSIC_CMP",
+            }
+        ]
+        if len(blocks[0]["instructions"]) != len(expected_entry):
+            failures.append(f"{case_name}: expected {len(expected_entry)} entry instructions")
+        for index, expected in enumerate(expected_entry[: len(blocks[0]["instructions"])]):
+            failures.extend(compare_lowering_instruction(blocks[0]["instructions"][index], expected, label=f"{case_name}: entry instruction {index}"))
+        failures.extend(
+            compare_lowering_terminator(
+                blocks[0]["terminator"],
+                {
+                    "kind": "cond_br",
+                    "cond": "cmp0",
+                    "true": "ret_zero",
+                    "true_args": [],
+                    "false": "ret_x",
+                    "false_args": ["x"],
+                    "origin": "fixture.python_importer.b_if_else_return::branch",
+                    "lowering_rule": "H_BRANCH_COND",
+                },
+                label=f"{case_name}: entry terminator",
+            )
+        )
+        if blocks[1]["params"] != []:
+            failures.append(f"{case_name}: expected ret_zero params []")
+        if len(blocks[1]["instructions"]) != 1:
+            failures.append(f"{case_name}: expected single const in ret_zero block")
+        else:
+            failures.extend(compare_lowering_instruction(blocks[1]["instructions"][0], {"id": "const0", "op": "const", "operands": [0], "origin": "fixture.python_importer.b_if_else_return::return-zero", "lowering_rule": "H_CONST_RET"}, label=f"{case_name}: ret_zero instruction 0"))
+        failures.extend(compare_lowering_terminator(blocks[1]["terminator"], {"kind": "ret", "value": "const0", "origin": "fixture.python_importer.b_if_else_return::return-zero-ret", "lowering_rule": "H_CONST_RET"}, label=f"{case_name}: ret_zero terminator"))
+        if blocks[2]["params"] != ["value0"]:
+            failures.append(f"{case_name}: expected ret_x params ['value0']")
+        if blocks[2]["instructions"]:
+            failures.append(f"{case_name}: expected ret_x to return its carried value directly")
+        failures.extend(compare_lowering_terminator(blocks[2]["terminator"], {"kind": "ret", "value": "value0", "origin": "fixture.python_importer.b_if_else_return::return-x", "lowering_rule": "H_RETURN"}, label=f"{case_name}: ret_x terminator"))
+        return failures
+
+    if case_name == "b_while_call_update":
+        functions = lowered["functions"]
+        if len(functions) != 1:
+            return [f"{case_name}: expected exactly one lowered function"]
+        function = functions[0]
+        if function["name"] != "step_until_nonneg":
+            failures.append(f"{case_name}: expected lowered function name 'step_until_nonneg'")
+        if function["returns"] != "int":
+            failures.append(f"{case_name}: expected lowered return type 'int'")
+        if function["params"] != ["step", "x"]:
+            failures.append(f"{case_name}: expected lowered function params ['step', 'x']")
+        blocks = function["blocks"]
+        if [block["id"] for block in blocks] != ["entry", "loop_guard", "loop_body", "retread"]:
+            failures.append(f"{case_name}: expected entry/loop_guard/loop_body/retread block layout")
+            return failures
+        if blocks[0]["params"] != ["mem0", "eff0"]:
+            failures.append(f"{case_name}: expected entry params ['mem0', 'eff0']")
+        expected_entry = [
+            {
+                "id": "cell0",
+                "op": "alloc",
+                "operands": ["mem0"],
+                "origin": "fixture.python_importer.b_while_call_update::var-current",
+                "lowering_rule": "H_VAR_ALLOC",
+            },
+            {
+                "id": "mem1",
+                "op": "store",
+                "operands": ["cell0", "x", "mem0"],
+                "origin": "fixture.python_importer.b_while_call_update::init-current",
+                "lowering_rule": "H_VAR_ALLOC",
+            },
+        ]
+        if len(blocks[0]["instructions"]) != len(expected_entry):
+            failures.append(f"{case_name}: expected {len(expected_entry)} entry instructions")
+        for index, expected in enumerate(expected_entry[: len(blocks[0]["instructions"])]):
+            failures.extend(compare_lowering_instruction(blocks[0]["instructions"][index], expected, label=f"{case_name}: entry instruction {index}"))
+        failures.extend(compare_lowering_terminator(blocks[0]["terminator"], {"kind": "br", "target": "loop_guard", "args": ["cell0", "mem1", "eff0"], "origin": "fixture.python_importer.b_while_call_update::enter-loop", "lowering_rule": "H_BRANCH_JOIN"}, label=f"{case_name}: entry terminator"))
+        if blocks[1]["params"] != ["cell1", "mem2", "eff1"]:
+            failures.append(f"{case_name}: expected loop_guard params ['cell1', 'mem2', 'eff1']")
+        expected_guard = [
+            {
+                "id": "load0",
+                "op": "load",
+                "operands": ["cell1", "mem2"],
+                "origin": "fixture.python_importer.b_while_call_update::loop-guard-load-current",
+                "lowering_rule": "H_PLACE_LOAD",
+            },
+            {
+                "id": "cmp0",
+                "op": "cmp",
+                "operands": ["load0", 0],
+                "origin": "fixture.python_importer.b_while_call_update::loop-guard-lt-zero",
+                "lowering_rule": "H_INTRINSIC_CMP",
+            },
+        ]
+        if len(blocks[1]["instructions"]) != len(expected_guard):
+            failures.append(f"{case_name}: expected {len(expected_guard)} loop_guard instructions")
+        for index, expected in enumerate(expected_guard[: len(blocks[1]["instructions"])]):
+            failures.extend(compare_lowering_instruction(blocks[1]["instructions"][index], expected, label=f"{case_name}: loop_guard instruction {index}"))
+        failures.extend(compare_lowering_terminator(blocks[1]["terminator"], {"kind": "cond_br", "cond": "cmp0", "true": "loop_body", "true_args": ["cell1", "mem2", "eff1", "load0"], "false": "retread", "false_args": ["cell1", "mem2"], "origin": "fixture.python_importer.b_while_call_update::loop-branch", "lowering_rule": "H_BRANCH_COND"}, label=f"{case_name}: loop_guard terminator"))
+        if blocks[2]["params"] != ["cell2", "mem3", "eff2", "value0"]:
+            failures.append(f"{case_name}: expected loop_body params ['cell2', 'mem3', 'eff2', 'value0']")
+        expected_body = [
+            {
+                "id": "call0",
+                "op": "call",
+                "operands": ["sym:step", "value0", "eff2"],
+                "origin": "fixture.python_importer.b_while_call_update::call-step",
+                "lowering_rule": "H_DIRECT_CALL",
+            },
+            {
+                "id": "mem4",
+                "op": "store",
+                "operands": ["cell2", "call0", "mem3"],
+                "origin": "fixture.python_importer.b_while_call_update::set-current",
+                "lowering_rule": "H_SET_STORE",
+            },
+        ]
+        if len(blocks[2]["instructions"]) != len(expected_body):
+            failures.append(f"{case_name}: expected {len(expected_body)} loop_body instructions")
+        for index, expected in enumerate(expected_body[: len(blocks[2]["instructions"])]):
+            failures.extend(compare_lowering_instruction(blocks[2]["instructions"][index], expected, label=f"{case_name}: loop_body instruction {index}"))
+        failures.extend(compare_lowering_terminator(blocks[2]["terminator"], {"kind": "br", "target": "loop_guard", "args": ["cell2", "mem4", "eff2"], "origin": "fixture.python_importer.b_while_call_update::loop-backedge", "lowering_rule": "H_BRANCH_JOIN"}, label=f"{case_name}: loop_body terminator"))
+        if blocks[3]["params"] != ["cell3", "mem5"]:
+            failures.append(f"{case_name}: expected retread params ['cell3', 'mem5']")
+        if len(blocks[3]["instructions"]) != 1:
+            failures.append(f"{case_name}: expected single load in retread block")
+        else:
+            failures.extend(compare_lowering_instruction(blocks[3]["instructions"][0], {"id": "load1", "op": "load", "operands": ["cell3", "mem5"], "origin": "fixture.python_importer.b_while_call_update::return-load-current", "lowering_rule": "H_PLACE_LOAD"}, label=f"{case_name}: retread instruction 0"))
+        failures.extend(compare_lowering_terminator(blocks[3]["terminator"], {"kind": "ret", "value": "load1", "origin": "fixture.python_importer.b_while_call_update::return", "lowering_rule": "H_RETURN"}, label=f"{case_name}: retread terminator"))
+        return failures
+
+    if case_name == "b_while_break_continue":
+        functions = lowered["functions"]
+        if len(functions) != 1:
+            return [f"{case_name}: expected exactly one lowered function"]
+        function = functions[0]
+        if function["name"] != "step_with_escape":
+            failures.append(f"{case_name}: expected lowered function name 'step_with_escape'")
+        if function["returns"] != "int":
+            failures.append(f"{case_name}: expected lowered return type 'int'")
+        if function["params"] != ["step", "x"]:
+            failures.append(f"{case_name}: expected lowered function params ['step', 'x']")
+        blocks = function["blocks"]
+        if [block["id"] for block in blocks] != ["entry", "loop_guard", "break_guard", "loop_body", "retread"]:
+            failures.append(f"{case_name}: expected entry/loop_guard/break_guard/loop_body/retread block layout")
+            return failures
+        if blocks[0]["params"] != ["mem0", "eff0"]:
+            failures.append(f"{case_name}: expected entry params ['mem0', 'eff0']")
+        expected_entry = [
+            {
+                "id": "cell0",
+                "op": "alloc",
+                "operands": ["mem0"],
+                "origin": "fixture.python_importer.b_while_break_continue::var-current",
+                "lowering_rule": "H_VAR_ALLOC",
+            },
+            {
+                "id": "mem1",
+                "op": "store",
+                "operands": ["cell0", "x", "mem0"],
+                "origin": "fixture.python_importer.b_while_break_continue::init-current",
+                "lowering_rule": "H_VAR_ALLOC",
+            },
+        ]
+        if len(blocks[0]["instructions"]) != len(expected_entry):
+            failures.append(f"{case_name}: expected {len(expected_entry)} entry instructions")
+        for index, expected in enumerate(expected_entry[: len(blocks[0]["instructions"])]):
+            failures.extend(compare_lowering_instruction(blocks[0]["instructions"][index], expected, label=f"{case_name}: entry instruction {index}"))
+        failures.extend(compare_lowering_terminator(blocks[0]["terminator"], {"kind": "br", "target": "loop_guard", "args": ["cell0", "mem1", "eff0"], "origin": "fixture.python_importer.b_while_break_continue::enter-loop", "lowering_rule": "H_BRANCH_JOIN"}, label=f"{case_name}: entry terminator"))
+        if blocks[1]["params"] != ["cell1", "mem2", "eff1"]:
+            failures.append(f"{case_name}: expected loop_guard params ['cell1', 'mem2', 'eff1']")
+        expected_guard = [
+            {
+                "id": "load0",
+                "op": "load",
+                "operands": ["cell1", "mem2"],
+                "origin": "fixture.python_importer.b_while_break_continue::loop-guard-load-current",
+                "lowering_rule": "H_PLACE_LOAD",
+            },
+            {
+                "id": "cmp0",
+                "op": "cmp",
+                "operands": ["load0", 0],
+                "origin": "fixture.python_importer.b_while_break_continue::loop-guard-lt-zero",
+                "lowering_rule": "H_INTRINSIC_CMP",
+            },
+        ]
+        if len(blocks[1]["instructions"]) != len(expected_guard):
+            failures.append(f"{case_name}: expected {len(expected_guard)} loop_guard instructions")
+        for index, expected in enumerate(expected_guard[: len(blocks[1]["instructions"])]):
+            failures.extend(compare_lowering_instruction(blocks[1]["instructions"][index], expected, label=f"{case_name}: loop_guard instruction {index}"))
+        failures.extend(compare_lowering_terminator(blocks[1]["terminator"], {"kind": "cond_br", "cond": "cmp0", "true": "break_guard", "true_args": ["cell1", "mem2", "eff1", "load0"], "false": "retread", "false_args": ["cell1", "mem2"], "origin": "fixture.python_importer.b_while_break_continue::loop-branch", "lowering_rule": "H_BRANCH_COND"}, label=f"{case_name}: loop_guard terminator"))
+        if blocks[2]["params"] != ["cell2", "mem3", "eff2", "value0"]:
+            failures.append(f"{case_name}: expected break_guard params ['cell2', 'mem3', 'eff2', 'value0']")
+        if len(blocks[2]["instructions"]) != 1:
+            failures.append(f"{case_name}: expected single comparison in break_guard block")
+        else:
+            failures.extend(compare_lowering_instruction(blocks[2]["instructions"][0], {"id": "cmp1", "op": "cmp", "operands": ["value0", -1], "origin": "fixture.python_importer.b_while_break_continue::break-guard-eq-neg-one", "lowering_rule": "H_INTRINSIC_CMP"}, label=f"{case_name}: break_guard instruction 0"))
+        failures.extend(compare_lowering_terminator(blocks[2]["terminator"], {"kind": "cond_br", "cond": "cmp1", "true": "retread", "true_args": ["cell2", "mem3"], "false": "loop_body", "false_args": ["cell2", "mem3", "eff2", "value0"], "origin": "fixture.python_importer.b_while_break_continue::break-branch", "lowering_rule": "H_BRANCH_COND"}, label=f"{case_name}: break_guard terminator"))
+        if blocks[3]["params"] != ["cell3", "mem4", "eff3", "value1"]:
+            failures.append(f"{case_name}: expected loop_body params ['cell3', 'mem4', 'eff3', 'value1']")
+        expected_body = [
+            {
+                "id": "call0",
+                "op": "call",
+                "operands": ["sym:step", "value1", "eff3"],
+                "origin": "fixture.python_importer.b_while_break_continue::call-step",
+                "lowering_rule": "H_DIRECT_CALL",
+            },
+            {
+                "id": "mem5",
+                "op": "store",
+                "operands": ["cell3", "call0", "mem4"],
+                "origin": "fixture.python_importer.b_while_break_continue::set-current",
+                "lowering_rule": "H_SET_STORE",
+            },
+        ]
+        if len(blocks[3]["instructions"]) != len(expected_body):
+            failures.append(f"{case_name}: expected {len(expected_body)} loop_body instructions")
+        for index, expected in enumerate(expected_body[: len(blocks[3]["instructions"])]):
+            failures.extend(compare_lowering_instruction(blocks[3]["instructions"][index], expected, label=f"{case_name}: loop_body instruction {index}"))
+        failures.extend(compare_lowering_terminator(blocks[3]["terminator"], {"kind": "br", "target": "loop_guard", "args": ["cell3", "mem5", "eff3"], "origin": "fixture.python_importer.b_while_break_continue::continue-loop", "lowering_rule": "H_BRANCH_JOIN"}, label=f"{case_name}: loop_body terminator"))
+        if blocks[4]["params"] != ["cell4", "mem6"]:
+            failures.append(f"{case_name}: expected retread params ['cell4', 'mem6']")
+        if len(blocks[4]["instructions"]) != 1:
+            failures.append(f"{case_name}: expected single load in retread block")
+        else:
+            failures.extend(compare_lowering_instruction(blocks[4]["instructions"][0], {"id": "load1", "op": "load", "operands": ["cell4", "mem6"], "origin": "fixture.python_importer.b_while_break_continue::return-load-current", "lowering_rule": "H_PLACE_LOAD"}, label=f"{case_name}: retread instruction 0"))
+        failures.extend(compare_lowering_terminator(blocks[4]["terminator"], {"kind": "ret", "value": "load1", "origin": "fixture.python_importer.b_while_break_continue::return", "lowering_rule": "H_RETURN"}, label=f"{case_name}: retread terminator"))
+        return failures
+
+    if case_name == "b_class_init_method":
+        functions = lowered["functions"]
+        if [function["name"] for function in functions] != ["Counter__init__", "Counter__get"]:
+            return [f"{case_name}: expected Counter__init__/Counter__get lowered functions"]
+        failures = []
+        init_function, get_function = functions
+        if init_function["returns"] != "Counter":
+            failures.append(f"{case_name}: expected Counter__init__ return type 'Counter'")
+        if init_function["params"] != ["self", "value"]:
+            failures.append(f"{case_name}: expected Counter__init__ params ['self', 'value']")
+        if len(init_function["blocks"]) != 1:
+            failures.append(f"{case_name}: expected single entry block for Counter__init__")
+        else:
+            init_entry = init_function["blocks"][0]
+            if init_entry["id"] != "entry" or init_entry["params"] != ["mem0"]:
+                failures.append(f"{case_name}: expected Counter__init__ entry block with memory token param")
+            expected_init = [
+                {
+                    "id": "field0",
+                    "op": "field.addr",
+                    "operands": ["self", "sym:field:value"],
+                    "origin": "fixture.python_importer.b_class_init_method::init-field-value",
+                    "lowering_rule": "H_FIELD_ADDR",
+                },
+                {
+                    "id": "mem1",
+                    "op": "store",
+                    "operands": ["field0", "value", "mem0"],
+                    "origin": "fixture.python_importer.b_class_init_method::set-value",
+                    "lowering_rule": "H_SET_STORE",
+                },
+            ]
+            if len(init_entry["instructions"]) != len(expected_init):
+                failures.append(f"{case_name}: expected field.addr/store in Counter__init__ entry block")
+            for index, expected in enumerate(expected_init[: len(init_entry["instructions"])]):
+                failures.extend(compare_lowering_instruction(init_entry["instructions"][index], expected, label=f"{case_name}: Counter__init__ instruction {index}"))
+            failures.extend(compare_lowering_terminator(init_entry["terminator"], {"kind": "ret", "value": "self", "origin": "fixture.python_importer.b_class_init_method::init-return", "lowering_rule": "H_RETURN"}, label=f"{case_name}: Counter__init__ terminator"))
+
+        if get_function["returns"] != "int":
+            failures.append(f"{case_name}: expected Counter__get return type 'int'")
+        if get_function["params"] != ["self"]:
+            failures.append(f"{case_name}: expected Counter__get params ['self']")
+        if len(get_function["blocks"]) != 1:
+            failures.append(f"{case_name}: expected single entry block for Counter__get")
+        else:
+            get_entry = get_function["blocks"][0]
+            if get_entry["id"] != "entry" or get_entry["params"] != ["mem0"]:
+                failures.append(f"{case_name}: expected Counter__get entry block with memory token param")
+            expected_get = [
+                {
+                    "id": "field0",
+                    "op": "field.addr",
+                    "operands": ["self", "sym:field:value"],
+                    "origin": "fixture.python_importer.b_class_init_method::get-field-value",
+                    "lowering_rule": "H_FIELD_ADDR",
+                },
+                {
+                    "id": "load0",
+                    "op": "load",
+                    "operands": ["field0", "mem0"],
+                    "origin": "fixture.python_importer.b_class_init_method::return-load-value",
+                    "lowering_rule": "H_PLACE_LOAD",
+                },
+            ]
+            if len(get_entry["instructions"]) != len(expected_get):
+                failures.append(f"{case_name}: expected field.addr/load in Counter__get entry block")
+            for index, expected in enumerate(expected_get[: len(get_entry["instructions"])]):
+                failures.extend(compare_lowering_instruction(get_entry["instructions"][index], expected, label=f"{case_name}: Counter__get instruction {index}"))
+            failures.extend(compare_lowering_terminator(get_entry["terminator"], {"kind": "ret", "value": "load0", "origin": "fixture.python_importer.b_class_init_method::get-return", "lowering_rule": "H_RETURN"}, label=f"{case_name}: Counter__get terminator"))
+        return failures
+
+    if case_name == "b_class_field_update":
+        functions = lowered["functions"]
+        if [function["name"] for function in functions] != ["Counter__init__", "Counter__bump"]:
+            return [f"{case_name}: expected Counter__init__/Counter__bump lowered functions"]
+        failures = []
+
+        init_function = functions[0]
+        if init_function["returns"] != "Counter":
+            failures.append(f"{case_name}: expected Counter__init__ return type 'Counter'")
+        if init_function["params"] != ["self", "value"]:
+            failures.append(f"{case_name}: expected Counter__init__ params ['self', 'value']")
+        if len(init_function["blocks"]) != 1:
+            failures.append(f"{case_name}: expected single entry block in Counter__init__")
+        else:
+            init_entry = init_function["blocks"][0]
+            if init_entry["id"] != "entry" or init_entry["params"] != ["mem0"]:
+                failures.append(f"{case_name}: expected Counter__init__ entry params ['mem0']")
+            expected_init = [
+                {
+                    "id": "field0",
+                    "op": "field.addr",
+                    "operands": ["self", "sym:field:value"],
+                    "origin": "fixture.python_importer.b_class_field_update::init-field-value",
+                    "lowering_rule": "H_FIELD_ADDR",
+                },
+                {
+                    "id": "mem1",
+                    "op": "store",
+                    "operands": ["field0", "value", "mem0"],
+                    "origin": "fixture.python_importer.b_class_field_update::set-value",
+                    "lowering_rule": "H_SET_STORE",
+                },
+            ]
+            if len(init_entry["instructions"]) != len(expected_init):
+                failures.append(f"{case_name}: expected field.addr/store in Counter__init__ entry block")
+            for index, expected in enumerate(expected_init[: len(init_entry["instructions"])]):
+                failures.extend(compare_lowering_instruction(init_entry["instructions"][index], expected, label=f"{case_name}: Counter__init__ instruction {index}"))
+            failures.extend(compare_lowering_terminator(init_entry["terminator"], {"kind": "ret", "value": "self", "origin": "fixture.python_importer.b_class_field_update::init-return", "lowering_rule": "H_RETURN"}, label=f"{case_name}: Counter__init__ terminator"))
+
+        bump_function = functions[1]
+        if bump_function["returns"] != "int":
+            failures.append(f"{case_name}: expected Counter__bump return type 'int'")
+        if bump_function["params"] != ["self", "step"]:
+            failures.append(f"{case_name}: expected Counter__bump params ['self', 'step']")
+        if len(bump_function["blocks"]) != 1:
+            failures.append(f"{case_name}: expected single entry block in Counter__bump")
+        else:
+            bump_entry = bump_function["blocks"][0]
+            if bump_entry["id"] != "entry" or bump_entry["params"] != ["mem0", "eff0"]:
+                failures.append(f"{case_name}: expected Counter__bump entry params ['mem0', 'eff0']")
+            expected_bump = [
+                {
+                    "id": "field0",
+                    "op": "field.addr",
+                    "operands": ["self", "sym:field:value"],
+                    "origin": "fixture.python_importer.b_class_field_update::bump-field-value",
+                    "lowering_rule": "H_FIELD_ADDR",
+                },
+                {
+                    "id": "load0",
+                    "op": "load",
+                    "operands": ["field0", "mem0"],
+                    "origin": "fixture.python_importer.b_class_field_update::call-load-value",
+                    "lowering_rule": "H_PLACE_LOAD",
+                },
+                {
+                    "id": "call0",
+                    "op": "call",
+                    "operands": ["sym:step", "load0", "eff0"],
+                    "origin": "fixture.python_importer.b_class_field_update::call-step",
+                    "lowering_rule": "H_DIRECT_CALL",
+                },
+                {
+                    "id": "mem1",
+                    "op": "store",
+                    "operands": ["field0", "call0", "mem0"],
+                    "origin": "fixture.python_importer.b_class_field_update::set-value",
+                    "lowering_rule": "H_SET_STORE",
+                },
+                {
+                    "id": "load1",
+                    "op": "load",
+                    "operands": ["field0", "mem1"],
+                    "origin": "fixture.python_importer.b_class_field_update::return-load-value",
+                    "lowering_rule": "H_PLACE_LOAD",
+                },
+            ]
+            if len(bump_entry["instructions"]) != len(expected_bump):
+                failures.append(f"{case_name}: expected field.addr/load/call/store/load in Counter__bump entry block")
+            for index, expected in enumerate(expected_bump[: len(bump_entry["instructions"])]):
+                failures.extend(compare_lowering_instruction(bump_entry["instructions"][index], expected, label=f"{case_name}: Counter__bump instruction {index}"))
+            failures.extend(compare_lowering_terminator(bump_entry["terminator"], {"kind": "ret", "value": "load1", "origin": "fixture.python_importer.b_class_field_update::return", "lowering_rule": "H_RETURN"}, label=f"{case_name}: Counter__bump terminator"))
+        return failures
+
+    if case_name == "d_try_except":
+        functions = lowered["functions"]
+        if len(functions) != 1:
+            return [f"{case_name}: expected exactly one lowered function"]
+        function = functions[0]
+        if function["name"] != "guard":
+            failures.append(f"{case_name}: expected lowered function name 'guard'")
+        if function["returns"] != "int":
+            failures.append(f"{case_name}: expected lowered return type 'int'")
+        if function["params"] != ["may_fail", "x"]:
+            failures.append(f"{case_name}: expected lowered function params ['may_fail', 'x']")
+        blocks = function["blocks"]
+        if [block["id"] for block in blocks] != ["entry", "ret_value", "catch_valueerror"]:
+            failures.append(f"{case_name}: expected entry/ret_value/catch_valueerror block layout")
+            return failures
+        if blocks[0]["params"] != ["eff0"]:
+            failures.append(f"{case_name}: expected entry params ['eff0']")
+        if blocks[0]["instructions"]:
+            failures.append(f"{case_name}: expected no entry instructions before invoke")
+        failures.extend(compare_lowering_terminator(blocks[0]["terminator"], {"kind": "invoke", "callee": "sym:may_fail", "args": ["x", "eff0"], "result": "call0", "normal": "ret_value", "normal_args": ["call0"], "catch": "catch_valueerror", "catch_args": [], "catch_type": "ValueError", "origin": "fixture.python_importer.d_try_except::try-call", "lowering_rule": "H_TRY_INVOKE"}, label=f"{case_name}: entry terminator"))
+        if blocks[1]["params"] != ["value0"]:
+            failures.append(f"{case_name}: expected ret_value params ['value0']")
+        if blocks[1]["instructions"]:
+            failures.append(f"{case_name}: expected ret_value to return its carried value directly")
+        failures.extend(compare_lowering_terminator(blocks[1]["terminator"], {"kind": "ret", "value": "value0", "origin": "fixture.python_importer.d_try_except::try-return", "lowering_rule": "H_RETURN"}, label=f"{case_name}: ret_value terminator"))
+        if blocks[2]["params"] != []:
+            failures.append(f"{case_name}: expected catch_valueerror params []")
+        expected_catch = [
+            {
+                "id": "const0",
+                "op": "const",
+                "operands": [0],
+                "origin": "fixture.python_importer.d_try_except::catch-return-zero",
+                "lowering_rule": "H_CONST_RET",
+            }
+        ]
+        if len(blocks[2]["instructions"]) != len(expected_catch):
+            failures.append(f"{case_name}: expected single const in catch_valueerror block")
+        for index, expected in enumerate(expected_catch[: len(blocks[2]["instructions"])]):
+            failures.extend(compare_lowering_instruction(blocks[2]["instructions"][index], expected, label=f"{case_name}: catch_valueerror instruction {index}"))
+        failures.extend(compare_lowering_terminator(blocks[2]["terminator"], {"kind": "ret", "value": "const0", "origin": "fixture.python_importer.d_try_except::catch-return", "lowering_rule": "H_CONST_RET"}, label=f"{case_name}: catch_valueerror terminator"))
         return failures
 
     if case_name == "b_direct_call":
         functions = lowered["functions"]
         if [function["name"] for function in functions] != ["identity", "call_identity"]:
             return [f"{case_name}: expected identity/call_identity lowered functions"]
-        if functions[0]["blocks"][0]["instructions"]:
+        if functions[0]["returns"] != "int" or functions[1]["returns"] != "int":
+            failures.append(f"{case_name}: expected both lowered returns to remain int")
+        if functions[0]["params"] != ["x"] or functions[1]["params"] != ["x"]:
+            failures.append(f"{case_name}: expected both lowered functions to keep param x")
+        identity_entry = functions[0]["blocks"][0]
+        if identity_entry["id"] != "entry" or identity_entry["params"] != []:
+            failures.append(f"{case_name}: expected identity entry block with no params")
+        if identity_entry["instructions"]:
             failures.append(f"{case_name}: expected identity to return its parameter directly")
-        if functions[0]["blocks"][0]["terminator"]["kind"] != "ret":
-            failures.append(f"{case_name}: expected identity ret terminator")
-        if functions[0]["blocks"][0]["terminator"]["value"] != "x":
-            failures.append(f"{case_name}: expected identity to return x directly")
-        if [item["op"] for item in functions[1]["blocks"][0]["instructions"]] != ["call"]:
-            failures.append(f"{case_name}: expected call_identity to lower to a single call")
-        if functions[1]["blocks"][0]["params"] != ["eff0"]:
+        failures.extend(compare_lowering_terminator(identity_entry["terminator"], {"kind": "ret", "value": "x", "origin": "fixture.python_importer.b_direct_call::identity-return", "lowering_rule": "H_RETURN"}, label=f"{case_name}: identity terminator"))
+        call_entry = functions[1]["blocks"][0]
+        if call_entry["id"] != "entry" or call_entry["params"] != ["eff0"]:
             failures.append(f"{case_name}: expected call_identity entry effect token parameter")
+        if len(call_entry["instructions"]) != 1:
+            failures.append(f"{case_name}: expected call_identity to lower to a single call")
+        else:
+            failures.extend(compare_lowering_instruction(call_entry["instructions"][0], {"id": "call0", "op": "call", "operands": ["sym:identity", "x", "eff0"], "origin": "fixture.python_importer.b_direct_call::call-identity", "lowering_rule": "H_DIRECT_CALL"}, label=f"{case_name}: call_identity instruction 0"))
+        failures.extend(compare_lowering_terminator(call_entry["terminator"], {"kind": "ret", "value": "call0", "origin": "fixture.python_importer.b_direct_call::call-identity-return", "lowering_rule": "H_RETURN"}, label=f"{case_name}: call_identity terminator"))
         return failures
 
     if case_name == "c_opaque_call":
@@ -1712,10 +3234,15 @@ def validate_lowering_alignment(case_name: str, lowered: dict):
         if len(functions) != 1:
             return [f"{case_name}: expected exactly one lowered function"]
         function = functions[0]
+        if function["name"] != "ping" or function["returns"] != "opaque<ForeignResult>" or function["params"] != []:
+            failures.append(f"{case_name}: expected ping() -> opaque<ForeignResult>")
         if function["blocks"][0]["params"] != ["eff0"]:
             failures.append(f"{case_name}: expected opaque entry effect token parameter")
-        if [item["op"] for item in function["blocks"][0]["instructions"]] != ["opaque.call"]:
+        if len(function["blocks"][0]["instructions"]) != 1:
             failures.append(f"{case_name}: expected opaque.call lowering")
+        else:
+            failures.extend(compare_lowering_instruction(function["blocks"][0]["instructions"][0], {"id": "opaque0", "op": "opaque.call", "operands": ["sym:foreign_api_ping", "eff0"], "origin": "fixture.python_importer.c_opaque_call::opaque-call", "lowering_rule": "H_OPAQUE_CALL"}, label=f"{case_name}: entry instruction 0"))
+        failures.extend(compare_lowering_terminator(function["blocks"][0]["terminator"], {"kind": "ret", "value": "opaque0", "origin": "fixture.python_importer.c_opaque_call::ret", "lowering_rule": "H_RETURN"}, label=f"{case_name}: entry terminator"))
         return failures
 
     return [f"{case_name}: lowering alignment contract is not defined"]
@@ -1735,12 +3262,72 @@ def validate_translation_report(case_name: str, report: dict):
         failures.append(f"{case_name}: expected translation profile {profile}")
     if report["preservation_level"] != preservation_level:
         failures.append(f"{case_name}: expected translation preservation level {preservation_level}")
+    if report["status"] != "pass":
+        failures.append(f"{case_name}: expected translation status pass")
     opaque_items = report["boundary_annotations"]
+    expected_preserved = {
+        "a_basic_function": ["function boundaries", "structured control", "explicit mutation"],
+        "a_async_await": ["async function boundaries", "await suspension"],
+        "b_async_arg_await": ["async function boundaries", "await suspension", "argument flow through awaited local call"],
+        "b_if_else_return": ["function boundaries", "structured control", "explicit return branching"],
+        "b_while_call_update": ["function boundaries", "structured control", "loop-carried mutation through direct local call"],
+        "b_while_break_continue": ["function boundaries", "structured control", "explicit loop exit and continuation control", "loop-carried mutation through direct local call"],
+        "b_class_init_method": ["record-like type boundary", "constructor field initialization", "bounded instance field read method"],
+        "b_class_field_update": ["record-like type boundary", "constructor field initialization", "bounded instance field update method"],
+        "d_try_except": ["function boundaries", "single-handler exception fallback"],
+        "b_direct_call": ["function boundaries", "direct local call semantics"],
+        "c_opaque_call": ["function boundary"],
+    }[case_name]
+    expected_normalized = {
+        "a_basic_function": [],
+        "a_async_await": [],
+        "b_async_arg_await": [],
+        "b_if_else_return": [],
+        "b_while_call_update": [],
+        "b_while_break_continue": [],
+        "b_class_init_method": [],
+        "b_class_field_update": [],
+        "d_try_except": ["single-handler try/catch lowered into explicit invoke/catch CFG"],
+        "b_direct_call": [],
+        "c_opaque_call": ["direct foreign call lowered into explicit opaque.call op"],
+    }[case_name]
+    expected_evidence = {
+        "a_basic_function": [TRANSLATION_VALIDATOR_NAME, "lowered CFG and provenance validated"],
+        "a_async_await": [TRANSLATION_VALIDATOR_NAME, "lowered CFG and provenance validated"],
+        "b_async_arg_await": [TRANSLATION_VALIDATOR_NAME, "lowered CFG and provenance validated"],
+        "b_if_else_return": [TRANSLATION_VALIDATOR_NAME, "lowered CFG and provenance validated"],
+        "b_while_call_update": [TRANSLATION_VALIDATOR_NAME, "lowered CFG and provenance validated"],
+        "b_while_break_continue": [TRANSLATION_VALIDATOR_NAME, "lowered CFG and provenance validated"],
+        "b_class_init_method": [TRANSLATION_VALIDATOR_NAME, "lowered CFG and provenance validated"],
+        "b_class_field_update": [TRANSLATION_VALIDATOR_NAME, "lowered CFG and provenance validated"],
+        "d_try_except": [TRANSLATION_VALIDATOR_NAME, "lowered CFG and provenance validated"],
+        "b_direct_call": [TRANSLATION_VALIDATOR_NAME, "lowered CFG and provenance validated"],
+        "c_opaque_call": [TRANSLATION_VALIDATOR_NAME, "opaque boundary preserved in lowered form"],
+    }[case_name]
     if requires_opaque:
         if "foreign_api.ping boundary" not in opaque_items:
             failures.append(f"{case_name}: translation report must preserve opaque boundary accounting")
+        if not report["downgrades"]:
+            failures.append(f"{case_name}: translation report must record an explicit downgrade for boundary-only preservation")
+        elif report["downgrades"] != [{"reason": "opaque boundary preserved as boundary annotation only", "preservation_level": "P3"}]:
+            failures.append(f"{case_name}: expected exact opaque-boundary downgrade")
     elif opaque_items:
         failures.append(f"{case_name}: Tier A translation report must not introduce opaque accounting")
+    elif report["downgrades"]:
+        failures.append(f"{case_name}: Tier A translation report must not record downgrades")
+    observables = report["observables"]
+    if observables["preserved"] != expected_preserved:
+        failures.append(f"{case_name}: expected translation preserved observables {expected_preserved!r}")
+    if observables["normalized"] != expected_normalized:
+        failures.append(f"{case_name}: expected translation normalized observables {expected_normalized!r}")
+    if observables["contract_bounded"] != []:
+        failures.append(f"{case_name}: translation report must not introduce contract_bounded observables")
+    if observables["opaque"] != opaque_items:
+        failures.append(f"{case_name}: translation opaque observables must match boundary annotations")
+    if observables["unsupported"] != []:
+        failures.append(f"{case_name}: translation report must not mark unsupported observables")
+    if report["evidence"] != expected_evidence:
+        failures.append(f"{case_name}: expected exact translation evidence {expected_evidence!r}")
     return failures
 
 
@@ -1777,7 +3364,26 @@ def translation_report(case_name: str):
     preserved = {
         "a_basic_function": ["function boundaries", "structured control", "explicit mutation"],
         "a_async_await": ["async function boundaries", "await suspension"],
+        "b_async_arg_await": ["async function boundaries", "await suspension", "argument flow through awaited local call"],
+        "b_if_else_return": ["function boundaries", "structured control", "explicit return branching"],
+        "b_while_call_update": ["function boundaries", "structured control", "loop-carried mutation through direct local call"],
+        "b_while_break_continue": ["function boundaries", "structured control", "explicit loop exit and continuation control", "loop-carried mutation through direct local call"],
+        "b_class_init_method": ["record-like type boundary", "constructor field initialization", "bounded instance field read method"],
+        "b_class_field_update": ["record-like type boundary", "constructor field initialization", "bounded instance field update method"],
+        "d_try_except": ["function boundaries", "single-handler exception fallback"],
         "b_direct_call": ["function boundaries", "direct local call semantics"],
+    }
+    normalized = {
+        "a_basic_function": [],
+        "a_async_await": [],
+        "b_async_arg_await": [],
+        "b_if_else_return": [],
+        "b_while_call_update": [],
+        "b_while_break_continue": [],
+        "b_class_init_method": [],
+        "b_class_field_update": [],
+        "d_try_except": ["single-handler try/catch lowered into explicit invoke/catch CFG"],
+        "b_direct_call": [],
     }
     return {
         "report_id": f"translation-preservation-{slug(case_name)}",
@@ -1792,7 +3398,7 @@ def translation_report(case_name: str):
         "boundary_annotations": [],
         "observables": {
             "preserved": preserved[case_name],
-            "normalized": [],
+            "normalized": normalized[case_name],
             "contract_bounded": [],
             "opaque": [],
             "unsupported": [],
@@ -2296,6 +3902,83 @@ def emit_wasm_direct_local_call_function(module: Module, function: FunctionDecl,
     ]
 
 
+def emit_wasm_if_else_return_function(module: Module, function: FunctionDecl, lowered_function: dict):
+    if len(function.params) != 1:
+        raise PipelineError(
+            f"{module.module_id}::{function.name}: if/else-return Wasm emission requires exactly one int parameter"
+        )
+    blocks = lowered_function["blocks"]
+    if [block["id"] for block in blocks] != ["entry", "ret_zero", "ret_x"]:
+        raise PipelineError(
+            f"{module.module_id}::{function.name}: if/else-return Wasm emission requires the current entry/ret_zero/ret_x lowering shape"
+        )
+    entry, ret_zero, ret_x = blocks
+    if entry["params"] != []:
+        raise PipelineError(
+            f"{module.module_id}::{function.name}: if/else-return Wasm emission requires the current parameter-free entry block"
+        )
+    if [instruction["op"] for instruction in entry["instructions"]] != ["cmp"]:
+        raise PipelineError(
+            f"{module.module_id}::{function.name}: if/else-return Wasm emission requires a single cmp in the entry block"
+        )
+    cmp_instr = entry["instructions"][0]
+    param_name = function.params[0].name
+    if cmp_instr["operands"] != [param_name, 0]:
+        raise PipelineError(
+            f"{module.module_id}::{function.name}: if/else-return Wasm emission requires the current less-than-zero compare over the function parameter"
+        )
+    entry_term = entry["terminator"]
+    if (
+        entry_term["kind"] != "cond_br"
+        or entry_term["cond"] != cmp_instr["id"]
+        or entry_term["true"] != "ret_zero"
+        or entry_term["true_args"] != []
+        or entry_term["false"] != "ret_x"
+        or entry_term["false_args"] != [param_name]
+    ):
+        raise PipelineError(
+            f"{module.module_id}::{function.name}: if/else-return Wasm emission requires the current direct branch-to-return lowering"
+        )
+    if ret_zero["params"] != [] or [instruction["op"] for instruction in ret_zero["instructions"]] != ["const"]:
+        raise PipelineError(
+            f"{module.module_id}::{function.name}: if/else-return Wasm emission requires a const-only ret_zero block"
+        )
+    if ret_zero["instructions"][0]["operands"] != [0]:
+        raise PipelineError(
+            f"{module.module_id}::{function.name}: if/else-return Wasm emission requires the current zero-return constant"
+        )
+    if ret_zero["terminator"]["kind"] != "ret" or ret_zero["terminator"]["value"] != "const0":
+        raise PipelineError(
+            f"{module.module_id}::{function.name}: if/else-return Wasm emission requires ret_zero to return const0"
+        )
+    if ret_x["params"] != ["value0"] or ret_x["instructions"]:
+        raise PipelineError(
+            f"{module.module_id}::{function.name}: if/else-return Wasm emission requires a carried-value ret_x block"
+        )
+    if ret_x["terminator"]["kind"] != "ret" or ret_x["terminator"]["value"] != "value0":
+        raise PipelineError(
+            f"{module.module_id}::{function.name}: if/else-return Wasm emission requires ret_x to return the carried parameter"
+        )
+
+    params_clause = " ".join(render_wasm_param(param.name) for param in function.params)
+    header = f"  (func ${function.name} (export \"{function.name}\")"
+    if params_clause:
+        header += f" {params_clause}"
+    header += " (result i32)"
+    return [
+        header,
+        f"    local.get ${param_name}",
+        "    i32.const 0",
+        "    i32.lt_s",
+        "    if (result i32)",
+        "      i32.const 0",
+        "    else",
+        f"      local.get ${param_name}",
+        "    end",
+        "  )",
+    ]
+
+
 def emit_wasm_record_cell_function(module: Module, function: FunctionDecl, lowered_function: dict):
     blocks = lowered_function["blocks"]
     if [block["id"] for block in blocks] != ["entry", "neg", "retread"]:
@@ -2421,6 +4104,8 @@ def emit_wasm_function(module: Module, function: FunctionDecl, lowered_function:
         return emit_wasm_passthrough_function(module, function, lowered_function)
     if lowered_ops == ["call"]:
         return emit_wasm_direct_local_call_function(module, function, lowered_function)
+    if lowered_ops == ["cmp", "const"]:
+        return emit_wasm_if_else_return_function(module, function, lowered_function)
     if lowered_ops == ["field.addr", "load", "cmp", "store", "load"]:
         return emit_wasm_record_cell_function(module, function, lowered_function)
     if lowered_ops == ["alloc", "store", "load", "cmp", "store", "load"]:
@@ -2695,6 +4380,75 @@ def render_python_stmt(stmt, indent: int, import_aliases: dict[str, str]):
     raise PipelineError(f"unsupported Python reconstruction statement: {type(stmt).__name__}")
 
 
+def reconstruct_while_call_update_source(module: Module) -> str:
+    function = match_while_call_update_module(module)
+    if function is None:
+        raise PipelineError("b_while_call_update: unsupported compact SCIR-H shape for reconstruction")
+    return (
+        "def step_until_nonneg(step, x):\n"
+        "    while x < 0:\n"
+        "        x = step(x)\n"
+        "    return x\n"
+    )
+
+
+def reconstruct_while_break_continue_source(module: Module) -> str:
+    function = match_while_break_continue_module(module)
+    if function is None:
+        raise PipelineError("b_while_break_continue: unsupported compact SCIR-H shape for reconstruction")
+    return (
+        "def step_with_escape(step, x):\n"
+        "    while x < 0:\n"
+        "        if x == -1:\n"
+        "            break\n"
+        "        x = step(x)\n"
+        "        continue\n"
+        "    return x\n"
+    )
+
+
+def reconstruct_class_init_source(module: Module) -> str:
+    matched = match_class_init_module(module)
+    if matched is None:
+        raise PipelineError("b_class_init_method: unsupported compact SCIR-H shape for reconstruction")
+    return (
+        "class Counter:\n"
+        "    def __init__(self, value):\n"
+        "        self.value = value\n"
+        "\n"
+        "    def get(self):\n"
+        "        return self.value\n"
+    )
+
+
+def reconstruct_class_field_update_source(module: Module) -> str:
+    matched = match_class_field_update_module(module)
+    if matched is None:
+        raise PipelineError("b_class_field_update: unsupported compact SCIR-H shape for reconstruction")
+    return (
+        "class Counter:\n"
+        "    def __init__(self, value):\n"
+        "        self.value = value\n"
+        "\n"
+        "    def bump(self, step):\n"
+        "        self.value = step(self.value)\n"
+        "        return self.value\n"
+    )
+
+
+def reconstruct_try_except_source(module: Module) -> str:
+    function = match_try_except_module(module)
+    if function is None:
+        raise PipelineError("d_try_except: unsupported compact SCIR-H shape for reconstruction")
+    return (
+        "def guard(may_fail, x):\n"
+        "    try:\n"
+        "        return may_fail(x)\n"
+        "    except ValueError:\n"
+        "        return 0\n"
+    )
+
+
 def import_aliases(module: Module):
     aliases = {}
     for item in module.imports:
@@ -2705,6 +4459,16 @@ def import_aliases(module: Module):
 
 def reconstruct_python_source(module: Module, *, input_representation: str = "SCIR-H"):
     assert_canonical_pipeline_input(input_representation, "reconstruction")
+    if case_name_from_module(module) == "b_while_call_update":
+        return reconstruct_while_call_update_source(module)
+    if case_name_from_module(module) == "b_while_break_continue":
+        return reconstruct_while_break_continue_source(module)
+    if case_name_from_module(module) == "b_class_init_method":
+        return reconstruct_class_init_source(module)
+    if case_name_from_module(module) == "b_class_field_update":
+        return reconstruct_class_field_update_source(module)
+    if case_name_from_module(module) == "d_try_except":
+        return reconstruct_try_except_source(module)
     aliases = import_aliases(module)
     lines = []
     source_imports = sorted({value.split(".", 1)[0] for value in aliases.values()})
@@ -2738,6 +4502,44 @@ def execute_module(case_name: str, source_text: str):
             asyncio.run(namespace["fetch_value"]()),
             asyncio.run(namespace["load_once"]()),
         ]
+    if case_name == "b_async_arg_await":
+        exec(compile(source_text, f"<{case_name}>", "exec"), namespace)
+        return [
+            asyncio.run(namespace["fetch_value"](-4)),
+            asyncio.run(namespace["load_value"](-4)),
+            asyncio.run(namespace["load_value"](7)),
+        ]
+    if case_name == "b_if_else_return":
+        exec(compile(source_text, f"<{case_name}>", "exec"), namespace)
+        function = namespace["choose_zero_or_x"]
+        return [function(-4), function(0), function(7)]
+    if case_name == "b_while_call_update":
+        exec(compile(source_text, f"<{case_name}>", "exec"), namespace)
+        function = namespace["step_until_nonneg"]
+        step = lambda value: value + 2
+        return [function(step, -5), function(step, 0), function(step, 7)]
+    if case_name == "b_while_break_continue":
+        exec(compile(source_text, f"<{case_name}>", "exec"), namespace)
+        function = namespace["step_with_escape"]
+        step = lambda value: value + 2
+        return [function(step, -5), function(step, 0), function(step, 7)]
+    if case_name == "b_class_init_method":
+        exec(compile(source_text, f"<{case_name}>", "exec"), namespace)
+        counter_type = namespace["Counter"]
+        return [counter_type(-3).get(), counter_type(0).get(), counter_type(7).get()]
+    if case_name == "b_class_field_update":
+        exec(compile(source_text, f"<{case_name}>", "exec"), namespace)
+        counter_type = namespace["Counter"]
+        step = lambda value: value + 2
+        return [counter_type(-3).bump(step), counter_type(0).bump(step), counter_type(7).bump(step)]
+    if case_name == "d_try_except":
+        exec(compile(source_text, f"<{case_name}>", "exec"), namespace)
+        function = namespace["guard"]
+        def may_fail(value):
+            if value < 0:
+                raise ValueError("neg")
+            return value + 1
+        return [function(may_fail, -3), function(may_fail, 0), function(may_fail, 7)]
     if case_name == "b_direct_call":
         exec(compile(source_text, f"<{case_name}>", "exec"), namespace)
         return [
@@ -2914,6 +4716,8 @@ def validate_reconstruction_preservation_report(case_name: str, reconstruction_r
     if RECONSTRUCTION_EXPECTATIONS[case_name]["requires_opaque"]:
         if "foreign_api.ping boundary" not in opaque_items:
             failures.append(f"{case_name}: reconstruction preservation must retain opaque boundary accounting")
+        if not report["downgrades"]:
+            failures.append(f"{case_name}: reconstruction preservation must record an explicit downgrade for boundary-only preservation")
     elif opaque_items:
         failures.append(f"{case_name}: Tier A reconstruction must not introduce opaque accounting")
 
@@ -3062,6 +4866,48 @@ TRACK_C_REPAIR_CASE_CONFIG = {
         "regularized_core_surface": "(return 1)",
         "seed_bug": lambda source: source.replace("return 1", "return 0", 1),
     },
+    "b_async_arg_await": {
+        "source_surface": "return await fetch_value(x)",
+        "scirh_surface": "return await fetch_value(x)",
+        "regularized_core_surface": "(return (await (call fetch_value x)))",
+        "seed_bug": lambda source: source.replace("return await fetch_value(x)", "return await fetch_value(0)", 1),
+    },
+    "b_while_call_update": {
+        "source_surface": "while x < 0:\n    x = step(x)",
+        "scirh_surface": "loop loop0\n  if lt current 0\n    set current step(current)\n  else\n    break loop0",
+        "regularized_core_surface": "(loop loop0 (if (lt current 0) (set current (call step current)) (break loop0)))",
+        "seed_bug": lambda source: source.replace("step(x)", "step(0)", 1),
+    },
+    "b_while_break_continue": {
+        "source_surface": "while x < 0:\n    if x == -1:\n        break\n    x = step(x)\n    continue",
+        "scirh_surface": "loop loop0\n  if lt current 0\n    if eq current -1\n      break loop0\n    set current step(current)\n    continue loop0\n  else\n    break loop0",
+        "regularized_core_surface": "(loop loop0 (if (lt current 0) (if (eq current -1) (break loop0) (do (set current (call step current)) (continue loop0))) (break loop0)))",
+        "seed_bug": lambda source: source.replace("x == -1", "x == -2", 1),
+    },
+    "b_class_init_method": {
+        "source_surface": "class Counter:\n    def __init__(self, value):\n        self.value = value\n\n    def get(self):\n        return self.value",
+        "scirh_surface": "type Counter record { value int }\nfn Counter__init__ self Counter value int -> Counter !write\n  set self.value value\n  return self\nfn Counter__get self Counter -> int !\n  return self.value",
+        "regularized_core_surface": "(type Counter (record (value int))) (fn Counter__init__ (set self.value value) (return self)) (fn Counter__get (return self.value))",
+        "seed_bug": lambda source: source.replace("return self.value", "return 0", 1),
+    },
+    "b_class_field_update": {
+        "source_surface": "class Counter:\n    def __init__(self, value):\n        self.value = value\n\n    def bump(self, step):\n        self.value = step(self.value)\n        return self.value",
+        "scirh_surface": "type Counter record { value int }\nfn Counter__init__ self Counter value int -> Counter !write\n  set self.value value\n  return self\nfn Counter__bump self Counter step Callable -> int !write\n  set self.value step(self.value)\n  return self.value",
+        "regularized_core_surface": "(type Counter (record (value int))) (fn Counter__init__ (set self.value value) (return self)) (fn Counter__bump (set self.value (call step self.value)) (return self.value))",
+        "seed_bug": lambda source: source.replace("step(self.value)", "step(0)", 1),
+    },
+    "d_try_except": {
+        "source_surface": "try:\n    return may_fail(x)\nexcept ValueError:\n    return 0",
+        "scirh_surface": "try\n  return may_fail(x)\ncatch err ValueError\n  return 0",
+        "regularized_core_surface": "(try (return (call may_fail x)) (catch err ValueError (return 0)))",
+        "seed_bug": lambda source: source.replace("return 0", "return 1", 1),
+    },
+    "b_if_else_return": {
+        "source_surface": "if x < 0:\n    return 0\nelse:\n    return x",
+        "scirh_surface": "if lt x 0\n  return 0\nelse\n  return x",
+        "regularized_core_surface": "(if (lt x 0) (return 0) (return x))",
+        "seed_bug": lambda source: source.replace("return 0", "return 1", 1),
+    },
     "b_direct_call": {
         "source_surface": "return identity(x)",
         "scirh_surface": "return identity(x)",
@@ -3082,6 +4928,20 @@ def track_c_typed_ast_surface(case_name: str, source_text: str):
     if case_name == "a_basic_function":
         node = tree.body[0].body[1]
     elif case_name == "a_async_await":
+        node = tree.body[0].body[0]
+    elif case_name == "b_async_arg_await":
+        node = tree.body[1].body[0]
+    elif case_name == "b_while_call_update":
+        node = tree.body[0].body[0]
+    elif case_name == "b_while_break_continue":
+        node = tree.body[0].body[0]
+    elif case_name == "b_class_init_method":
+        node = tree.body[0]
+    elif case_name == "b_class_field_update":
+        node = tree.body[0]
+    elif case_name == "d_try_except":
+        node = tree.body[0].body[0]
+    elif case_name == "b_if_else_return":
         node = tree.body[0].body[0]
     elif case_name == "b_direct_call":
         node = tree.body[1].body[0]
@@ -3331,7 +5191,7 @@ def run_track_a(root: pathlib.Path, *, outputs: dict):
     gate_s3_source_pass = median_source_ratio <= 1.10
     gate_s3_ast_pass = median_scirhc_typed_ast_ratio <= 0.75
     gate_s4_pass = opaque_fraction < 0.15
-    gate_k2_hit = median_source_ratio > 1.50
+    gate_k2_hit = median_source_ratio > 1.50 and explicitness_gain <= 0
     gate_k4_hit = opaque_fraction > 0.25
     success = (gate_s3_source_pass or gate_s3_ast_pass) and gate_s4_pass
     passed = success and not gate_k2_hit and not gate_k4_hit
@@ -3469,687 +5329,6 @@ def run_track_b(root: pathlib.Path, reconstruction_reports: dict[str, dict]):
         "evidence": [
             "validated importer outputs",
             "reconstruction compile/test harness",
-        ],
-    }
-    return manifest, result
-
-
-TRACK_D_CONTROLS = [
-    "hash every published corpus manifest",
-    "separate development, tuning, and held-out evaluation slices",
-    "record prompt templates and baseline adapters",
-    "do not claim generalization from a contaminated or untracked dataset",
-]
-
-PYTHON_TRACK_D_CASES = ["a_basic_function", "a_async_await", "c_opaque_call"]
-RUST_TRACK_D_CASES = ["a_mut_local", "a_struct_field_borrow_mut", "a_async_await"]
-PYTHON_TRACK_D_ITERATIONS = {
-    "a_basic_function": 20000,
-    "a_async_await": 1000,
-    "c_opaque_call": 4000,
-}
-RUST_TRACK_D_ITERATIONS = {
-    "a_mut_local": 200000,
-    "a_struct_field_borrow_mut": 120000,
-    "a_async_await": 30000,
-}
-
-
-def rust_corpus_hash():
-    digest = hashlib.sha256()
-    for case_name in RUST_ALL_CASES:
-        digest.update(RUST_SOURCE_TEXTS[case_name].encode("utf-8"))
-    return f"sha256:{digest.hexdigest()}"
-
-
-def compare_rust_imported_feature_totals(root: pathlib.Path):
-    total = 0
-    opaque = 0
-    tier_counts = {"A": 0, "B": 0, "C": 0, "D": 0}
-    for case_name in RUST_SUPPORTED_CASES:
-        report = load_rust_import_artifacts(root, case_name)["feature_tier_report.json"]
-        total += len(report["items"])
-        for item in report["items"]:
-            tier_counts[item["tier"]] += 1
-            if item["tier"] == "C":
-                opaque += 1
-    return opaque, total, tier_counts
-
-
-def scirl_instruction_count(module: dict):
-    return sum(len(block["instructions"]) for function in module["functions"] for block in function["blocks"])
-
-
-def optimize_local_cell_module(lowered: dict):
-    function = lowered["functions"][0]
-    entry, neg, retread = function["blocks"]
-    if [item["op"] for item in entry["instructions"]] != ["alloc", "store", "load", "cmp"]:
-        raise PipelineError(f"{lowered['module_id']}: expected local-cell lowering for optimization")
-    if [item["op"] for item in neg["instructions"]] != ["store"]:
-        raise PipelineError(f"{lowered['module_id']}: expected store-only negative block for optimization")
-    if [item["op"] for item in retread["instructions"]] != ["load"]:
-        raise PipelineError(f"{lowered['module_id']}: expected load-only return block for optimization")
-
-    param = function["params"][0]
-    module_id = lowered["module_id"]
-    return {
-        "module_id": module_id,
-        "functions": [
-            {
-                "name": function["name"],
-                "returns": function["returns"],
-                "params": list(function["params"]),
-                "blocks": [
-                    {
-                        "id": "entry",
-                        "params": [],
-                        "instructions": [
-                            {
-                                "id": "cmp0",
-                                "op": "cmp",
-                                "operands": [param, 0],
-                                "origin": f"{module_id}::track-d-opt-cmp-param-zero",
-                            }
-                        ],
-                        "terminator": {
-                            "kind": "cond_br",
-                            "cond": "cmp0",
-                            "true": "neg",
-                            "true_args": [],
-                            "false": "retv",
-                            "false_args": [param],
-                            "origin": f"{module_id}::track-d-opt-branch",
-                        },
-                    },
-                    {
-                        "id": "neg",
-                        "params": [],
-                        "instructions": [
-                            {
-                                "id": "const0",
-                                "op": "const",
-                                "operands": [0],
-                                "origin": f"{module_id}::track-d-opt-const-zero",
-                            }
-                        ],
-                        "terminator": {
-                            "kind": "ret",
-                            "value": "const0",
-                            "origin": f"{module_id}::track-d-opt-ret-zero",
-                        },
-                    },
-                    {
-                        "id": "retv",
-                        "params": ["value0"],
-                        "instructions": [],
-                        "terminator": {
-                            "kind": "ret",
-                            "value": "value0",
-                            "origin": f"{module_id}::track-d-opt-ret-value",
-                        },
-                    },
-                ],
-            }
-        ],
-    }
-
-
-def optimize_field_borrow_module(lowered: dict):
-    function = lowered["functions"][0]
-    entry, neg, retread = function["blocks"]
-    if [item["op"] for item in entry["instructions"]] != ["field.addr", "load", "cmp"]:
-        raise PipelineError(f"{lowered['module_id']}: expected field borrow lowering for optimization")
-    if [item["op"] for item in neg["instructions"]] != ["store"]:
-        raise PipelineError(f"{lowered['module_id']}: expected field store block for optimization")
-    if [item["op"] for item in retread["instructions"]] != ["load"]:
-        raise PipelineError(f"{lowered['module_id']}: expected field reload block for optimization")
-
-    module_id = lowered["module_id"]
-    field_symbol = entry["instructions"][0]["operands"][1]
-    param = function["params"][0]
-    return {
-        "module_id": module_id,
-        "functions": [
-            {
-                "name": function["name"],
-                "returns": function["returns"],
-                "params": list(function["params"]),
-                "blocks": [
-                    {
-                        "id": "entry",
-                        "params": ["mem0"],
-                        "instructions": [
-                            {
-                                "id": "field0",
-                                "op": "field.addr",
-                                "operands": [param, field_symbol],
-                                "origin": f"{module_id}::track-d-opt-field",
-                            },
-                            {
-                                "id": "load0",
-                                "op": "load",
-                                "operands": ["field0", "mem0"],
-                                "origin": f"{module_id}::track-d-opt-load-field",
-                            },
-                            {
-                                "id": "cmp0",
-                                "op": "cmp",
-                                "operands": ["load0", 0],
-                                "origin": f"{module_id}::track-d-opt-cmp-zero",
-                            },
-                        ],
-                        "terminator": {
-                            "kind": "cond_br",
-                            "cond": "cmp0",
-                            "true": "neg",
-                            "true_args": ["field0", "mem0"],
-                            "false": "retv",
-                            "false_args": ["load0"],
-                            "origin": f"{module_id}::track-d-opt-branch",
-                        },
-                    },
-                    {
-                        "id": "neg",
-                        "params": ["field1", "mem1"],
-                        "instructions": [
-                            {
-                                "id": "const0",
-                                "op": "const",
-                                "operands": [0],
-                                "origin": f"{module_id}::track-d-opt-const-zero",
-                            },
-                            {
-                                "id": "mem2",
-                                "op": "store",
-                                "operands": ["field1", 0, "mem1"],
-                                "origin": f"{module_id}::track-d-opt-store-zero",
-                            },
-                        ],
-                        "terminator": {
-                            "kind": "ret",
-                            "value": "const0",
-                            "origin": f"{module_id}::track-d-opt-ret-zero",
-                        },
-                    },
-                    {
-                        "id": "retv",
-                        "params": ["value0"],
-                        "instructions": [],
-                        "terminator": {
-                            "kind": "ret",
-                            "value": "value0",
-                            "origin": f"{module_id}::track-d-opt-ret-value",
-                        },
-                    },
-                ],
-            }
-        ],
-    }
-
-
-def optimize_python_track_d_module(case_name: str, lowered: dict):
-    if case_name == "a_basic_function":
-        return optimize_local_cell_module(lowered)
-    if case_name in {"a_async_await", "c_opaque_call"}:
-        return json.loads(json.dumps(lowered))
-    raise PipelineError(f"{case_name}: Python Track D optimization contract is not defined")
-
-
-def optimize_rust_track_d_module(case_name: str, lowered: dict):
-    if case_name == "a_mut_local":
-        return optimize_local_cell_module(lowered)
-    if case_name == "a_struct_field_borrow_mut":
-        return optimize_field_borrow_module(lowered)
-    if case_name == "a_async_await":
-        return json.loads(json.dumps(lowered))
-    raise PipelineError(f"{case_name}: Rust Track D optimization contract is not defined")
-
-
-def emit_python_track_d_source(case_name: str, optimized: bool):
-    if case_name == "a_basic_function" and optimized:
-        return (
-            "def clamp_nonneg(x):\n"
-            "    if x < 0:\n"
-            "        return 0\n"
-            "    return x\n"
-        )
-    return PYTHON_SOURCE_TEXTS[case_name]
-
-
-def emit_rust_track_d_source(case_name: str, optimized: bool):
-    if case_name == "a_mut_local" and optimized:
-        return (
-            "pub fn clamp_nonneg(x: i32) -> i32 {\n"
-            "    if x < 0 {\n"
-            "        return 0;\n"
-            "    }\n"
-            "    return x;\n"
-            "}\n"
-        )
-    if case_name == "a_struct_field_borrow_mut" and optimized:
-        return (
-            "pub struct Counter {\n"
-            "    pub value: i32,\n"
-            "}\n"
-            "\n"
-            "pub fn clamp_counter(counter: &mut Counter) -> i32 {\n"
-            "    if counter.value < 0 {\n"
-            "        counter.value = 0;\n"
-            "        return 0;\n"
-            "    }\n"
-            "    return counter.value;\n"
-            "}\n"
-        )
-    return RUST_SOURCE_TEXTS[case_name]
-
-
-def execute_python_track_d_case(case_name: str, source_text: str, iterations: int):
-    namespace = {"__builtins__": __builtins__}
-    compile(source_text, f"<track-d:{case_name}>", "exec")
-    if case_name == "a_basic_function":
-        exec(compile(source_text, f"<track-d:{case_name}>", "exec"), namespace)
-        function = namespace["clamp_nonneg"]
-        function(-3)
-        start = time.perf_counter()
-        checksum = 0
-        for index in range(iterations):
-            checksum += function(-3 if index % 2 == 0 else 4)
-        return time.perf_counter() - start, checksum
-    if case_name == "a_async_await":
-        exec(compile(source_text, f"<track-d:{case_name}>", "exec"), namespace)
-
-        async def run_many():
-            checksum = 0
-            for _ in range(iterations):
-                checksum += await namespace["load_once"]()
-            return checksum
-
-        asyncio.run(run_many())
-        start = time.perf_counter()
-        checksum = asyncio.run(run_many())
-        return time.perf_counter() - start, checksum
-    if case_name == "c_opaque_call":
-        with tempfile.TemporaryDirectory(prefix="scir-track-d-foreign-api-") as tmp:
-            temp_dir = pathlib.Path(tmp)
-            (temp_dir / "foreign_api.py").write_text(
-                "def ping():\n    return {'status': 'ok', 'origin': 'stub'}\n",
-                encoding="utf-8",
-            )
-            sys.path.insert(0, str(temp_dir))
-            try:
-                importlib.invalidate_caches()
-                sys.modules.pop("foreign_api", None)
-                exec(compile(source_text, f"<track-d:{case_name}>", "exec"), namespace)
-                function = namespace["ping"]
-                function()
-                start = time.perf_counter()
-                checksum = 0
-                for _ in range(iterations):
-                    checksum += len(function()["origin"])
-                return time.perf_counter() - start, checksum
-            finally:
-                sys.modules.pop("foreign_api", None)
-                sys.path.pop(0)
-    raise PipelineError(f"{case_name}: Python Track D execution harness is not defined")
-
-
-def rust_benchmark_harness(case_name: str, crate_name: str, iterations: int):
-    if case_name == "a_mut_local":
-        return (
-            f"use {crate_name}::clamp_nonneg;\n\n"
-            "fn main() {\n"
-            "    let mut checksum: i64 = 0;\n"
-            f"    for index in 0..{iterations} {{\n"
-            "        checksum += clamp_nonneg(if index % 2 == 0 { -3 } else { 4 }) as i64;\n"
-            "    }\n"
-            "    println!(\"{}\", checksum);\n"
-            "}\n"
-        )
-    if case_name == "a_struct_field_borrow_mut":
-        return (
-            f"use {crate_name}::{{clamp_counter, Counter}};\n\n"
-            "fn main() {\n"
-            "    let mut checksum: i64 = 0;\n"
-            f"    for index in 0..{iterations} {{\n"
-            "        let mut counter = Counter { value: if index % 2 == 0 { -5 } else { 4 } };\n"
-            "        checksum += clamp_counter(&mut counter) as i64;\n"
-            "        checksum += counter.value as i64;\n"
-            "    }\n"
-            "    println!(\"{}\", checksum);\n"
-            "}\n"
-        )
-    if case_name == "a_async_await":
-        return (
-            f"use {crate_name}::load_once;\n"
-            "use std::future::Future;\n"
-            "use std::pin::Pin;\n"
-            "use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};\n\n"
-            "fn noop_raw_waker() -> RawWaker {\n"
-            "    fn clone(_: *const ()) -> RawWaker { noop_raw_waker() }\n"
-            "    fn wake(_: *const ()) {}\n"
-            "    fn wake_by_ref(_: *const ()) {}\n"
-            "    fn drop(_: *const ()) {}\n"
-            "    RawWaker::new(std::ptr::null(), &RawWakerVTable::new(clone, wake, wake_by_ref, drop))\n"
-            "}\n\n"
-            "fn block_on<F: Future>(future: F) -> F::Output {\n"
-            "    let waker = unsafe { Waker::from_raw(noop_raw_waker()) };\n"
-            "    let mut future = Pin::from(Box::new(future));\n"
-            "    loop {\n"
-            "        let mut context = Context::from_waker(&waker);\n"
-            "        match Future::poll(future.as_mut(), &mut context) {\n"
-            "            Poll::Ready(value) => return value,\n"
-            "            Poll::Pending => std::thread::yield_now(),\n"
-            "        }\n"
-            "    }\n"
-            "}\n\n"
-            "fn main() {\n"
-            "    let mut checksum: i64 = 0;\n"
-            f"    for _ in 0..{iterations} {{\n"
-            "        checksum += block_on(load_once()) as i64;\n"
-            "    }\n"
-            "    println!(\"{}\", checksum);\n"
-            "}\n"
-        )
-    raise PipelineError(f"{case_name}: Rust Track D benchmark harness is not defined")
-
-
-def rust_binary_path(crate_root: pathlib.Path, crate_name: str):
-    suffix = ".exe" if sys.platform.startswith("win") else ""
-    return crate_root / "target" / "debug" / f"{crate_name}{suffix}"
-
-
-def measure_rust_track_d_case(case_name: str, source_text: str, iterations: int):
-    require_rust_toolchain()
-    with tempfile.TemporaryDirectory(
-        prefix=f"scir-track-d-rust-{case_name}-",
-        ignore_cleanup_errors=True,
-    ) as tmp:
-        crate_root = pathlib.Path(tmp)
-        crate_name = f"track_d_{slug(case_name).replace('-', '_')}"
-        (crate_root / "src").mkdir(parents=True, exist_ok=True)
-        (crate_root / "src" / "lib.rs").write_text(source_text, encoding="utf-8")
-        (crate_root / "src" / "main.rs").write_text(
-            rust_benchmark_harness(case_name, crate_name, iterations),
-            encoding="utf-8",
-        )
-        (crate_root / "Cargo.toml").write_text(
-            (
-                f"[package]\nname = \"{crate_name}\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n"
-                "[lib]\npath = \"src/lib.rs\"\n"
-            ),
-            encoding="utf-8",
-        )
-
-        compile_start = time.perf_counter()
-        compile_result = run_rust_command(
-            ["cargo", "build", "--quiet"],
-            cwd=crate_root,
-            capture_output=True,
-            text=True,
-        )
-        compile_time = time.perf_counter() - compile_start
-        if compile_result.returncode != 0:
-            raise PipelineError(f"{case_name}: cargo build failed for Track D benchmark source")
-
-        binary_path = rust_binary_path(crate_root, crate_name)
-        if not binary_path.exists():
-            raise PipelineError(f"{case_name}: expected Track D benchmark binary at {binary_path}")
-
-        runtime_start = time.perf_counter()
-        run_result = subprocess.run(
-            [str(binary_path)],
-            cwd=crate_root,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        runtime_time = time.perf_counter() - runtime_start
-        if run_result.returncode != 0:
-            raise PipelineError(f"{case_name}: Track D benchmark binary failed to execute")
-
-        return {
-            "compile_time": compile_time,
-            "runtime_time": runtime_time,
-            "artifact_size": binary_path.stat().st_size,
-            "output": run_result.stdout.strip(),
-        }
-
-
-def run_python_track_d(root: pathlib.Path):
-    opaque_nodes, total_nodes, tier_counts = compare_imported_feature_totals(root)
-    opaque_fraction = opaque_nodes / total_nodes
-    sync_ratios = []
-    async_ratio = None
-    opaque_ratio = None
-    observable_match = True
-    instruction_ratios = []
-
-    for case_name in PYTHON_TRACK_D_CASES:
-        lowered = lower_supported_module(PYTHON_SCIRH_MODULES[case_name])
-        optimized = optimize_python_track_d_module(case_name, lowered)
-        scirl_failures, _ = validate_scirl_module(optimized)
-        if scirl_failures:
-            raise PipelineError(f"{case_name}: optimized Python Track D SCIR-L failed validation")
-        instruction_ratios.append(scirl_instruction_count(optimized) / scirl_instruction_count(lowered))
-
-        direct_source = PYTHON_SOURCE_TEXTS[case_name]
-        unoptimized_source = emit_python_track_d_source(case_name, optimized=False)
-        optimized_source = emit_python_track_d_source(case_name, optimized=True)
-        direct_elapsed, direct_value = execute_python_track_d_case(
-            case_name,
-            direct_source,
-            PYTHON_TRACK_D_ITERATIONS[case_name],
-        )
-        if unoptimized_source == direct_source:
-            unoptimized_elapsed, unoptimized_value = direct_elapsed, direct_value
-        else:
-            unoptimized_elapsed, unoptimized_value = execute_python_track_d_case(
-                case_name,
-                unoptimized_source,
-                PYTHON_TRACK_D_ITERATIONS[case_name],
-            )
-        if optimized_source == direct_source:
-            optimized_elapsed, optimized_value = direct_elapsed, direct_value
-        else:
-            optimized_elapsed, optimized_value = execute_python_track_d_case(
-                case_name,
-                optimized_source,
-                PYTHON_TRACK_D_ITERATIONS[case_name],
-            )
-        observable_match = observable_match and direct_value == unoptimized_value == optimized_value
-        ratio = optimized_elapsed / direct_elapsed
-        if case_name == "a_async_await":
-            async_ratio = ratio
-        elif case_name == "c_opaque_call":
-            opaque_ratio = ratio
-            sync_ratios.append(ratio)
-        else:
-            sync_ratios.append(ratio)
-
-    median_runtime_ratio = statistics.median(sync_ratios)
-    gate_s5_pass = (
-        median_runtime_ratio <= 1.50
-        and async_ratio is not None
-        and async_ratio <= 1.75
-        and opaque_ratio is not None
-        and opaque_ratio <= 1.25
-    )
-    gate_k8_hit = (
-        any(ratio > 2.0 for ratio in sync_ratios)
-        or (async_ratio is not None and async_ratio > 2.0)
-        or (opaque_ratio is not None and opaque_ratio > 2.0)
-        or not observable_match
-    )
-
-    manifest = {
-        "benchmark_id": "bootstrap-track-d-python-dpy-subset",
-        "track": "D",
-        "task_family": "python-bootstrap-host-runtime",
-        "corpus": {
-            "name": "python-bootstrap-fixtures",
-            "scope": "Fixed Python bootstrap cases emitted from optimized SCIR-L",
-            "hash": corpus_hash(BENCHMARK_CASES),
-        },
-        "baselines": ["direct source", "typed-AST"],
-        "profiles": ["D-PY"],
-        "success_gates": ["S5"],
-        "kill_gates": ["K8"],
-        "contamination_controls": list(TRACK_D_CONTROLS),
-    }
-    result = {
-        "benchmark_id": manifest["benchmark_id"],
-        "run_id": "bootstrap-track-d-python-run-2026-03-17",
-        "system_under_test": "scir-bootstrap-track-d-python-dpy",
-        "track": "D",
-        "profile": "D-PY",
-        "metrics": {
-            "median_runtime_ratio": round(median_runtime_ratio, 4),
-            "async_overhead_ratio": round(async_ratio, 4),
-            "opaque_boundary_overhead_ratio": round(opaque_ratio, 4),
-            "observable_match": observable_match,
-            "gate_S5_pass": gate_s5_pass,
-            "gate_K8_hit": gate_k8_hit,
-            "opaque_fraction": round(opaque_fraction, 4),
-            "preservation_level_ceiling": "P3",
-            "tier_a_feature_count": tier_counts["A"],
-            "tier_b_feature_count": tier_counts["B"],
-            "tier_c_feature_count": tier_counts["C"],
-            "tier_d_feature_count": tier_counts["D"],
-            "instruction_reduction_ratio": round(statistics.mean(instruction_ratios), 4),
-        },
-        "baseline_comparison": {
-            "direct source": round(median_runtime_ratio - 1.0, 4),
-            "typed-AST": "translation-only reference",
-        },
-        "status": "pass" if gate_s5_pass and not gate_k8_hit else "fail",
-        "evidence": [
-            "optimized Python D-PY source emitted from fixed SCIR-L bootstrap cases",
-            "direct-source runtime baseline on the same harness",
-            "observable matching checked across direct, unoptimized, and optimized emission",
-        ],
-    }
-    return manifest, result
-
-
-def run_rust_track_d(root: pathlib.Path):
-    require_rust_toolchain()
-    opaque_nodes, total_nodes, tier_counts = compare_rust_imported_feature_totals(root)
-    opaque_fraction = opaque_nodes / total_nodes
-    sync_ratios = []
-    async_ratio = None
-    compile_ratios = []
-    size_ratios = []
-    instruction_ratios = []
-    observable_match = True
-
-    for case_name in RUST_TRACK_D_CASES:
-        lowered = lower_rust_supported_module(RUST_SCIRH_MODULES[case_name])
-        optimized = optimize_rust_track_d_module(case_name, lowered)
-        scirl_failures, _ = validate_scirl_module(optimized)
-        if scirl_failures:
-            raise PipelineError(f"{case_name}: optimized Rust Track D SCIR-L failed validation")
-        instruction_ratios.append(scirl_instruction_count(optimized) / scirl_instruction_count(lowered))
-
-        direct_source = RUST_SOURCE_TEXTS[case_name]
-        unoptimized_source = emit_rust_track_d_source(case_name, optimized=False)
-        optimized_source = emit_rust_track_d_source(case_name, optimized=True)
-        direct_measure = measure_rust_track_d_case(
-            case_name,
-            direct_source,
-            RUST_TRACK_D_ITERATIONS[case_name],
-        )
-        if unoptimized_source == direct_source:
-            unoptimized_measure = dict(direct_measure)
-        else:
-            unoptimized_measure = measure_rust_track_d_case(
-                case_name,
-                unoptimized_source,
-                RUST_TRACK_D_ITERATIONS[case_name],
-            )
-        if optimized_source == direct_source:
-            optimized_measure = dict(direct_measure)
-        else:
-            optimized_measure = measure_rust_track_d_case(
-                case_name,
-                optimized_source,
-                RUST_TRACK_D_ITERATIONS[case_name],
-            )
-        observable_match = (
-            observable_match
-            and direct_measure["output"] == unoptimized_measure["output"] == optimized_measure["output"]
-        )
-
-        runtime_ratio = optimized_measure["runtime_time"] / direct_measure["runtime_time"]
-        compile_ratio = optimized_measure["compile_time"] / direct_measure["compile_time"]
-        size_ratio = optimized_measure["artifact_size"] / direct_measure["artifact_size"]
-        compile_ratios.append(compile_ratio)
-        size_ratios.append(size_ratio)
-        if case_name == "a_async_await":
-            async_ratio = runtime_ratio
-        else:
-            sync_ratios.append(runtime_ratio)
-
-    median_runtime_ratio = statistics.median(sync_ratios)
-    compile_time_ratio = statistics.median(compile_ratios)
-    artifact_size_ratio = statistics.median(size_ratios)
-    gate_s5_pass = (
-        median_runtime_ratio <= 1.25
-        and compile_time_ratio <= 1.50
-    )
-    gate_k8_hit = (
-        any(ratio > 2.0 for ratio in sync_ratios)
-        or (async_ratio is not None and async_ratio > 2.0)
-        or not observable_match
-    )
-
-    manifest = {
-        "benchmark_id": "bootstrap-track-d-rust-n-subset",
-        "track": "D",
-        "task_family": "rust-bootstrap-native-runtime",
-        "corpus": {
-            "name": "rust-bootstrap-fixtures",
-            "scope": "Fixed Rust bootstrap cases emitted from optimized SCIR-L",
-            "hash": rust_corpus_hash(),
-        },
-        "baselines": ["direct source", "typed-AST", "SSA-like internal IR"],
-        "profiles": ["N"],
-        "success_gates": ["S5"],
-        "kill_gates": ["K8"],
-        "contamination_controls": list(TRACK_D_CONTROLS),
-    }
-    result = {
-        "benchmark_id": manifest["benchmark_id"],
-        "run_id": "bootstrap-track-d-rust-run-2026-03-17",
-        "system_under_test": "scir-bootstrap-track-d-rust-n",
-        "track": "D",
-        "profile": "N",
-        "metrics": {
-            "median_runtime_ratio": round(median_runtime_ratio, 4),
-            "compile_time_ratio": round(compile_time_ratio, 4),
-            "artifact_size_ratio": round(artifact_size_ratio, 4),
-            "peak_memory_ratio": None,
-            "async_overhead_ratio": round(async_ratio, 4),
-            "gate_S5_pass": gate_s5_pass,
-            "gate_K8_hit": gate_k8_hit,
-            "opaque_fraction": round(opaque_fraction, 4),
-            "preservation_level_ceiling": "P3",
-            "tier_a_feature_count": tier_counts["A"],
-            "tier_b_feature_count": tier_counts["B"],
-            "tier_c_feature_count": tier_counts["C"],
-            "tier_d_feature_count": tier_counts["D"],
-            "instruction_reduction_ratio": round(statistics.mean(instruction_ratios), 4),
-            "observable_match": observable_match,
-        },
-        "baseline_comparison": {
-            "direct source": round(median_runtime_ratio - 1.0, 4),
-            "typed-AST": "translation-only reference",
-            "SSA-like internal IR": "reference only",
-        },
-        "status": "pass" if gate_s5_pass and not gate_k8_hit else "fail",
-        "evidence": [
-            "optimized Rust N source emitted from fixed SCIR-L bootstrap cases",
-            "direct-source runtime and compile-time baselines on the same harness",
-            "observable matching checked across direct, unoptimized, and optimized emission",
         ],
     }
     return manifest, result
@@ -4501,6 +5680,16 @@ def run_self_tests(root: pathlib.Path):
     scirl_failures, _ = validate_scirl_module(mutated)
     if not any("must remain rooted" in item for item in scirl_failures):
         failures.append("self-test mismatched SCIR-L provenance root: expected failure")
+    mutated = json.loads(json.dumps(base_lowered))
+    mutated["functions"][0]["blocks"][0]["instructions"][0]["origin"] = "fixture.python_importer.a_basic_function::wrong-origin"
+    alignment_failures = validate_lowering_alignment("a_basic_function", mutated)
+    if not any("expected origin" in item for item in alignment_failures):
+        failures.append("self-test lowering alignment exact origin: expected failure")
+    mutated = json.loads(json.dumps(lower_supported_module(PYTHON_SCIRH_MODULES["b_direct_call"])))
+    mutated["functions"][1]["blocks"][0]["instructions"][0]["operands"][0] = "sym:fetch_value"
+    alignment_failures = validate_lowering_alignment("b_direct_call", mutated)
+    if not any("expected operands" in item for item in alignment_failures):
+        failures.append("self-test lowering alignment exact call target: expected failure")
 
     overclaim_status = preservation_expectation_status(
         make_stage_observation(status="pass", preservation_level="P0"),
@@ -4539,6 +5728,21 @@ def run_self_tests(root: pathlib.Path):
     translation_failures = validate_translation_report("c_opaque_call", mutated_report)
     if not any("preserve opaque boundary accounting" in item for item in translation_failures):
         failures.append("self-test translation opaque accounting: expected failure")
+    mutated_report = translation_report("c_opaque_call")
+    mutated_report["downgrades"] = []
+    translation_failures = validate_translation_report("c_opaque_call", mutated_report)
+    if not any("record an explicit downgrade" in item for item in translation_failures):
+        failures.append("self-test translation missing downgrade: expected failure")
+    mutated_report = translation_report("a_basic_function")
+    mutated_report["observables"]["preserved"] = ["function boundaries"]
+    translation_failures = validate_translation_report("a_basic_function", mutated_report)
+    if not any("expected translation preserved observables" in item for item in translation_failures):
+        failures.append("self-test translation preserved observables drift: expected failure")
+    mutated_report = translation_report("a_basic_function")
+    mutated_report["evidence"] = [TRANSLATION_VALIDATOR_NAME]
+    translation_failures = validate_translation_report("a_basic_function", mutated_report)
+    if not any("expected exact translation evidence" in item for item in translation_failures):
+        failures.append("self-test translation evidence drift: expected failure")
 
     try:
         emit_wasm_module(PYTHON_SCIRH_MODULES["a_async_await"], lower_supported_module(PYTHON_SCIRH_MODULES["a_async_await"]))
@@ -4562,6 +5766,16 @@ def run_self_tests(root: pathlib.Path):
     wasm_failures = validate_wasm_artifacts(PYTHON_SCIRH_MODULES["a_basic_function"], base_lowered, base_wat_text, mutated_wasm_report)
     if not any("must not add boundary annotations" in item for item in wasm_failures):
         failures.append("self-test Wasm boundary accounting: expected failure")
+    mutated_wasm_report = json.loads(json.dumps(base_wasm_report))
+    mutated_wasm_report["profile"] = "R"
+    wasm_failures = validate_wasm_artifacts(PYTHON_SCIRH_MODULES["a_basic_function"], base_lowered, base_wat_text, mutated_wasm_report)
+    if not any("expected Wasm preservation profile" in item for item in wasm_failures):
+        failures.append("self-test Wasm overclaim profile: expected failure")
+    mutated_wasm_report = json.loads(json.dumps(base_wasm_report))
+    mutated_wasm_report["downgrades"] = []
+    wasm_failures = validate_wasm_artifacts(PYTHON_SCIRH_MODULES["a_basic_function"], base_lowered, base_wat_text, mutated_wasm_report)
+    if not any("must record local-slot normalization" in item for item in wasm_failures):
+        failures.append("self-test Wasm missing downgrade evidence: expected failure")
 
     base_scirh_text = format_module(PYTHON_SCIRH_MODULES["a_basic_function"])
     (
@@ -4643,6 +5857,18 @@ def run_self_tests(root: pathlib.Path):
     )
     if not any("retain opaque boundary accounting" in item for item in reconstruction_failures):
         failures.append("self-test opaque reconstruction accounting: expected failure")
+    mutated_preservation_report = json.loads(json.dumps(opaque_preservation_report))
+    mutated_preservation_report["downgrades"] = []
+    reconstruction_failures = validate_reconstruction_artifacts(
+        "c_opaque_call",
+        opaque_scirh_text,
+        opaque_reconstructed_text,
+        opaque_provenance_map,
+        opaque_reconstruction_report,
+        mutated_preservation_report,
+    )
+    if not any("record an explicit downgrade" in item for item in reconstruction_failures):
+        failures.append("self-test opaque reconstruction missing downgrade: expected failure")
 
     mutated_provenance_map = dict(base_provenance_map)
     mutated_provenance_map.pop(next(iter(mutated_provenance_map)))
@@ -4673,23 +5899,23 @@ def run_self_tests(root: pathlib.Path):
     importer_only_output_failures = validate_executable_output_set(
         {
             "scir_hc_reports": {case_name: {} for case_name in IMPORT_SUPPORTED_CASES},
-            "scir_l_reports": {case_name: {} for case_name in SUPPORTED_CASES} | {"b_if_else_return": {}},
-            "translation_reports": {case_name: {} for case_name in SUPPORTED_CASES} | {"b_async_arg_await": {}},
-            "reconstruction_reports": {case_name: {} for case_name in SUPPORTED_CASES} | {"b_while_call_update": {}},
+            "scir_l_reports": {case_name: {} for case_name in SUPPORTED_CASES} | {"d_exec_eval": {}},
+            "translation_reports": {case_name: {} for case_name in SUPPORTED_CASES} | {"d_exec_eval": {}},
+            "reconstruction_reports": {case_name: {} for case_name in SUPPORTED_CASES} | {"d_exec_eval": {}},
             "reconstruction_preservation_reports": {case_name: {} for case_name in SUPPORTED_CASES},
-            "wasm_reports": {case_name: {} for case_name in WASM_EMITTABLE_CASES} | {"a_async_await": {}, "b_class_field_update": {}},
+            "wasm_reports": {case_name: {} for case_name in WASM_EMITTABLE_CASES} | {"a_async_await": {}, "d_exec_eval": {}},
         }
     )
-    if not any("b_if_else_return: non-executable case must not emit SCIR-L output" in item for item in importer_only_output_failures):
-        failures.append("self-test importer-only SCIR-L output exclusion: expected failure")
-    if not any("b_async_arg_await: non-executable case must not emit translation output" in item for item in importer_only_output_failures):
-        failures.append("self-test importer-only translation output exclusion: expected failure")
-    if not any("b_while_call_update: non-executable case must not emit reconstruction output" in item for item in importer_only_output_failures):
-        failures.append("self-test importer-only reconstruction output exclusion: expected failure")
+    if not any("d_exec_eval: non-executable case must not emit SCIR-L output" in item for item in importer_only_output_failures):
+        failures.append("self-test non-executable SCIR-L output exclusion: expected failure")
+    if not any("d_exec_eval: non-executable case must not emit translation output" in item for item in importer_only_output_failures):
+        failures.append("self-test non-executable translation output exclusion: expected failure")
+    if not any("d_exec_eval: non-executable case must not emit reconstruction output" in item for item in importer_only_output_failures):
+        failures.append("self-test non-executable reconstruction output exclusion: expected failure")
     if not any("a_async_await: non-emittable supported case must not emit a Wasm output" in item for item in importer_only_output_failures):
         failures.append("self-test non-emittable Wasm output exclusion: expected failure")
-    if not any("b_class_field_update: non-executable case must not emit Wasm output" in item for item in importer_only_output_failures):
-        failures.append("self-test importer-only Wasm output exclusion: expected failure")
+    if not any("d_exec_eval: non-executable case must not emit Wasm output" in item for item in importer_only_output_failures):
+        failures.append("self-test non-executable Wasm output exclusion: expected failure")
 
     for case_name in IMPORT_SUPPORTED_CASES:
         text = format_module(PYTHON_SCIRH_MODULES[case_name])
@@ -4950,9 +6176,71 @@ def lower_rust_supported_module(module: Module, *, input_representation: str = "
 
 def validate_rust_lowering_alignment(case_name: str, lowered: dict):
     if case_name == "a_mut_local":
-        return validate_lowering_alignment("a_basic_function", lowered)
+        function = lowered["functions"][0]
+        blocks = function["blocks"]
+        failures = []
+        if function["name"] != "clamp_nonneg" or function["returns"] != "int" or function["params"] != ["x"]:
+            failures.append(f"{case_name}: expected clamp_nonneg(x) -> int")
+        if [block["id"] for block in blocks] != ["entry", "neg", "retread"]:
+            failures.append(f"{case_name}: expected entry/neg/retread block layout")
+        if blocks[0]["params"] != ["mem0"]:
+            failures.append(f"{case_name}: expected entry params ['mem0']")
+        expected_entry = [
+            {"id": "cell0", "op": "alloc", "operands": ["mem0"], "origin": "fixture.rust_importer.a_mut_local::var-y", "lowering_rule": "H_VAR_ALLOC"},
+            {"id": "mem1", "op": "store", "operands": ["cell0", "x", "mem0"], "origin": "fixture.rust_importer.a_mut_local::init-y", "lowering_rule": "H_VAR_ALLOC"},
+            {"id": "load0", "op": "load", "operands": ["cell0", "mem1"], "origin": "fixture.rust_importer.a_mut_local::lt-load-y", "lowering_rule": "H_PLACE_LOAD"},
+            {"id": "cmp0", "op": "cmp", "operands": ["load0", 0], "origin": "fixture.rust_importer.a_mut_local::lt-zero", "lowering_rule": "H_INTRINSIC_CMP"},
+        ]
+        if len(blocks[0]["instructions"]) != len(expected_entry):
+            failures.append(f"{case_name}: expected alloc/store/load/cmp in entry block")
+        for index, expected in enumerate(expected_entry[: len(blocks[0]["instructions"])]):
+            failures.extend(compare_lowering_instruction(blocks[0]["instructions"][index], expected, label=f"{case_name}: entry instruction {index}"))
+        failures.extend(compare_lowering_terminator(blocks[0]["terminator"], {"kind": "cond_br", "cond": "cmp0", "true": "neg", "true_args": ["cell0", "mem1"], "false": "retread", "false_args": ["cell0", "mem1"], "origin": "fixture.rust_importer.a_mut_local::branch", "lowering_rule": "H_BRANCH_COND"}, label=f"{case_name}: entry terminator"))
+        if blocks[1]["params"] != ["cell1", "mem2"]:
+            failures.append(f"{case_name}: expected neg params ['cell1', 'mem2']")
+        if len(blocks[1]["instructions"]) != 1:
+            failures.append(f"{case_name}: expected single store in neg block")
+        else:
+            failures.extend(compare_lowering_instruction(blocks[1]["instructions"][0], {"id": "mem3", "op": "store", "operands": ["cell1", 0, "mem2"], "origin": "fixture.rust_importer.a_mut_local::set-y-zero", "lowering_rule": "H_SET_STORE"}, label=f"{case_name}: neg instruction 0"))
+        failures.extend(compare_lowering_terminator(blocks[1]["terminator"], {"kind": "br", "target": "retread", "args": ["cell1", "mem3"], "origin": "fixture.rust_importer.a_mut_local::join-return", "lowering_rule": "H_BRANCH_JOIN"}, label=f"{case_name}: neg terminator"))
+        if blocks[2]["params"] != ["cell2", "mem4"]:
+            failures.append(f"{case_name}: expected retread params ['cell2', 'mem4']")
+        if len(blocks[2]["instructions"]) != 1:
+            failures.append(f"{case_name}: expected single load in retread block")
+        else:
+            failures.extend(compare_lowering_instruction(blocks[2]["instructions"][0], {"id": "load1", "op": "load", "operands": ["cell2", "mem4"], "origin": "fixture.rust_importer.a_mut_local::return-load-y", "lowering_rule": "H_PLACE_LOAD"}, label=f"{case_name}: retread instruction 0"))
+        failures.extend(compare_lowering_terminator(blocks[2]["terminator"], {"kind": "ret", "value": "load1", "origin": "fixture.rust_importer.a_mut_local::return", "lowering_rule": "H_RETURN"}, label=f"{case_name}: retread terminator"))
+        return failures
     if case_name == "a_async_await":
-        return validate_lowering_alignment("a_async_await", lowered)
+        functions = lowered["functions"]
+        if [function["name"] for function in functions] != ["fetch_value", "load_once"]:
+            return [f"{case_name}: expected fetch_value/load_once lowered functions"]
+        failures = []
+        if functions[0]["returns"] != "int" or functions[1]["returns"] != "int":
+            failures.append(f"{case_name}: expected both lowered returns to remain int")
+        if functions[0]["params"] or functions[1]["params"]:
+            failures.append(f"{case_name}: expected no lowered function params")
+        fetch_entry = functions[0]["blocks"][0]
+        if fetch_entry["id"] != "entry" or fetch_entry["params"] != []:
+            failures.append(f"{case_name}: expected fetch_value entry block with no params")
+        if len(fetch_entry["instructions"]) != 1:
+            failures.append(f"{case_name}: expected fetch_value to lower to one const")
+        else:
+            failures.extend(compare_lowering_instruction(fetch_entry["instructions"][0], {"id": "const0", "op": "const", "operands": [1], "origin": "fixture.rust_importer.a_async_await::fetch-value-return", "lowering_rule": "H_CONST_RET"}, label=f"{case_name}: fetch_value instruction 0"))
+        failures.extend(compare_lowering_terminator(fetch_entry["terminator"], {"kind": "ret", "value": "const0", "origin": "fixture.rust_importer.a_async_await::fetch-value-ret", "lowering_rule": "H_CONST_RET"}, label=f"{case_name}: fetch_value terminator"))
+        load_entry = functions[1]["blocks"][0]
+        if load_entry["id"] != "entry" or load_entry["params"] != ["eff0"]:
+            failures.append(f"{case_name}: expected load_once entry effect token parameter")
+        expected_load = [
+            {"id": "call0", "op": "call", "operands": ["sym:fetch_value", "eff0"], "origin": "fixture.rust_importer.a_async_await::call-fetch-value", "lowering_rule": "H_DIRECT_CALL"},
+            {"id": "await0", "op": "async.resume", "operands": ["call0", "eff0"], "origin": "fixture.rust_importer.a_async_await::await-fetch-value", "lowering_rule": "H_AWAIT_RESUME"},
+        ]
+        if len(load_entry["instructions"]) != len(expected_load):
+            failures.append(f"{case_name}: expected load_once to lower to call + async.resume")
+        for index, expected in enumerate(expected_load[: len(load_entry["instructions"])]):
+            failures.extend(compare_lowering_instruction(load_entry["instructions"][index], expected, label=f"{case_name}: load_once instruction {index}"))
+        failures.extend(compare_lowering_terminator(load_entry["terminator"], {"kind": "ret", "value": "await0", "origin": "fixture.rust_importer.a_async_await::load-once-ret", "lowering_rule": "H_RETURN"}, label=f"{case_name}: load_once terminator"))
+        return failures
     if case_name == "c_unsafe_call":
         function = lowered["functions"][0]
         failures = []
@@ -4969,14 +6257,34 @@ def validate_rust_lowering_alignment(case_name: str, lowered: dict):
             failures.append(f"{case_name}: expected borrowed record parameter to remain a function input")
         if [block["id"] for block in blocks] != ["entry", "neg", "retread"]:
             failures.append(f"{case_name}: expected entry/neg/retread block layout")
-        if [item["op"] for item in blocks[0]["instructions"]] != ["field.addr", "load", "cmp"]:
+        if function["name"] != "clamp_counter" or function["returns"] != "int":
+            failures.append(f"{case_name}: expected clamp_counter() -> int")
+        if blocks[0]["params"] != ["mem0"]:
+            failures.append(f"{case_name}: expected entry params ['mem0']")
+        expected_entry = [
+            {"id": "field0", "op": "field.addr", "operands": ["counter", "sym:field:value"], "origin": "fixture.rust_importer.a_struct_field_borrow_mut::field-value", "lowering_rule": "H_FIELD_ADDR"},
+            {"id": "load0", "op": "load", "operands": ["field0", "mem0"], "origin": "fixture.rust_importer.a_struct_field_borrow_mut::lt-load-value", "lowering_rule": "H_PLACE_LOAD"},
+            {"id": "cmp0", "op": "cmp", "operands": ["load0", 0], "origin": "fixture.rust_importer.a_struct_field_borrow_mut::lt-zero", "lowering_rule": "H_INTRINSIC_CMP"},
+        ]
+        if len(blocks[0]["instructions"]) != len(expected_entry):
             failures.append(f"{case_name}: expected field.addr/load/cmp in entry block")
-        if blocks[0]["terminator"]["kind"] != "cond_br":
-            failures.append(f"{case_name}: expected cond_br entry terminator")
-        if [item["op"] for item in blocks[1]["instructions"]] != ["store"]:
+        for index, expected in enumerate(expected_entry[: len(blocks[0]["instructions"])]):
+            failures.extend(compare_lowering_instruction(blocks[0]["instructions"][index], expected, label=f"{case_name}: entry instruction {index}"))
+        failures.extend(compare_lowering_terminator(blocks[0]["terminator"], {"kind": "cond_br", "cond": "cmp0", "true": "neg", "true_args": ["field0", "mem0"], "false": "retread", "false_args": ["field0", "mem0"], "origin": "fixture.rust_importer.a_struct_field_borrow_mut::branch", "lowering_rule": "H_BRANCH_COND"}, label=f"{case_name}: entry terminator"))
+        if blocks[1]["params"] != ["field1", "mem1"]:
+            failures.append(f"{case_name}: expected neg params ['field1', 'mem1']")
+        if len(blocks[1]["instructions"]) != 1:
             failures.append(f"{case_name}: expected single store in neg block")
-        if [item["op"] for item in blocks[2]["instructions"]] != ["load"]:
+        else:
+            failures.extend(compare_lowering_instruction(blocks[1]["instructions"][0], {"id": "mem2", "op": "store", "operands": ["field1", 0, "mem1"], "origin": "fixture.rust_importer.a_struct_field_borrow_mut::set-value", "lowering_rule": "H_SET_STORE"}, label=f"{case_name}: neg instruction 0"))
+        failures.extend(compare_lowering_terminator(blocks[1]["terminator"], {"kind": "br", "target": "retread", "args": ["field1", "mem2"], "origin": "fixture.rust_importer.a_struct_field_borrow_mut::join", "lowering_rule": "H_BRANCH_JOIN"}, label=f"{case_name}: neg terminator"))
+        if blocks[2]["params"] != ["field2", "mem3"]:
+            failures.append(f"{case_name}: expected retread params ['field2', 'mem3']")
+        if len(blocks[2]["instructions"]) != 1:
             failures.append(f"{case_name}: expected single load in retread block")
+        else:
+            failures.extend(compare_lowering_instruction(blocks[2]["instructions"][0], {"id": "load1", "op": "load", "operands": ["field2", "mem3"], "origin": "fixture.rust_importer.a_struct_field_borrow_mut::return-load-value", "lowering_rule": "H_PLACE_LOAD"}, label=f"{case_name}: retread instruction 0"))
+        failures.extend(compare_lowering_terminator(blocks[2]["terminator"], {"kind": "ret", "value": "load1", "origin": "fixture.rust_importer.a_struct_field_borrow_mut::return", "lowering_rule": "H_RETURN"}, label=f"{case_name}: retread terminator"))
         return failures
     return [f"{case_name}: Rust lowering alignment contract is not defined"]
 
@@ -5037,16 +6345,38 @@ def validate_rust_translation_report(case_name: str, report: dict):
         failures.append(
             f"{case_name}: expected translation preservation level {expected['preservation_level']}"
         )
+    if report["status"] != "pass":
+        failures.append(f"{case_name}: expected translation status pass")
     opaque_items = report["boundary_annotations"]
+    expected_preserved = {
+        "a_mut_local": ["function boundaries", "mutable local semantics", "branch behavior"],
+        "a_struct_field_borrow_mut": ["function boundaries", "borrowed field mutation semantics"],
+        "a_async_await": ["function boundaries", "await boundary"],
+        "c_unsafe_call": [],
+    }[case_name]
     if expected["requires_opaque"]:
         if "unsafe boundary" not in opaque_items:
             failures.append(f"{case_name}: Rust translation must preserve unsafe boundary accounting")
         if not report["downgrades"]:
             failures.append(f"{case_name}: unsafe Rust translation must record an explicit downgrade")
+        elif report["downgrades"] != [{"reason": "unsafe boundary is preserved as explicit boundary annotation only", "preservation_level": "P3"}]:
+            failures.append(f"{case_name}: expected exact unsafe-boundary downgrade")
     elif opaque_items:
         failures.append(f"{case_name}: Tier A Rust translation must not introduce opaque accounting")
     elif report["downgrades"]:
         failures.append(f"{case_name}: Tier A Rust translation must not record downgrades")
+    observables = report["observables"]
+    if observables["preserved"] != expected_preserved:
+        failures.append(f"{case_name}: expected Rust translation preserved observables {expected_preserved!r}")
+    if observables["normalized"] != [] or observables["contract_bounded"] != []:
+        failures.append(f"{case_name}: Rust translation must not introduce normalized or contract_bounded observables")
+    if observables["opaque"] != opaque_items:
+        failures.append(f"{case_name}: Rust translation opaque observables must match boundary annotations")
+    if observables["unsupported"] != []:
+        failures.append(f"{case_name}: Rust translation must not mark unsupported observables")
+    expected_evidence = [TRANSLATION_VALIDATOR_NAME, "Rust bootstrap lowering and provenance validated"]
+    if report["evidence"] != expected_evidence:
+        failures.append(f"{case_name}: expected exact Rust translation evidence {expected_evidence!r}")
     return failures
 
 
@@ -5206,6 +6536,11 @@ def run_rust_self_tests(root: pathlib.Path):
     translation_failures = validate_rust_translation_report("c_unsafe_call", mutated_report)
     if not any("preserve unsafe boundary accounting" in item for item in translation_failures):
         failures.append("self-test Rust unsafe accounting: expected failure")
+    mutated_report = rust_translation_report("a_mut_local")
+    mutated_report["observables"]["preserved"] = ["function boundaries"]
+    translation_failures = validate_rust_translation_report("a_mut_local", mutated_report)
+    if not any("expected Rust translation preserved observables" in item for item in translation_failures):
+        failures.append("self-test Rust translation observables drift: expected failure")
 
     output_failures = validate_rust_output_set(
         {

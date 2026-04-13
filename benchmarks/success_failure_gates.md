@@ -15,7 +15,7 @@ Status: Normative
 | ID | Condition |
 | --- | --- |
 | K1 | no evidence that the active proof loop is useful relative to direct source and typed AST on controlled tasks |
-| K2 | `SCIR-H` median token count > 1.5x source without compensating gains |
+| K2 | `SCIR-H` median token count > 1.5x source and `semantic_explicitness_gain <= 0` |
 | K3 | Track `B` Tier `A` compile and test pass rate stays < 90% after stabilization |
 | K4 | opaque fallback required for > 25% of the targeted proof-loop corpus |
 | K5 | Wasm success is being used to imply native or host parity |
@@ -81,7 +81,7 @@ Track `A` and `B` are the only active executable benchmark gates in the MVP.
 
 - `gate_S2_ready must remain true`
 - `gate_K1_hit must remain false`
-- `accepted_case_count must remain 3`
+- `accepted_case_count must remain 10`
 - `boundary_only_case_count must remain 1`
 - `status must remain mixed or pass`
 
@@ -89,7 +89,7 @@ Track `A` and `B` are the only active executable benchmark gates in the MVP.
 
 - `retire if gate_S2_ready becomes false`
 - `retire if gate_K1_hit becomes true`
-- `retire if accepted_case_count drops below 3`
+- `retire if accepted_case_count drops below 10`
 - `retire if boundary_only_case_count differs from 1`
 - `retire if status becomes fail`
 

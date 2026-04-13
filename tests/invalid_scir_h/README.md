@@ -9,7 +9,7 @@ The current fixtures cover:
 
 - forbidden hidden control transfer
 - implicit mutation and effect rows
-- unresolved names and invalid field places
+- unresolved or ambiguous names and invalid field places
 - canonical formatting and deterministic-storage violations
-- missing opaque-boundary contracts
+- missing opaque-boundary contracts and illegal opaque-value projection
 - unsupported legacy syntax

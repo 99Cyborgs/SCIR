@@ -7,8 +7,8 @@ The fixed first-slice case directories now contain placeholder-only bundle files
 
 Current placeholder bundle state:
 
-- admitted cases now carry placeholder `source.ts`, `expected.scirh`, `module_manifest.json`, `feature_tier_report.json`, and `validation_report.json`
-- rejected boundary cases now carry placeholder `source.ts`, `module_manifest.json`, `feature_tier_report.json`, and `validation_report.json`
-- rejected boundary cases intentionally omit `expected.scirh`
+- all archived case directories now carry placeholder `source.ts`, `module_manifest.json`, `feature_tier_report.json`, and `validation_report.json`
+- archived placeholder cases intentionally omit `expected.scirh`
 - no case in this first slice may imply executable `D-JS`, lowering, reconstruction, or benchmark scope
 - none of these files are live importer outputs
+- historical case ids are retained for traceability only and do not imply live tier support

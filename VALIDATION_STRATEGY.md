@@ -46,8 +46,13 @@ A change must not merge when any of the following is true:
 - `SCIR-Hc` drifts from canonical `SCIR-H` or becomes semantic authority
 - `SCIR-L` introduces semantics without validated `SCIR-H` origin and lowering rule
 - active importer fixtures drift from their checked-in bundles
+- archived TypeScript placeholders drift back toward live tier, profile, or `SCIR-H` implications
 - active manifests drift from their schemas or file hashes
 - active preservation reports omit required path/profile/preservation fields
+- active `P2` or `P3` preservation reports omit required downgrade evidence for their bounded claim
+- admitted proof-loop `H -> L` shapes or translation-report evidence drift from the fixed lowering contract
+- admitted proof-loop exceptional `H -> L` invoke/catch shape drifts from the fixed `d_try_except` lowering contract
+- deferred Track `D` executable residue re-enters the active bootstrap pipeline surface
 - the default gate silently reactivates release-bundle machinery or queue-era exports
 - tracked generated artifacts re-enter the live repository surface
 

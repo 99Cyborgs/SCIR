@@ -9,9 +9,6 @@ Status: Normative
 - `a_async_await`
 - `b_direct_call`
 - `c_opaque_call`
-
-### Importer-only canonical `SCIR-H` cases
-
 - `b_if_else_return`
 - `b_async_arg_await`
 - `b_while_call_update`
@@ -19,6 +16,10 @@ Status: Normative
 - `b_class_init_method`
 - `b_class_field_update`
 - `d_try_except`
+
+### Importer-only canonical `SCIR-H` cases
+
+No checked-in importer-only canonical `SCIR-H` cases remain in the active Python fixture set.
 
 ### Rejected cases
 
@@ -37,4 +38,4 @@ The importer-only cases above remain canonical `SCIR-H` evidence only. They do n
 - `exec` / `eval`
 - import hooks
 - metaclasses and descriptor mutation
-- broader exception control
+- broader exception control beyond the exact single-handler `ValueError` slice

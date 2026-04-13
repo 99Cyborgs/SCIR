@@ -188,25 +188,18 @@ CASE_CONFIG = {
     },
     "b_if_else_return": {
         "profiles": ["R", "D-PY"],
-        "tier": "B",
+        "tier": "A",
         "dependencies": ["python:builtins"],
         "exports": ["choose_zero_or_x"],
-        "status": "warn",
+        "status": "pass",
         "feature_items": [
             {
                 "feature": "explicit if/else return normalization",
-                "tier": "B",
-                "rationale": "A fixed-shape if/else that returns directly from both branches normalizes cleanly into canonical SCIR-H, but this follow-on slice remains importer-only with no executable lowering or reconstruction claim.",
+                "tier": "A",
+                "rationale": "A fixed-shape if/else that returns directly from both branches now participates in the active Python proof loop with bounded lowering, reconstruction, and helper-free Wasm evidence.",
             }
         ],
-        "diagnostics": [
-            {
-                "code": "PY-B002",
-                "severity": "warn",
-                "message": "Explicit if/else return imports as Tier B canonical SCIR-H only; no executable lowering, translation, or reconstruction path is claimed for this follow-on case.",
-                "location": "source.py:1",
-            }
-        ],
+        "diagnostics": [],
         "opaque_boundary_contract": None,
     },
     "b_direct_call": {
@@ -227,142 +220,107 @@ CASE_CONFIG = {
     },
     "b_async_arg_await": {
         "profiles": ["R", "D-PY"],
-        "tier": "B",
+        "tier": "A",
         "dependencies": ["python:builtins"],
         "exports": ["fetch_value", "load_value"],
-        "status": "warn",
+        "status": "pass",
         "feature_items": [
             {
-                "feature": "parameterized async await normalization",
-                "tier": "B",
-                "rationale": "A fixed-shape async function pair with an awaited local call preserves canonical await structure, but this follow-on slice remains importer-only and does not widen executable claims.",
+                "feature": "parameterized async local-call await preservation",
+                "tier": "A",
+                "rationale": "A fixed-shape async function pair with one parameter threaded through an awaited local call now participates in the active Python proof loop with bounded lowering, reconstruction, and benchmark evidence.",
             }
         ],
-        "diagnostics": [
-            {
-                "code": "PY-B004",
-                "severity": "warn",
-                "message": "Parameterized async await imports as Tier B canonical SCIR-H only; no executable lowering, translation, or reconstruction path is claimed for this follow-on case.",
-                "location": "source.py:1",
-            }
-        ],
+        "diagnostics": [],
         "opaque_boundary_contract": None,
     },
     "b_while_call_update": {
         "profiles": ["R", "D-PY"],
-        "tier": "B",
+        "tier": "A",
         "dependencies": ["python:builtins"],
         "exports": ["step_until_nonneg"],
-        "status": "warn",
+        "status": "pass",
         "feature_items": [
             {
                 "feature": "fixed-shape while-loop guard normalization",
-                "tier": "B",
-                "rationale": "A bounded while loop can normalize into canonical loop plus explicit guard-and-break structure, but this slice remains importer-only and adds no executable downstream claim.",
+                "tier": "A",
+                "rationale": "A bounded while loop with one less-than-zero guard now participates in the active Python proof loop through exact-shape lowering, reconstruction, and benchmark evidence.",
             },
             {
                 "feature": "loop-carried mutation through a direct local call",
-                "tier": "B",
-                "rationale": "A loop body that updates a local through a direct local call is accepted only as canonical SCIR-H evidence and remains outside lowering, translation, and reconstruction.",
+                "tier": "A",
+                "rationale": "The fixed loop body that updates the carried local through one direct local call now participates in the active Python proof loop without widening into generic loop control.",
             },
         ],
-        "diagnostics": [
-            {
-                "code": "PY-B005",
-                "severity": "warn",
-                "message": "Fixed-shape while-loop update imports as Tier B canonical SCIR-H only; no executable lowering, translation, or reconstruction path is claimed for this follow-on case.",
-                "location": "source.py:1",
-            }
-        ],
+        "diagnostics": [],
         "opaque_boundary_contract": None,
     },
     "b_while_break_continue": {
         "profiles": ["R", "D-PY"],
-        "tier": "B",
+        "tier": "A",
         "dependencies": ["python:builtins"],
         "exports": ["step_with_escape"],
-        "status": "warn",
+        "status": "pass",
         "feature_items": [
             {
                 "feature": "fixed-shape while-loop guard normalization",
-                "tier": "B",
-                "rationale": "A bounded while loop can normalize into canonical loop plus explicit guard-and-break structure, but this slice remains importer-only and adds no executable downstream claim.",
+                "tier": "A",
+                "rationale": "A bounded while loop with one guard and one nested escape path now participates in the active Python proof loop through exact-shape lowering, reconstruction, and benchmark evidence.",
             },
             {
                 "feature": "explicit break normalization",
-                "tier": "B",
-                "rationale": "A fixed nested break site can normalize into canonical break syntax with a deterministic loop id, but this remains importer-only evidence.",
+                "tier": "A",
+                "rationale": "The fixed nested break site now participates in the active Python proof loop without widening into generalized loop-exit lowering.",
             },
             {
                 "feature": "explicit continue normalization",
-                "tier": "B",
-                "rationale": "A fixed continue site can normalize into canonical continue syntax with a deterministic loop id, while executable lowering remains out of scope.",
+                "tier": "A",
+                "rationale": "The fixed continue site now participates in the active Python proof loop without widening into generalized loop-control support.",
             },
         ],
-        "diagnostics": [
-            {
-                "code": "PY-B006",
-                "severity": "warn",
-                "message": "Fixed-shape while-loop break/continue imports as Tier B canonical SCIR-H only; no executable lowering, translation, or reconstruction path is claimed for this follow-on case.",
-                "location": "source.py:1",
-            }
-        ],
+        "diagnostics": [],
         "opaque_boundary_contract": None,
     },
     "b_class_init_method": {
         "profiles": ["R", "D-PY"],
-        "tier": "B",
+        "tier": "A",
         "dependencies": ["python:builtins"],
         "exports": ["Counter", "Counter__init__", "Counter__get"],
-        "status": "warn",
+        "status": "pass",
         "feature_items": [
             {
-                "feature": "bounded record-like class import",
-                "tier": "B",
-                "rationale": "A single plain class with one explicit instance field can normalize into a canonical record declaration plus plain functions, but this slice remains importer-only and does not widen executable claims.",
+                "feature": "bounded record-like class construction normalization",
+                "tier": "A",
+                "rationale": "A single plain class with one explicit instance field now participates in the active Python proof loop through exact-shape lowering, reconstruction, and benchmark evidence without widening into generalized object semantics.",
             },
             {
-                "feature": "explicit instance-field assignment and read normalization",
-                "tier": "B",
-                "rationale": "The fixed self.value assignment in __init__ and fixed field read in one method reuse canonical field-place syntax, while broader Python object semantics remain deferred.",
+                "feature": "explicit instance-field initialization and bounded field-read method normalization",
+                "tier": "A",
+                "rationale": "The fixed self.value assignment in __init__ and fixed get() field read now participate in the active Python proof loop while broader method-local mutation and object semantics remain deferred.",
             },
         ],
-        "diagnostics": [
-            {
-                "code": "PY-B007",
-                "severity": "warn",
-                "message": "Bounded class-field import remains Tier B canonical SCIR-H only; no executable lowering, translation, or reconstruction path is claimed for this follow-on case.",
-                "location": "source.py:1",
-            }
-        ],
+        "diagnostics": [],
         "opaque_boundary_contract": None,
     },
     "b_class_field_update": {
         "profiles": ["R", "D-PY"],
-        "tier": "B",
+        "tier": "A",
         "dependencies": ["python:builtins"],
         "exports": ["Counter", "Counter__init__", "Counter__bump"],
-        "status": "warn",
+        "status": "pass",
         "feature_items": [
             {
                 "feature": "bounded record-like class import with field update method",
-                "tier": "B",
-                "rationale": "A single plain class with one explicit instance field and one fixed field-update method can normalize into a canonical record declaration plus plain functions, but this slice remains importer-only and does not widen executable claims.",
+                "tier": "A",
+                "rationale": "A single plain class with one explicit instance field and one fixed field-update method now participates in the active Python proof loop through exact-shape lowering, reconstruction, and benchmark evidence without widening into generalized object semantics.",
             },
             {
                 "feature": "explicit instance-field read/write normalization through a direct local call",
-                "tier": "B",
-                "rationale": "The fixed self.value = step(self.value) method body reuses canonical field-place and direct-call syntax while broader Python object semantics remain deferred.",
+                "tier": "A",
+                "rationale": "The fixed self.value = step(self.value) method body now participates in the active Python proof loop through the bounded record-field lowering subset while broader Python object semantics remain deferred.",
             },
         ],
-        "diagnostics": [
-            {
-                "code": "PY-B008",
-                "severity": "warn",
-                "message": "Bounded class field-update import remains Tier B canonical SCIR-H only; no executable lowering, translation, or reconstruction path is claimed for this follow-on case.",
-                "location": "source.py:1",
-            }
-        ],
+        "diagnostics": [],
         "opaque_boundary_contract": None,
     },
     "c_opaque_call": {
@@ -432,25 +390,18 @@ CASE_CONFIG = {
     },
     "d_try_except": {
         "profiles": ["R", "D-PY"],
-        "tier": "B",
+        "tier": "A",
         "dependencies": ["python:builtins"],
         "exports": ["guard"],
-        "status": "warn",
+        "status": "pass",
         "feature_items": [
             {
                 "feature": "single-handler try/except normalization",
-                "tier": "B",
-                "rationale": "A minimal unnamed except ValueError block can normalize into canonical try/catch, but the importer synthesizes the catch binder and keeps callable and throw modeling coarse.",
+                "tier": "A",
+                "rationale": "A minimal unnamed except ValueError block now participates in the active Python proof loop through one exact-shape canonical try/catch lowering, reconstruction, and benchmark path without widening broader exception control.",
             }
         ],
-        "diagnostics": [
-            {
-                "code": "PY-B001",
-                "severity": "warn",
-                "message": "Minimal try/except imports as Tier B only; the catch binder is synthesized and no executable lowering or reconstruction path is claimed.",
-                "location": "source.py:2",
-            }
-        ],
+        "diagnostics": [],
         "opaque_boundary_contract": None,
     },
 }
@@ -475,8 +426,6 @@ PYTHON_PROOF_LOOP_METADATA = {
         "a_async_await",
         "b_direct_call",
         "c_opaque_call",
-    ],
-    "importer_only_cases": [
         "b_if_else_return",
         "b_async_arg_await",
         "b_while_call_update",
@@ -485,12 +434,20 @@ PYTHON_PROOF_LOOP_METADATA = {
         "b_class_field_update",
         "d_try_except",
     ],
+    "importer_only_cases": [],
     "rejected_cases": ["d_exec_eval"],
     "benchmark_cases": [
         "a_basic_function",
         "a_async_await",
         "b_direct_call",
         "c_opaque_call",
+        "b_if_else_return",
+        "b_async_arg_await",
+        "b_while_call_update",
+        "b_while_break_continue",
+        "b_class_init_method",
+        "b_class_field_update",
+        "d_try_except",
     ],
     "executable_case_contracts": {
         "a_basic_function": {
@@ -515,6 +472,48 @@ PYTHON_PROOF_LOOP_METADATA = {
             "profile": "D-PY",
             "preservation_level": "P3",
             "requires_opaque_boundary": True,
+            "wasm_emittable": False,
+        },
+        "b_if_else_return": {
+            "profile": "R",
+            "preservation_level": "P1",
+            "requires_opaque_boundary": False,
+            "wasm_emittable": True,
+        },
+        "b_async_arg_await": {
+            "profile": "R",
+            "preservation_level": "P1",
+            "requires_opaque_boundary": False,
+            "wasm_emittable": False,
+        },
+        "b_while_call_update": {
+            "profile": "R",
+            "preservation_level": "P1",
+            "requires_opaque_boundary": False,
+            "wasm_emittable": False,
+        },
+        "b_while_break_continue": {
+            "profile": "R",
+            "preservation_level": "P1",
+            "requires_opaque_boundary": False,
+            "wasm_emittable": False,
+        },
+        "b_class_init_method": {
+            "profile": "R",
+            "preservation_level": "P1",
+            "requires_opaque_boundary": False,
+            "wasm_emittable": False,
+        },
+        "b_class_field_update": {
+            "profile": "R",
+            "preservation_level": "P1",
+            "requires_opaque_boundary": False,
+            "wasm_emittable": False,
+        },
+        "d_try_except": {
+            "profile": "R",
+            "preservation_level": "P1",
+            "requires_opaque_boundary": False,
             "wasm_emittable": False,
         },
     },

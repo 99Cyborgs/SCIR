@@ -54,4 +54,5 @@ The Rust MVP scope is importer-only safe-subset evidence.
 
 ## Claim boundary
 
-Rust importer evidence must not be presented as an active round-trip, backend, or benchmark claim unless the root roadmap and benchmark strategy are updated together.
+Rust importer evidence is retained for the MVP as importer-first support only.
+It must not be presented as an active round-trip, backend, or benchmark claim unless a post-MVP reactivation decision updates the root roadmap, benchmark strategy, and repo-contract surfaces together.

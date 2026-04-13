@@ -5,10 +5,8 @@
   "corpus": {
     "name": "python-bootstrap-fixtures",
     "scope": "Fixed executable Python proof-loop cases reframed as single-function repair tasks",
-    "hash": "sha256:41592f102f5fd852200de007698774508f9ffeebd8fb5b4d9d01c85c812873e6"
+    "hash": "sha256:9c61d6427b0a8dc5b79a3a84e5215cc952d9051458c01cf0b4dc8001ff3d0824"
   },
-  "corpus_manifest": "tests/corpora/python_proof_loop_corpus.json",
-  "corpus_manifest_hash": "sha256:41592f102f5fd852200de007698774508f9ffeebd8fb5b4d9d01c85c812873e6",
   "baselines": [
     "direct source",
     "typed-AST",
@@ -29,5 +27,7 @@
     "separate development, tuning, and held-out evaluation slices",
     "record prompt templates and baseline adapters",
     "do not claim generalization from a contaminated or untracked dataset"
-  ]
+  ],
+  "corpus_manifest": "tests/corpora/python_proof_loop_corpus.json",
+  "corpus_manifest_hash": "sha256:9c61d6427b0a8dc5b79a3a84e5215cc952d9051458c01cf0b4dc8001ff3d0824"
 }

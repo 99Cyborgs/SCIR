@@ -3,16 +3,16 @@
   "subject": "fixture.python_importer.b_async_arg_await",
   "source_language": "python",
   "summary": {
-    "A": 0,
-    "B": 1,
+    "A": 1,
+    "B": 0,
     "C": 0,
     "D": 0
   },
   "items": [
     {
-      "feature": "parameterized async await normalization",
-      "tier": "B",
-      "rationale": "A fixed-shape async function pair with an awaited local call preserves canonical await structure, but this follow-on slice remains importer-only and does not widen executable claims."
+      "feature": "parameterized async local-call await preservation",
+      "tier": "A",
+      "rationale": "A fixed-shape async function pair with one parameter threaded through an awaited local call now participates in the active Python proof loop with bounded lowering, reconstruction, and benchmark evidence."
     }
   ]
 }

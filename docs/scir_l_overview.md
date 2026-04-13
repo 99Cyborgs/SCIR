@@ -15,7 +15,8 @@ Status: Informative
 
 ## Active subset
 
-The active subset is the op set implemented and validated by `scripts/scir_bootstrap_pipeline.py`.
+The active subset is the op set and terminator set implemented and validated by `scripts/scir_bootstrap_pipeline.py`.
+It now includes one exact-shape exceptional CFG terminator for the bounded `d_try_except` proof-loop slice.
 
 Every meaningful op must have:
 

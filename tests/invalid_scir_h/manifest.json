@@ -108,6 +108,21 @@
       ]
     },
     {
+      "id": "invalid_scir_h.name_resolution.ambiguous_top_level",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/invalid_ambiguous_top_level_name.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "ambiguous top-level binding"
+      ],
+      "hash": "sha256:c7db6e4fd36a95014c5de4db6d417a9f3d965158caee16810dd060d8fb04e59e",
+      "expected_diagnostic_codes": [
+        "H004"
+      ]
+    },
+    {
       "id": "invalid_scir_h.canonical_format.indent",
       "language": "scir_h",
       "path": "tests/invalid_scir_h/invalid_noncanonical_indent.scirh",
@@ -194,6 +209,22 @@
       ],
       "hash": "sha256:5854ca36aee9ea93fb22dba95213368971729f32491d434abf93509836abc808",
       "boundary_contract_path": "tests/invalid_scir_h/invalid_boundary_missing_capabilities_contract.json",
+      "expected_diagnostic_codes": [
+        "H008"
+      ]
+    },
+    {
+      "id": "invalid_scir_h.boundary.opaque_projection",
+      "language": "scir_h",
+      "path": "tests/invalid_scir_h/invalid_opaque_projection.scirh",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "opaque value projected as modeled structure"
+      ],
+      "hash": "sha256:4cf0cdd73ac205caf4f326279618dedc53ae6690bec04cc647f14e2abf9b139e",
+      "boundary_contract_path": "tests/invalid_scir_h/invalid_opaque_projection_contract.json",
       "expected_diagnostic_codes": [
         "H008"
       ]

@@ -7,7 +7,7 @@ The following are explicitly outside the active MVP unless a later decision over
 | --- | --- | --- |
 | U1 | Python `exec` / `eval` | reject |
 | U2 | Python import hooks, metaclass-driven rewrites, descriptor mutation, pervasive monkey patching | reject or explicit opaque boundary |
-| U3 | Python exception control beyond the bounded importer-only single-handler slice | reject |
+| U3 | Python exception control beyond the exact single-handler `ValueError` proof-loop slice | reject |
 | U4 | Rust proc macros and build scripts | reject |
 | U5 | Rust self-referential pin patterns and unsafe alias choreography beyond explicit boundary treatment | reject |
 | U6 | TypeScript implementation work | deferred, not active |

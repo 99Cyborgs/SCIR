@@ -347,7 +347,14 @@
         "fixture.python_importer.a_basic_function",
         "fixture.python_importer.a_async_await",
         "fixture.python_importer.b_direct_call",
-        "fixture.python_importer.c_opaque_call"
+        "fixture.python_importer.c_opaque_call",
+        "fixture.python_importer.b_if_else_return",
+        "fixture.python_importer.b_async_arg_await",
+        "fixture.python_importer.b_while_call_update",
+        "fixture.python_importer.b_while_break_continue",
+        "fixture.python_importer.b_class_init_method",
+        "fixture.python_importer.b_class_field_update",
+        "fixture.python_importer.d_try_except"
       ],
       "properties": {
         "fixture.python_importer.a_basic_function": {
@@ -360,6 +367,27 @@
           "$ref": "#/$defs/lineageReference"
         },
         "fixture.python_importer.c_opaque_call": {
+          "$ref": "#/$defs/lineageReference"
+        },
+        "fixture.python_importer.b_if_else_return": {
+          "$ref": "#/$defs/lineageReference"
+        },
+        "fixture.python_importer.b_async_arg_await": {
+          "$ref": "#/$defs/lineageReference"
+        },
+        "fixture.python_importer.b_while_call_update": {
+          "$ref": "#/$defs/lineageReference"
+        },
+        "fixture.python_importer.b_while_break_continue": {
+          "$ref": "#/$defs/lineageReference"
+        },
+        "fixture.python_importer.b_class_init_method": {
+          "$ref": "#/$defs/lineageReference"
+        },
+        "fixture.python_importer.b_class_field_update": {
+          "$ref": "#/$defs/lineageReference"
+        },
+        "fixture.python_importer.d_try_except": {
           "$ref": "#/$defs/lineageReference"
         }
       }
@@ -536,7 +564,14 @@
               "fixture.python_importer.a_basic_function",
               "fixture.python_importer.a_async_await",
               "fixture.python_importer.b_direct_call",
-              "fixture.python_importer.c_opaque_call"
+              "fixture.python_importer.c_opaque_call",
+              "fixture.python_importer.b_if_else_return",
+              "fixture.python_importer.b_async_arg_await",
+              "fixture.python_importer.b_while_call_update",
+              "fixture.python_importer.b_while_break_continue",
+              "fixture.python_importer.b_class_init_method",
+              "fixture.python_importer.b_class_field_update",
+              "fixture.python_importer.d_try_except"
             ]
           }
         },
@@ -626,7 +661,14 @@
               "fixture.python_importer.a_basic_function",
               "fixture.python_importer.a_async_await",
               "fixture.python_importer.b_direct_call",
-              "fixture.python_importer.c_opaque_call"
+              "fixture.python_importer.c_opaque_call",
+              "fixture.python_importer.b_if_else_return",
+              "fixture.python_importer.b_async_arg_await",
+              "fixture.python_importer.b_while_call_update",
+              "fixture.python_importer.b_while_break_continue",
+              "fixture.python_importer.b_class_init_method",
+              "fixture.python_importer.b_class_field_update",
+              "fixture.python_importer.d_try_except"
             ]
           }
         },

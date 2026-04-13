@@ -9,7 +9,14 @@
       "fixture.python_importer.a_basic_function",
       "fixture.python_importer.a_async_await",
       "fixture.python_importer.b_direct_call",
-      "fixture.python_importer.c_opaque_call"
+      "fixture.python_importer.c_opaque_call",
+      "fixture.python_importer.b_if_else_return",
+      "fixture.python_importer.b_async_arg_await",
+      "fixture.python_importer.b_while_call_update",
+      "fixture.python_importer.b_while_break_continue",
+      "fixture.python_importer.b_class_init_method",
+      "fixture.python_importer.b_class_field_update",
+      "fixture.python_importer.d_try_except"
     ]
   },
   "fixtures": [
@@ -231,6 +238,373 @@
       "unsupported_tags": [
         "boundary_only"
       ]
+    },
+    {
+      "id": "fixture.python_importer.b_if_else_return",
+      "language": "python",
+      "path": "tests/python_importer/cases/b_if_else_return/source.py",
+      "tier": "A",
+      "expected_support": "roundtrip",
+      "expected_preservation_ceiling": "P1",
+      "expected_preservation_stage_behavior": {
+        "source_to_h": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_h_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_l": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_l_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_python": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "l_to_wasm": {
+          "status": "pass",
+          "preservation_level": "P2"
+        }
+      },
+      "features": [
+        "explicit if/else return normalization"
+      ],
+      "hash": "sha256:f43e439f83d6382c5e927636e8f7b1ac4d42a72c829f5593d35a51358b4512ad",
+      "frontend": "python",
+      "split": "test",
+      "origin": "checked_in_fixture",
+      "sample_class": "real",
+      "profiles": [
+        "R",
+        "D-PY"
+      ],
+      "pipeline_stages": [
+        "source_to_h",
+        "scir_h_validation",
+        "h_to_l",
+        "scir_l_validation",
+        "h_to_python",
+        "l_to_wasm"
+      ],
+      "construct_family": "if-else-return",
+      "fixture_set": "python-proof-loop"
+    },
+    {
+      "id": "fixture.python_importer.b_async_arg_await",
+      "language": "python",
+      "path": "tests/python_importer/cases/b_async_arg_await/source.py",
+      "tier": "A",
+      "expected_support": "roundtrip",
+      "expected_preservation_ceiling": "P1",
+      "expected_preservation_stage_behavior": {
+        "source_to_h": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_h_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_l": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_l_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_python": {
+          "status": "pass",
+          "preservation_level": "P1"
+        }
+      },
+      "features": [
+        "parameterized async local-call await preservation"
+      ],
+      "hash": "sha256:268bbe6cb56519057a4acc143a031c3e53b9e7887437d925b7dd91b97501cd7d",
+      "frontend": "python",
+      "split": "test",
+      "origin": "checked_in_fixture",
+      "sample_class": "real",
+      "profiles": [
+        "R",
+        "D-PY"
+      ],
+      "pipeline_stages": [
+        "source_to_h",
+        "scir_h_validation",
+        "h_to_l",
+        "scir_l_validation",
+        "h_to_python"
+      ],
+      "construct_family": "async-arg-await",
+      "fixture_set": "python-proof-loop"
+    },
+    {
+      "id": "fixture.python_importer.b_while_call_update",
+      "language": "python",
+      "path": "tests/python_importer/cases/b_while_call_update/source.py",
+      "tier": "A",
+      "expected_support": "roundtrip",
+      "expected_preservation_ceiling": "P1",
+      "expected_preservation_stage_behavior": {
+        "source_to_h": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_h_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_l": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_l_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_python": {
+          "status": "pass",
+          "preservation_level": "P1"
+        }
+      },
+      "features": [
+        "fixed-shape while-loop guard normalization",
+        "loop-carried mutation through a direct local call"
+      ],
+      "hash": "sha256:cb87105491f6c4a674e584aef460e0edf79cd313bac1bb3b63848a01be67297e",
+      "frontend": "python",
+      "split": "test",
+      "origin": "checked_in_fixture",
+      "sample_class": "real",
+      "profiles": [
+        "R",
+        "D-PY"
+      ],
+      "pipeline_stages": [
+        "source_to_h",
+        "scir_h_validation",
+        "h_to_l",
+        "scir_l_validation",
+        "h_to_python"
+      ],
+      "construct_family": "while-call-update",
+      "fixture_set": "python-proof-loop"
+    },
+    {
+      "id": "fixture.python_importer.b_while_break_continue",
+      "language": "python",
+      "path": "tests/python_importer/cases/b_while_break_continue/source.py",
+      "tier": "A",
+      "expected_support": "roundtrip",
+      "expected_preservation_ceiling": "P1",
+      "expected_preservation_stage_behavior": {
+        "source_to_h": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_h_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_l": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_l_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_python": {
+          "status": "pass",
+          "preservation_level": "P1"
+        }
+      },
+      "features": [
+        "fixed-shape while-loop guard normalization",
+        "explicit break normalization",
+        "explicit continue normalization"
+      ],
+      "hash": "sha256:a44b598da3ac829d66815501fd4cd9c1fdaa2701bcfec68aa4b2d07158131905",
+      "frontend": "python",
+      "split": "test",
+      "origin": "checked_in_fixture",
+      "sample_class": "real",
+      "profiles": [
+        "R",
+        "D-PY"
+      ],
+      "pipeline_stages": [
+        "source_to_h",
+        "scir_h_validation",
+        "h_to_l",
+        "scir_l_validation",
+        "h_to_python"
+      ],
+      "construct_family": "while-break-continue",
+      "fixture_set": "python-proof-loop"
+    },
+    {
+      "id": "fixture.python_importer.b_class_init_method",
+      "language": "python",
+      "path": "tests/python_importer/cases/b_class_init_method/source.py",
+      "tier": "A",
+      "expected_support": "roundtrip",
+      "expected_preservation_ceiling": "P1",
+      "expected_preservation_stage_behavior": {
+        "source_to_h": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_h_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_l": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_l_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_python": {
+          "status": "pass",
+          "preservation_level": "P1"
+        }
+      },
+      "features": [
+        "bounded record-like class construction normalization",
+        "explicit instance-field initialization and bounded field-read method normalization"
+      ],
+      "hash": "sha256:7dda5a0a9ca4a5ba3bc8bd6a074654765fdaaa5370fe02622c413e868de88c49",
+      "frontend": "python",
+      "split": "test",
+      "origin": "checked_in_fixture",
+      "sample_class": "real",
+      "profiles": [
+        "R",
+        "D-PY"
+      ],
+      "pipeline_stages": [
+        "source_to_h",
+        "scir_h_validation",
+        "h_to_l",
+        "scir_l_validation",
+        "h_to_python"
+      ],
+      "construct_family": "class-init-read",
+      "fixture_set": "python-proof-loop"
+    },
+    {
+      "id": "fixture.python_importer.b_class_field_update",
+      "language": "python",
+      "path": "tests/python_importer/cases/b_class_field_update/source.py",
+      "tier": "A",
+      "expected_support": "roundtrip",
+      "expected_preservation_ceiling": "P1",
+      "expected_preservation_stage_behavior": {
+        "source_to_h": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_h_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_l": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_l_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_python": {
+          "status": "pass",
+          "preservation_level": "P1"
+        }
+      },
+      "features": [
+        "bounded record-like class import with field update method",
+        "explicit instance-field read/write normalization through a direct local call"
+      ],
+      "hash": "sha256:b79eff45adce638739f98283d31eca1faeca2981aacb206aa50d8f170f2d58b7",
+      "frontend": "python",
+      "split": "test",
+      "origin": "checked_in_fixture",
+      "sample_class": "real",
+      "profiles": [
+        "R",
+        "D-PY"
+      ],
+      "pipeline_stages": [
+        "source_to_h",
+        "scir_h_validation",
+        "h_to_l",
+        "scir_l_validation",
+        "h_to_python"
+      ],
+      "construct_family": "class-field-update",
+      "fixture_set": "python-proof-loop"
+    },
+    {
+      "id": "fixture.python_importer.d_try_except",
+      "language": "python",
+      "path": "tests/python_importer/cases/d_try_except/source.py",
+      "tier": "A",
+      "expected_support": "roundtrip",
+      "expected_preservation_ceiling": "P1",
+      "expected_preservation_stage_behavior": {
+        "source_to_h": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_h_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_l": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "scir_l_validation": {
+          "status": "pass",
+          "preservation_level": "P1"
+        },
+        "h_to_python": {
+          "status": "pass",
+          "preservation_level": "P1"
+        }
+      },
+      "features": [
+        "single-handler try/except normalization"
+      ],
+      "hash": "sha256:4d30bc88eec806d2319f349b9e862f16cd371e67e2300bc8a787784a8719f271",
+      "frontend": "python",
+      "split": "test",
+      "origin": "checked_in_fixture",
+      "sample_class": "real",
+      "profiles": [
+        "R",
+        "D-PY"
+      ],
+      "pipeline_stages": [
+        "source_to_h",
+        "scir_h_validation",
+        "h_to_l",
+        "scir_l_validation",
+        "h_to_python"
+      ],
+      "construct_family": "try-except",
+      "fixture_set": "python-proof-loop"
     }
   ]
 }

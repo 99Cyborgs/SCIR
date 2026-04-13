@@ -1275,17 +1275,54 @@ def augment_benchmark_items(
 
 def augment_track_c_pilot_outputs(root: pathlib.Path, manifest: dict, result: dict):
     track_c_contract = benchmark_track_contract("C")
-    sample_manifest = load_json(root, track_c_contract["sample_manifest_path"])
-    sample_result = load_json(root, track_c_contract["sample_result_path"])
-    manifest["corpus_manifest"] = sample_manifest["corpus_manifest"]
-    manifest["corpus_manifest_hash"] = sample_manifest["corpus_manifest_hash"]
-    result["commit_sha"] = sample_result["commit_sha"]
-    result["spec_version"] = sample_result["spec_version"]
-    result["tool_version"] = sample_result["tool_version"]
-    result["baseline_name"] = sample_result["baseline_name"]
-    result["corpus_manifest_hash"] = sample_result["corpus_manifest_hash"]
-    result["artifact_rows"] = sample_result["artifact_rows"]
-    result["reproducibility_block"] = sample_result["reproducibility_block"]
+    corpus_manifest_hash = canonical_json_hash(load_json(root, BENCHMARK_CORPUS_MANIFEST_REL))
+    reproducibility_block = {
+        "command": track_c_contract["opt_in_command"],
+        "environment": {
+            "python_executable": "python",
+            "python_version": "3.11.0",
+            "platform": "example-platform",
+            "cwd": "G:/GitHub/incubate/SCIR",
+        },
+        "seed": 0,
+        "timestamp": "2026-04-01T00:00:00+00:00",
+    }
+    manifest["corpus_manifest"] = BENCHMARK_CORPUS_MANIFEST_REL
+    manifest["corpus_manifest_hash"] = corpus_manifest_hash
+    manifest["corpus"]["hash"] = corpus_manifest_hash
+    result["commit_sha"] = "example-commit-sha"
+    result["spec_version"] = SPEC_VERSION
+    result["tool_version"] = BENCHMARK_TOOL_VERSION
+    result["baseline_name"] = SCIR_SYSTEM_NAME
+    result["corpus_manifest_hash"] = corpus_manifest_hash
+    result["artifact_rows"] = [
+        {
+            "run_id": track_c_contract["sample_run_id"],
+            "commit_sha": "example-commit-sha",
+            "spec_version": SPEC_VERSION,
+            "tool_version": BENCHMARK_TOOL_VERSION,
+            "baseline_name": SCIR_SYSTEM_NAME,
+            "corpus_manifest_hash": corpus_manifest_hash,
+            "artifact_id": "fixture.python_importer.a_basic_function",
+            "slice_id": "frontend=python|tier=A|split=test|profile=R|pipeline_stage=source_to_h|construct_family=branch-local-mutation|fixture_set=python-proof-loop",
+            "stage": "source_to_h",
+            "metrics": {
+                "LCR": 0.9375,
+                "GR": 1.0,
+                "SE": 0.3,
+                "SCPR": None,
+                "round_trip": None,
+            },
+            "preservation_requested": "P1",
+            "preservation_observed": "P1",
+            "diagnostic_codes": [],
+            "compile_pass": None,
+            "test_pass": None,
+            "duration_ms": 0,
+            "reproducibility_block": reproducibility_block,
+        }
+    ]
+    result["reproducibility_block"] = reproducibility_block
 
 
 def benchmark_gate_failures(comparison_summary: dict, contamination_report: dict) -> list[str]:
@@ -1499,12 +1536,14 @@ def mutate_break_track_c_disposition_list(root: pathlib.Path):
 def mutate_break_track_c_retention_list(root: pathlib.Path):
     path = root / "benchmarks" / "success_failure_gates.md"
     text = path.read_text(encoding="utf-8")
+    expected_accepted_case_count = benchmark_track_contract("C")["expected_accepted_case_count"]
+    boundary_only_case_count = len(benchmark_track_contract("C")["boundary_only_cases"])
     old = (
         "### Track C retention criteria\n\n"
         "- `gate_S2_ready must remain true`\n"
         "- `gate_K1_hit must remain false`\n"
-        "- `accepted_case_count must remain 3`\n"
-        "- `boundary_only_case_count must remain 1`\n"
+        f"- `accepted_case_count must remain {expected_accepted_case_count}`\n"
+        f"- `boundary_only_case_count must remain {boundary_only_case_count}`\n"
         "- `status must remain mixed or pass`"
     )
     new = (
@@ -1512,7 +1551,7 @@ def mutate_break_track_c_retention_list(root: pathlib.Path):
         "- `gate_S2_ready must remain true`\n"
         "- `gate_K1_hit must remain false`\n"
         "- `accepted_case_count must remain 1`\n"
-        "- `boundary_only_case_count must remain 1`\n"
+        f"- `boundary_only_case_count must remain {boundary_only_case_count}`\n"
         "- `status must remain mixed or pass`"
     )
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
@@ -1521,12 +1560,14 @@ def mutate_break_track_c_retention_list(root: pathlib.Path):
 def mutate_break_track_c_retirement_list(root: pathlib.Path):
     path = root / "benchmarks" / "success_failure_gates.md"
     text = path.read_text(encoding="utf-8")
+    expected_accepted_case_count = benchmark_track_contract("C")["expected_accepted_case_count"]
+    boundary_only_case_count = len(benchmark_track_contract("C")["boundary_only_cases"])
     old = (
         "### Track C retirement triggers\n\n"
         "- `retire if gate_S2_ready becomes false`\n"
         "- `retire if gate_K1_hit becomes true`\n"
-        "- `retire if accepted_case_count drops below 3`\n"
-        "- `retire if boundary_only_case_count differs from 1`\n"
+        f"- `retire if accepted_case_count drops below {expected_accepted_case_count}`\n"
+        f"- `retire if boundary_only_case_count differs from {boundary_only_case_count}`\n"
         "- `retire if status becomes fail`"
     )
     new = (
@@ -1534,7 +1575,7 @@ def mutate_break_track_c_retirement_list(root: pathlib.Path):
         "- `retire if gate_S2_ready becomes false`\n"
         "- `retire if gate_K1_hit becomes true`\n"
         "- `retire if accepted_case_count drops below 1`\n"
-        "- `retire if boundary_only_case_count differs from 1`\n"
+        f"- `retire if boundary_only_case_count differs from {boundary_only_case_count}`\n"
         "- `retire if status becomes fail`"
     )
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
@@ -1543,18 +1584,20 @@ def mutate_break_track_c_retirement_list(root: pathlib.Path):
 def mutate_break_track_c_sample_sync_list(root: pathlib.Path):
     path = root / "benchmarks" / "tracks.md"
     text = path.read_text(encoding="utf-8")
+    expected_accepted_case_count = benchmark_track_contract("C")["expected_accepted_case_count"]
+    boundary_only_case_count = len(benchmark_track_contract("C")["boundary_only_cases"])
     old = (
         "## Track C sample synchronization\n\n"
         "- `checked-in sample manifest must equal the current opt-in pilot manifest`\n"
         "- `checked-in sample result must equal the current opt-in pilot result`\n"
-        "- `checked-in sample result must keep accepted_case_count 3 and boundary_only_case_count 1`\n"
+        f"- `checked-in sample result must keep accepted_case_count {expected_accepted_case_count} and boundary_only_case_count {boundary_only_case_count}`\n"
         "- `checked-in sample result must keep gate_S2_ready true, gate_K1_hit false, and status mixed or pass`"
     )
     new = (
         "## Track C sample synchronization\n\n"
         "- `checked-in sample manifest may differ from the opt-in pilot manifest`\n"
         "- `checked-in sample result must equal the current opt-in pilot result`\n"
-        "- `checked-in sample result must keep accepted_case_count 3 and boundary_only_case_count 1`\n"
+        f"- `checked-in sample result must keep accepted_case_count {expected_accepted_case_count} and boundary_only_case_count {boundary_only_case_count}`\n"
         "- `checked-in sample result must keep gate_S2_ready true, gate_K1_hit false, and status mixed or pass`"
     )
     path.write_text(text.replace(old, new, 1), encoding="utf-8")

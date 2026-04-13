@@ -14,11 +14,12 @@ The live implementation target is:
 Maintained but frozen support surfaces remain on disk:
 
 - bounded `SCIR-H -> SCIR-L` lowering
-- bounded Rust importer evidence
+- bounded Rust importer-first evidence
 - bounded Wasm reference backend
 - Track `A` and Track `B` benchmark harnesses
 
 Those surfaces are retained, but they are not the current scope-expansion target.
+Helper-free Wasm remains retained backend evidence only for the MVP; it is not the next automatic implementation phase, and any future backend widening requires a fresh post-MVP reactivation decision.
 
 ## Live surface
 

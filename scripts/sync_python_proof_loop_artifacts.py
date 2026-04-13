@@ -5,6 +5,7 @@ import argparse
 import json
 from pathlib import Path
 
+from benchmark_contract_dry_run import augment_track_c_pilot_outputs
 from scir_bootstrap_pipeline import run_track_c_pilot
 from scir_python_bootstrap import PYTHON_PROOF_LOOP_METADATA, build_bundle
 
@@ -35,6 +36,7 @@ def expected_track_c_samples(root: Path) -> tuple[str, str]:
             "Track C sample generation failed before synchronization:\n"
             + "\n".join(f" - {item}" for item in failures)
         )
+    augment_track_c_pilot_outputs(root, manifest, result)
     return (
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
         json.dumps(result, indent=2, ensure_ascii=False) + "\n",

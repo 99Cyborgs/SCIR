@@ -1,16 +1,15 @@
 # a_interface_local_witness_use
 Status: Informative
 
-Reserved placeholder for the first admitted module-local witness-consumption fixture.
+Archived placeholder for the historical module-local witness-use case id.
 
 This directory is intentionally placeholder-only.
 
 Placeholder bundle files now exist on disk:
 
 - `source.ts`
-- `expected.scirh`
 - `module_manifest.json`
 - `feature_tier_report.json`
 - `validation_report.json`
 
-These files remain reserved, importer-only placeholders. They are not live fixture inputs or validated importer outputs.
+These files remain archived placeholder residue. They are not live fixture inputs, validated importer outputs, or canonical `SCIR-H` artifacts.

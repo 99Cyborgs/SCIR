@@ -1,0 +1,33 @@
+{
+  "module_id": "invalid.scir_l.unsupported_terminator_kind",
+  "functions": [
+    {
+      "name": "bad_switch",
+      "returns": "int",
+      "params": [],
+      "blocks": [
+        {
+          "id": "entry",
+          "params": [],
+          "instructions": [
+            {
+              "id": "const0",
+              "op": "const",
+              "operands": [
+                1
+              ],
+              "origin": "invalid.scir_l.unsupported_terminator_kind::const0",
+              "lowering_rule": "H_CONST_RET"
+            }
+          ],
+          "terminator": {
+            "kind": "switch",
+            "value": "const0",
+            "origin": "invalid.scir_l.unsupported_terminator_kind::switch",
+            "lowering_rule": "H_BRANCH_COND"
+          }
+        }
+      ]
+    }
+  ]
+}

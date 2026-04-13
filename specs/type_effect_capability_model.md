@@ -26,7 +26,7 @@ The active MVP uses only the effect and type surface required by:
 - `write` remains explicit
 - `await` remains explicit
 - `opaque` and `unsafe` remain explicit
-- the importer-only `try/catch` slice may carry an explicit `throw` effect marker without promoting standalone `throw` syntax
+- the exact single-handler `try/catch` proof-loop slice may carry an explicit `throw` effect marker without promoting standalone `throw` syntax
 - empty effect rows render as `!`
 - declared active effects must match observed behavior; missing or unused effect rows are invalid
 

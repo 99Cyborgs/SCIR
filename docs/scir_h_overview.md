@@ -22,7 +22,7 @@ Status: Informative
 ## Active subset
 
 The active canonical subset is the subset implemented by `scripts/scir_h_bootstrap_model.py`.
-That subset now includes the importer-only `!throw` effect marker on the bounded Tier `B` `try/catch` slice, while standalone `throw` syntax remains deferred.
+That subset now includes the explicit `!throw` effect marker on the exact executable single-handler `try/catch` slice used by `d_try_except`, while standalone `throw` syntax remains deferred.
 
 Anything broader is deferred until grammar, parser, validator, lowering, reconstruction, and tests agree.
 

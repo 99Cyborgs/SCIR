@@ -52,3 +52,4 @@ The active post-scalar Wasm record-cell slice for `fixture.rust_importer.a_struc
 - explicit unsupported treatment for non-`int` record fields, imported-memory variants, and broader host/object layouts.
 
 Those obligations define the current executable boundary for the fixed Rust record-cell slice only. They do not activate broader post-scalar Wasm support.
+That slice remains retained support evidence only for the MVP. It does not auto-activate a new backend implementation phase, and any future Wasm widening requires a post-MVP reactivation decision plus synchronized roadmap and contract updates.

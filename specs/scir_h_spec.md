@@ -44,7 +44,7 @@ Active effects:
 - `await`
 - `opaque`
 - `unsafe`
-- importer-only `throw` effect marker for the bounded Tier `B` `try/catch` slice
+- `throw` effect marker for the exact bounded single-handler `try/catch` slice
 
 Anything broader is deferred and must not appear as active canonical syntax.
 
@@ -97,7 +97,7 @@ See `specs/scir_hc_doctrine.md` for the blocking authority-boundary, derivation,
 | `loop` | yes | canonical parser/validator surface only; importer-only beyond that |
 | `break` | yes | canonical parser/validator surface only; importer-only beyond that |
 | `continue` | yes | canonical parser/validator surface only; importer-only beyond that |
-| single-handler `try` / `catch name Type` | yes | canonical parser/validator surface only; importer-only beyond that |
+| single-handler `try` / `catch name Type` | yes | exact single-handler `ValueError` proof-loop slice only; broader forms importer-only or deferred |
 | direct call `f(args)` | yes | fully supported in MVP |
 | `await` | yes | fully supported in MVP |
 | intrinsic scalar comparison | yes | fully supported in MVP |

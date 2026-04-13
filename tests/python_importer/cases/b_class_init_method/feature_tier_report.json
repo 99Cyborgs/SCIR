@@ -3,21 +3,21 @@
   "subject": "fixture.python_importer.b_class_init_method",
   "source_language": "python",
   "summary": {
-    "A": 0,
-    "B": 2,
+    "A": 2,
+    "B": 0,
     "C": 0,
     "D": 0
   },
   "items": [
     {
-      "feature": "bounded record-like class import",
-      "tier": "B",
-      "rationale": "A single plain class with one explicit instance field can normalize into a canonical record declaration plus plain functions, but this slice remains importer-only and does not widen executable claims."
+      "feature": "bounded record-like class construction normalization",
+      "tier": "A",
+      "rationale": "A single plain class with one explicit instance field now participates in the active Python proof loop through exact-shape lowering, reconstruction, and benchmark evidence without widening into generalized object semantics."
     },
     {
-      "feature": "explicit instance-field assignment and read normalization",
-      "tier": "B",
-      "rationale": "The fixed self.value assignment in __init__ and fixed field read in one method reuse canonical field-place syntax, while broader Python object semantics remain deferred."
+      "feature": "explicit instance-field initialization and bounded field-read method normalization",
+      "tier": "A",
+      "rationale": "The fixed self.value assignment in __init__ and fixed get() field read now participate in the active Python proof loop while broader method-local mutation and object semantics remain deferred."
     }
   ]
 }

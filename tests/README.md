@@ -30,6 +30,7 @@ This directory holds checked-in golden corpora and conformance fixtures.
 The checked-in TypeScript placeholder tree is retained only as an archived, non-blocking historical surface.
 It is marked with `tests/typescript_importer/NOT_ACTIVE.md` and remains outside the default gate.
 It must not be treated as an active importer, lowering, reconstruction, benchmark, or CI commitment.
+Its historical case ids do not imply live `Tier A` / `B` / `C` support, and archived placeholder bundles must not carry canonical `SCIR-H`.
 
 - `tests/typescript_importer/cases/a_interface_decl/`
 - `tests/typescript_importer/cases/a_interface_local_witness_use/`

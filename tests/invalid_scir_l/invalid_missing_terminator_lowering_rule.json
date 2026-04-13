@@ -1,0 +1,32 @@
+{
+  "module_id": "invalid.scir_l.missing_terminator_lowering_rule",
+  "functions": [
+    {
+      "name": "bad_ret_rule",
+      "returns": "int",
+      "params": [],
+      "blocks": [
+        {
+          "id": "entry",
+          "params": [],
+          "instructions": [
+            {
+              "id": "const0",
+              "op": "const",
+              "operands": [
+                1
+              ],
+              "origin": "invalid.scir_l.missing_terminator_lowering_rule::const0",
+              "lowering_rule": "H_CONST_RET"
+            }
+          ],
+          "terminator": {
+            "kind": "ret",
+            "value": "const0",
+            "origin": "invalid.scir_l.missing_terminator_lowering_rule::ret"
+          }
+        }
+      ]
+    }
+  ]
+}

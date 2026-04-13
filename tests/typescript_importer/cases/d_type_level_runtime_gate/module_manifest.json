@@ -4,7 +4,6 @@
   "source_language": "typescript",
   "source_path": "tests/typescript_importer/cases/d_type_level_runtime_gate/source.ts",
   "declared_profiles": [
-    "R",
     "D-JS"
   ],
   "declared_tier": "D",

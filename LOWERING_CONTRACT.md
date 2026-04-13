@@ -24,6 +24,7 @@ Every semantically meaningful `SCIR-L` instruction or terminator must carry:
 | `H_DIRECT_CALL` | direct validated call | `call` |
 | `H_AWAIT_RESUME` | `await` over a validated direct call | `async.resume` |
 | `H_OPAQUE_CALL` | explicit opaque or unsafe boundary call | `opaque.call` |
+| `H_TRY_INVOKE` | exact single-handler `try/catch` around a validated direct call | `invoke` |
 | `H_BRANCH_COND` | structured conditional branch | `cond_br` |
 | `H_BRANCH_JOIN` | structured join from lowered control | `br` |
 | `H_RETURN` | structured return | `ret` |
@@ -64,6 +65,7 @@ The active helper-free Wasm backend consumes only the subset of `SCIR-L` justifi
 
 - `H_AWAIT_RESUME`
 - `H_OPAQUE_CALL`
+- `H_TRY_INVOKE`
 
 ### Wasm backend contract notes
 
@@ -86,4 +88,5 @@ Wasm emission does not create new semantics. It only emits the already-lowered d
 - an op lacks origin,
 - an op lacks a lowering rule,
 - a lowering rule is not recognized,
-- an op/lowering-rule pairing is invalid for the active subset.
+- an op/lowering-rule pairing is invalid for the active subset,
+- an admitted proof-loop case drifts from its fixed lowering shape, provenance labels, or boundary-preservation contract.

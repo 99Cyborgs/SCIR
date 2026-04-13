@@ -42,6 +42,11 @@ TRACK_C_NON_EDITORIAL_SAMPLE_REFRESH_PROVENANCE = [
     "cite the regenerated manifest corpus hash",
     "cite the regenerated result run_id and system_under_test",
 ]
+TRACK_C_MVP_POSTURE = [
+    "retain bounded diagnostic pilot for the remainder of the MVP",
+    "not an auto-activating post-Phase-5 benchmark lane",
+    "promotion into the default executable gate or broader benchmark claim surface requires a post-MVP reactivation decision",
+]
 
 
 BENCHMARK_CONTRACT_METADATA = {
@@ -153,6 +158,7 @@ BENCHMARK_CONTRACT_METADATA = {
                 "do not promote to default executable gate",
                 "keep c_opaque_call boundary-accounting-only",
             ],
+            "mvp_posture": list(TRACK_C_MVP_POSTURE),
             "expected_accepted_case_count": len(TRACK_C_EXECUTABLE_CASES),
             "allowed_result_statuses": ["mixed", "pass"],
             "retention_criteria": [
@@ -177,7 +183,7 @@ BENCHMARK_CONTRACT_METADATA = {
             "opt_in_validation_command": "python scripts/run_repo_validation.py --include-track-c-pilot",
             "sample_manifest_path": "reports/examples/benchmark_track_c_manifest.example.json",
             "sample_result_path": "reports/examples/benchmark_track_c_result.example.json",
-            "sample_manifest_hash": "sha256:41592f102f5fd852200de007698774508f9ffeebd8fb5b4d9d01c85c812873e6",
+            "sample_manifest_hash": "sha256:9c61d6427b0a8dc5b79a3a84e5215cc952d9051458c01cf0b4dc8001ff3d0824",
             "sample_run_id": "example-track-c-pilot-run-2026-04-01",
             "sample_system_under_test": "scir-bootstrap-non-default-track-c-pilot",
             "sample_result_status": "mixed",
@@ -289,6 +295,8 @@ def _validate_benchmark_contract_metadata():
         "keep c_opaque_call boundary-accounting-only",
     ]:
         raise ValueError("BENCHMARK_CONTRACT_METADATA Track C disposition markers drifted")
+    if track_c_contract["mvp_posture"] != TRACK_C_MVP_POSTURE:
+        raise ValueError("BENCHMARK_CONTRACT_METADATA Track C MVP posture markers drifted")
     if track_c_contract["expected_accepted_case_count"] != len(expected_compile_cases):
         raise ValueError("BENCHMARK_CONTRACT_METADATA Track C accepted-case expectation drifted")
     if track_c_contract["allowed_result_statuses"] != ["mixed", "pass"]:

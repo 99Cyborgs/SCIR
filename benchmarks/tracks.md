@@ -5,7 +5,7 @@ Status: Normative
 | --- | --- | --- |
 | `A` | Are canonical `SCIR-H` and compressed `SCIR-Hc` jointly explicit and compact enough to justify themselves? | active |
 | `B` | Can the Python proof loop round-trip through import, validation, lowering, and reconstruction? | active |
-| `C` | Does SCIR beat strong baselines on tightly controlled repair or editing tasks? | conditional pilot only |
+| `C` | Does SCIR beat strong baselines on tightly controlled repair or editing tasks? | retained non-default pilot only |
 | `D` | Is runtime or backend performance competitive? | deferred |
 
 ## Active executable tracks
@@ -36,11 +36,17 @@ Status: Normative
 - `do not promote to default executable gate`
 - `keep c_opaque_call boundary-accounting-only`
 
+## Track C MVP posture
+
+- `retain bounded diagnostic pilot for the remainder of the MVP`
+- `not an auto-activating post-Phase-5 benchmark lane`
+- `promotion into the default executable gate or broader benchmark claim surface requires a post-MVP reactivation decision`
+
 ## Track C sample synchronization
 
 - `checked-in sample manifest must equal the current opt-in pilot manifest`
 - `checked-in sample result must equal the current opt-in pilot result`
-- `checked-in sample result must keep accepted_case_count 3 and boundary_only_case_count 1`
+- `checked-in sample result must keep accepted_case_count 10 and boundary_only_case_count 1`
 - `checked-in sample result must keep gate_S2_ready true, gate_K1_hit false, and status mixed or pass`
 
 ## Track C sample posture re-decision triggers

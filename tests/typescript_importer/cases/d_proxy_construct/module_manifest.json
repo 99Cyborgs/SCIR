@@ -4,7 +4,6 @@
   "source_language": "typescript",
   "source_path": "tests/typescript_importer/cases/d_proxy_construct/source.ts",
   "declared_profiles": [
-    "R",
     "D-JS"
   ],
   "declared_tier": "D",
