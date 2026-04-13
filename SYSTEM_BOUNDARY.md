@@ -12,15 +12,18 @@ It is not:
 - a proof-first research stack
 - a universal backend program
 
-## Active repository target
+## Repository status
 
-The active repository target is:
+Frozen and retired.
+
+The final repository phase was:
 
 - Frozen 11-case Python proof-loop
 - strong-baseline falsification
 - Track `A` and Track `B`
+- outcome `SCIR_USEFUL_BUT_UNNECESSARY`
 
-## Current narrowed MVP boundary
+## Final narrowed MVP boundary
 
 The current narrowed MVP boundary kept executable for later baseline comparison includes:
 
@@ -34,9 +37,9 @@ The current narrowed MVP boundary kept executable for later baseline comparison 
 - bounded Wasm reference backend validation for the admitted helper-free subset
 - Track `A` and Track `B` strong-baseline benchmark comparison
 
-## Maintained but frozen support surfaces
+## Preserved support surfaces
 
-These remain validated and preserved on disk, but they are not the current widening target:
+These remain validated and preserved on disk, but there is no current widening target:
 
 - derived `SCIR-Hc`
 - derivative `SCIR-L`

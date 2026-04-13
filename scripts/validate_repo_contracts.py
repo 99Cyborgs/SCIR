@@ -207,12 +207,12 @@ AUDIT_NOT_ACTIVE_MARKERS = {
 }
 
 ACTIVE_FOCUS_MARKERS = [
-    "Frozen 11-case Python proof-loop",
-    "strong-baseline",
-    "Track `A` and Track `B`",
+    "Frozen and retired",
+    "strong-baseline falsification",
+    "SCIR_USEFUL_BUT_UNNECESSARY",
 ]
-ACTIVE_PLAN_REL = "plans/2026-04-13-strong-baseline-falsification-phase.md"
-ACTIVE_ITEM_MARKER = "decision-grade falsification phase"
+ACTIVE_PLAN_REL = "plans/2026-04-13-project-freeze-retirement-summary.md"
+ACTIVE_ITEM_MARKER = "retirement record"
 EXECUTABLE_SUBSET_REQUIRED_MARKERS = {
     "specs/scir_h_spec.md": [
         "| `loop` | yes | exact fixed proof-loop shapes are executable; broader forms remain deferred |",
@@ -1071,7 +1071,7 @@ def mutate_remove_required_file(root: pathlib.Path) -> None:
 def mutate_break_focus_alignment(root: pathlib.Path) -> None:
     path = root / "README.md"
     text = path.read_text(encoding="utf-8")
-    path.write_text(text.replace("Frozen 11-case Python proof-loop", "11-case Python proof-loop", 1), encoding="utf-8")
+    path.write_text(text.replace("Frozen and retired", "Retired", 1), encoding="utf-8")
 
 
 def mutate_break_reconstruction_policy_alignment(root: pathlib.Path) -> None:
@@ -1377,7 +1377,7 @@ def run_self_tests(root: pathlib.Path) -> list[str]:
             root,
             "focus drift",
             mutate_break_focus_alignment,
-            ["README.md: missing active-focus marker 'Frozen 11-case Python proof-loop'"],
+            ["README.md: missing active-focus marker 'Frozen and retired'"],
         )
     )
     failures.extend(

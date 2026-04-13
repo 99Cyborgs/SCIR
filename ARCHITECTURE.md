@@ -13,17 +13,19 @@ SCIR is a two-layer system.
 `SCIR-H` is the only semantic source of truth.
 `SCIR-L` is valid only when it is justified by validated `SCIR-H` plus a named lowering rule.
 
-## Active repository phase
+## Repository status
 
-The active phase is:
+Frozen and retired.
+
+The final repository phase was:
 
 ```text
 Frozen 11-case Python proof-loop
   -> Track A / Track B strong-baseline comparison
-  -> continuation or stop decision
+  -> outcome SCIR_USEFUL_BUT_UNNECESSARY
 ```
 
-Track `A` and Track `B` are the only active benchmark tracks in this strong-baseline phase.
+Track `A` and Track `B` were the only active benchmark tracks in the final strong-baseline falsification phase.
 
 ## Active implementation lane
 
