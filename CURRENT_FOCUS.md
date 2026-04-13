@@ -5,6 +5,18 @@ Status: Active
 
 Python subset importer -> canonical `SCIR-H` -> validator hardening.
 
+## Current bounded MVP kept comparison-ready
+
+- canonical `SCIR-H`
+- derived `SCIR-Hc`
+- derivative `SCIR-L`
+- validator coverage for `SCIR-H`, `SCIR-Hc`, `SCIR-L`, and `SCIR-H -> SCIR-L` preservation
+- Python subset import on the frozen 11-case proof loop
+- Python reconstruction from validated `SCIR-H`
+- bounded Rust importer-first evidence
+- bounded helper-free Wasm validation for the admitted subset
+- Track `A` and Track `B` benchmark harnesses
+
 ## Boundaries
 
 - Keep `SCIR-H` as the only normative semantic authority.
@@ -35,4 +47,4 @@ Python subset importer -> canonical `SCIR-H` -> validator hardening.
 
 ## Plan
 
-- `plans/2026-04-12-track-c-mvp-boundary-lock-and-phase-6-reset.md`
+- `plans/2026-04-13-mvp-completion-and-pre-baseline-alignment.md`

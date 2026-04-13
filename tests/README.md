@@ -5,7 +5,7 @@ This directory holds checked-in golden corpora and conformance fixtures.
 
 ## Current contents
 
-- `python_importer/cases/` fixture bundles for the active Python importer proof loop and importer-only follow-on cases
+- `python_importer/cases/` fixture bundles for the active Python importer proof loop plus the explicit rejected case
 - `rust_importer/cases/` fixture bundles for the bounded Rust safe-subset importer slice
 - `corpora/` frozen machine-readable manifests for the active proof-loop corpora
 - `sweeps/` slice definitions for sweep smoke and fuller proof-loop aggregation
@@ -18,7 +18,8 @@ This directory holds checked-in golden corpora and conformance fixtures.
 - Tier `A`, `B`, and `C` importer fixtures include canonical `SCIR-H` text targets
 - Tier `C` importer fixtures include an explicit opaque boundary contract
 - Tier `D` importer fixtures must not include canonical `SCIR-H`
-- importer-only Tier `B` fixtures may stop at validated `SCIR-H` and need not participate in executable lowering, translation, or reconstruction
+- the frozen Python MVP corpus currently has no active importer-only Tier `B` fixtures
+- any future importer-only Tier `B` fixture may stop at validated `SCIR-H` and need not participate in executable lowering, translation, or reconstruction
 - Tier `A` Rust importer fixtures are single-crate Rust 2021 library fixtures with `input/Cargo.toml`, `input/src/lib.rs`, and `input/tests/smoke.rs`
 - Tier `C` Rust importer fixtures include an explicit opaque boundary contract
 - `make test` and `make validate` fail if the Python or Rust importer fixture corpora drift from their conformance rules

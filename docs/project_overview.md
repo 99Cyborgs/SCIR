@@ -25,12 +25,14 @@ It is "can SCIR keep a narrow proof loop honest enough to justify continuing?"
 Implemented now:
 
 - canonical `SCIR-H` parser/formatter, invariant-coded negative validation, and stable proof-loop fixtures
+- derived `SCIR-Hc` generation plus validator-backed round-trip and lineage containment checks
 - bounded `SCIR-H -> SCIR-L` lowering plus structural validation for the active Python proof loop
+- Python reconstruction from validated `SCIR-H` across the frozen 11-case proof loop
 - fixed Tier `A` corpus manifests and a slice-based sweep smoke lane
+- active Track `A` / `B` benchmark harnesses with strong-baseline, contamination, and claim-scope enforcement
 
 Partially implemented:
 
-- importer-only Tier `B` `SCIR-H` evidence cases
 - Rust importer-first evidence and bounded optional Rust validation
 - helper-free Wasm emission only for the admitted fixed cases
 
