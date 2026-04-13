@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Conformance checker for checked-in Rust importer bundles.
-
-The checker keeps Rust importer evidence subset-bound by validating canonical
-`SCIR-H` output, Cargo fixture contracts, boundary metadata, and schema-backed
-reports for the fixed corpus only.
+"""File: scripts/rust_importer_conformance.py
+Purpose: Validate the checked-in Rust importer bundles against schemas, canonical SCIR-H, Cargo fixture rules, and boundary doctrine.
+Role in system: This is the governance checker that proves the Rust importer artifacts still match the retained fixed-corpus contract.
+Key dependencies: `scir_rust_bootstrap`, `scir_h_bootstrap_model`, and repo contract-validation helpers.
+Side effects: Reads checked-in Rust fixture bundles, regenerates importer outputs for parity checks, and mutates temp copies during self-tests.
 """
 import argparse
 import json
@@ -60,6 +60,7 @@ RUST_SCIRH_MARKERS = {
 
 
 def summarize_item_tiers(items):
+    """Derive the Rust feature-tier summary from item-level metadata for consistency checks."""
     summary = {"A": 0, "B": 0, "C": 0, "D": 0}
     for item in items:
         tier = item.get("tier")
@@ -69,6 +70,7 @@ def summarize_item_tiers(items):
 
 
 def build_case_expectations():
+    """Project bootstrap metadata into the exact fixture expectations enforced by this checker."""
     expectations = {}
     case_contracts = RUST_IMPORTER_METADATA["case_contracts"]
     for case_name in RUST_IMPORTER_METADATA["case_order"]:
@@ -106,14 +108,17 @@ SCIRH_REL = "expected.scirh"
 
 
 def load_json(path: pathlib.Path):
+    """Load one UTF-8 JSON fixture artifact used by the Rust conformance checker."""
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def load_schema(root: pathlib.Path, relative_path: str):
+    """Resolve and load a repo-relative schema needed for Rust artifact validation."""
     return load_json(root / relative_path)
 
 
 def validate_json_against_schema(root: pathlib.Path, json_path: pathlib.Path, schema_rel: str):
+    """Return the decoded JSON artifact plus any schema failures instead of aborting early."""
     schema = load_schema(root, schema_rel)
     instance = load_json(json_path)
     failures = []
@@ -123,6 +128,7 @@ def validate_json_against_schema(root: pathlib.Path, json_path: pathlib.Path, sc
 
 
 def expected_cargo_text(case_name: str) -> str:
+    """Return the canonical Cargo.toml contents expected for one fixed Rust fixture crate."""
     return CARGO_TOML.format(crate_name=case_name)
 
 
@@ -318,6 +324,7 @@ def compare_generated_to_goldens(root: pathlib.Path):
 
 
 def run_self_tests(root: pathlib.Path):
+    """Exercise negative checks that prove Rust conformance fails for source and capability drift."""
     failures = []
     source_path = root / FIXTURE_ROOT / "a_mut_local" / "input" / "src" / "lib.rs"
     original = source_path.read_text(encoding="utf-8")
@@ -361,6 +368,7 @@ def run_self_tests(root: pathlib.Path):
 
 
 def parse_args():
+    """Parse the small CLI contract for validation versus self-test mode."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", required=True, choices=["validate-fixtures", "test"])
     parser.add_argument("--root")
@@ -368,6 +376,7 @@ def parse_args():
 
 
 def main():
+    """Run Rust fixture validation, optional self-tests, and map failures onto the CLI exit contract."""
     args = parse_args()
     root = pathlib.Path(args.root).resolve() if args.root else pathlib.Path(__file__).resolve().parents[1]
     failures = []

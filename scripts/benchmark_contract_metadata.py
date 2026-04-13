@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Central benchmark contract metadata shared by validation, execution, and reporting.
-
-This file is authoritative for which tracks, cases, baselines, and Track C
-pilot posture are active. Scripts import these constants to prevent docs, CI,
-and executable benchmark logic from silently diverging.
+"""File: scripts/benchmark_contract_metadata.py
+Purpose: Hold the frozen benchmark contract metadata shared by validation, execution, and reporting code.
+Role in system: This is the authoritative executable metadata surface for active tracks, baselines, and retained Track C posture.
+Key dependencies: scir_python_bootstrap.PYTHON_PROOF_LOOP_METADATA and the benchmark scripts that import these constants.
+Side effects: Raises validation errors at import time when benchmark metadata drifts from the frozen doctrine.
 """
 from __future__ import annotations
 
@@ -222,7 +222,19 @@ BENCHMARK_CONTRACT_METADATA = {
 
 
 def benchmark_track_contract(track: str) -> dict:
-    """Return the canonical contract for one benchmark track."""
+    """Purpose: Return the canonical contract object for one benchmark track code.
+
+    Inputs:
+      - track: str benchmark track identifier such as `A`, `B`, or retained conditional `C`.
+    Outputs:
+      - dict canonical contract metadata for the requested track.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Active and conditional track contracts are the only valid executable sources for per-track metadata.
+    Failure Modes:
+      - Raises KeyError when the track code is unknown.
+    """
 
     if track in BENCHMARK_CONTRACT_METADATA["track_contracts"]:
         return BENCHMARK_CONTRACT_METADATA["track_contracts"][track]
@@ -232,7 +244,19 @@ def benchmark_track_contract(track: str) -> dict:
 
 
 def benchmark_track_baselines(track: str) -> list[str]:
-    """Return the exact baseline set that a track must compare against."""
+    """Purpose: Return the exact baseline set a track must compare against.
+
+    Inputs:
+      - track: str benchmark track identifier.
+    Outputs:
+      - list[str] mandatory plus track-specific baseline names in execution order.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Baseline selection is frozen centrally so scripts and docs cannot diverge silently.
+    Failure Modes:
+      - Raises KeyError if the track lacks track-specific additional baseline metadata.
+    """
 
     return [
         *BENCHMARK_CONTRACT_METADATA["mandatory_baselines"],
@@ -241,11 +265,36 @@ def benchmark_track_baselines(track: str) -> list[str]:
 
 
 def benchmark_track_compile_cases() -> list[str]:
+    """Purpose: Return the executable Track C case set reused by compile-sensitive benchmark checks.
+
+    Inputs:
+      - None.
+    Outputs:
+      - list[str] retained non-opaque executable case names.
+    Side Effects:
+      - None.
+    Assumptions:
+      - The compile case set must stay aligned with the frozen Track C executable slice.
+    Failure Modes:
+      - None.
+    """
     return list(TRACK_C_EXECUTABLE_CASES)
 
 
 def _validate_benchmark_contract_metadata():
-    """Fail fast if benchmark metadata would let executable logic drift from the frozen track doctrine."""
+    """Purpose: Fail fast if executable benchmark metadata drifts from the frozen track doctrine.
+
+    Inputs:
+      - None.
+    Outputs:
+      - None.
+    Side Effects:
+      - Raises ValueError during import when benchmark metadata no longer matches the repo's frozen benchmark contract.
+    Assumptions:
+      - Scripts should abort immediately rather than run with inconsistent active-track or Track C metadata.
+    Failure Modes:
+      - Raises ValueError on any metadata drift.
+    """
 
     expected_cases = list(PYTHON_PROOF_LOOP_METADATA["benchmark_cases"])
     if BENCHMARK_CONTRACT_METADATA["benchmark_cases"] != expected_cases:

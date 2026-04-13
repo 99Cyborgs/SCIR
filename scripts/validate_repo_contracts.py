@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Repository contract checker for the consolidated SCIR baseline."""
+"""File: scripts/validate_repo_contracts.py
+Purpose: Enforce the frozen repository contract for the active SCIR MVP surface.
+Role in system: Acts as the repo-level integrity gate used by validation, build, and importer checks to catch drift between specs, docs, examples, manifests, and retained support surfaces.
+Key dependencies: jsonschema (optional), scir_python_bootstrap.PYTHON_PROOF_LOOP_METADATA, wasm_backend_metadata.WASM_BACKEND_METADATA, benchmark_contract_metadata.TRACK_C_MVP_POSTURE.
+Side effects: Reads many repository files, hashes fixtures, validates example JSON artifacts, and in self-test mode clones the repo into temporary directories and mutates copies to verify expected failures.
+"""
 from __future__ import annotations
 
 import argparse
@@ -370,26 +375,43 @@ CAPABILITY_DEPENDENCY_PREFIX = "capability:"
 
 
 def load_json(path: pathlib.Path):
+    """Purpose: Read a UTF-8 JSON file into Python objects for contract checks."""
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def sha256_file(path: pathlib.Path) -> str:
+    """Purpose: Compute the repository's canonical text hash for fixture files.
+
+    Inputs:
+      - path: pathlib.Path for the on-disk artifact being fingerprinted.
+    Outputs:
+      - str: ``sha256:<digest>`` after line-ending normalization.
+    Side Effects:
+      - Reads file bytes from disk.
+    Assumptions:
+      - The file is small enough to read into memory in one shot.
+    Failure Modes:
+      - Propagates filesystem errors if the file is missing or unreadable.
+    """
     # Hash text fixtures after LF normalization so corpus manifests are stable
     # across Windows and Unix checkouts.
     return "sha256:" + hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def canonical_json_hash(payload) -> str:
+    """Purpose: Hash structured JSON content using the repo's canonical serialization."""
     return "sha256:" + hashlib.sha256(
         json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     ).hexdigest()
 
 
 def is_number(value):
+    """Purpose: Treat ints and floats as numbers while excluding booleans."""
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
 def matches_type(value, expected_type):
+    """Purpose: Evaluate a JSON Schema ``type`` constraint for the fallback validator."""
     if isinstance(expected_type, list):
         return any(matches_type(value, item) for item in expected_type)
     return {
@@ -404,10 +426,26 @@ def matches_type(value, expected_type):
 
 
 def normalize_for_uniqueness(value):
+    """Purpose: Canonicalize JSON-like values before comparing ``uniqueItems`` semantics."""
     return json.dumps(value, sort_keys=True, separators=(",", ":"))
 
 
 def _fallback_validation_errors(instance, schema, path="$"):
+    """Purpose: Provide a small schema-validation fallback when ``jsonschema`` is unavailable.
+
+    Inputs:
+      - instance: JSON-like value being validated.
+      - schema: Schema fragment expressed as a Python mapping.
+      - path: JSON pointer-like location used for error reporting.
+    Outputs:
+      - list[tuple[str, str]]: ``(path, message)`` pairs describing validation failures.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Only the subset of schema features encoded here is required for repo-contract checks.
+    Failure Modes:
+      - Deliberately ignores unsupported schema keywords rather than approximating them incorrectly.
+    """
     failures = []
     expected_type = schema.get("type")
     if expected_type is not None and not matches_type(instance, expected_type):
@@ -451,6 +489,7 @@ def _fallback_validation_errors(instance, schema, path="$"):
 
 
 def collect_instance_validation_errors(instance, schema):
+    """Purpose: Collect validation failures using ``jsonschema`` when installed, or the fallback checker otherwise."""
     if Draft202012Validator is None:
         return _fallback_validation_errors(instance, schema)
     errors = sorted(
@@ -467,6 +506,7 @@ def collect_instance_validation_errors(instance, schema):
 
 
 def capability_dependency_entries(module_manifest: dict | None):
+    """Purpose: Extract capability-prefixed dependency declarations from a module manifest."""
     if not isinstance(module_manifest, dict):
         return set()
     dependencies = module_manifest.get("dependencies", [])
@@ -480,6 +520,7 @@ def capability_dependency_entries(module_manifest: dict | None):
 
 
 def boundary_capability_entries(boundary_contract: dict | None):
+    """Purpose: Parse and validate capability requirements declared by an opaque-boundary contract."""
     if not isinstance(boundary_contract, dict):
         return set(), []
     capability_entries = set()
@@ -504,6 +545,22 @@ def validate_boundary_capability_contract(
     label: str,
     allow_capabilities: bool,
 ):
+    """Purpose: Enforce that boundary capability imports and boundary contracts stay synchronized.
+
+    Inputs:
+      - module_manifest: Optional module manifest payload for one fixture.
+      - boundary_contract: Optional opaque-boundary contract payload for the same fixture.
+      - label: Human-readable prefix for emitted failures.
+      - allow_capabilities: Whether this fixture is allowed to declare host capability requirements.
+    Outputs:
+      - list[str]: Human-readable validation failures.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Only boundary fixtures may import or declare host capabilities.
+    Failure Modes:
+      - Reports malformed capability entries, missing imports, and unused imports.
+    """
     failures = []
     capability_imports = capability_dependency_entries(module_manifest)
     boundary_capabilities, capability_failures = boundary_capability_entries(boundary_contract)
@@ -529,15 +586,18 @@ def validate_boundary_capability_contract(
 
 
 def validate_instance(root: pathlib.Path, payload, schema_rel: str, label: str) -> list[str]:
+    """Purpose: Validate one JSON payload against a repository schema and prefix the resulting failures."""
     schema = load_json(root / schema_rel)
     return [f"{label} {path}: {message}" for path, message in collect_instance_validation_errors(payload, schema)]
 
 
 def check_required_files(root: pathlib.Path, required_files: list[str]) -> list[str]:
+    """Purpose: Confirm that all files in a required-surface list still exist on disk."""
     return [f"missing file: {rel}" for rel in required_files if not (root / rel).exists()]
 
 
 def markdown_bullets_under_heading(text: str, heading: str) -> list[str] | None:
+    """Purpose: Read a flat bullet list under a specific Markdown heading for cross-doc drift checks."""
     lines = text.splitlines()
     try:
         start = lines.index(heading)
@@ -560,6 +620,7 @@ def markdown_bullets_under_heading(text: str, heading: str) -> list[str] | None:
 
 
 def check_focus_alignment(root: pathlib.Path) -> list[str]:
+    """Purpose: Enforce that the root roadmap documents share the same frozen-focus markers."""
     failures = []
     focus_text = (root / "CURRENT_FOCUS.md").read_text(encoding="utf-8")
     backlog_text = (root / "BACKLOG.md").read_text(encoding="utf-8")
@@ -596,6 +657,7 @@ def check_focus_alignment(root: pathlib.Path) -> list[str]:
 
 
 def check_python_import_scope_alignment(root: pathlib.Path) -> list[str]:
+    """Purpose: Verify that Python importer scope docs mirror the canonical proof-loop metadata."""
     failures = []
     text = (root / "frontend" / "python" / "IMPORT_SCOPE.md").read_text(encoding="utf-8")
     executable_cases = markdown_bullets_under_heading(text, "### Executable proof-loop cases")
@@ -616,6 +678,7 @@ def check_python_import_scope_alignment(root: pathlib.Path) -> list[str]:
 
 
 def check_reconstruction_policy_alignment(root: pathlib.Path) -> list[str]:
+    """Purpose: Keep reconstruction-policy documentation aligned with the active executable Python cases."""
     failures = []
     text = (root / "docs" / "reconstruction_policy.md").read_text(encoding="utf-8")
     active_cases = markdown_bullets_under_heading(text, "## Active reconstruction cases")
@@ -629,6 +692,7 @@ def check_reconstruction_policy_alignment(root: pathlib.Path) -> list[str]:
 
 
 def check_executable_subset_truth_alignment(root: pathlib.Path) -> list[str]:
+    """Purpose: Detect wording drift around the exact executable subset admitted by the frozen MVP."""
     failures = []
     for rel, markers in EXECUTABLE_SUBSET_REQUIRED_MARKERS.items():
         text = (root / rel).read_text(encoding="utf-8")
@@ -644,6 +708,19 @@ def check_executable_subset_truth_alignment(root: pathlib.Path) -> list[str]:
 
 
 def check_frozen_python_proof_loop_contract(root: pathlib.Path) -> list[str]:
+    """Purpose: Prove that the active Python proof-loop corpus, contracts, and Wasm slice remain frozen together.
+
+    Inputs:
+      - root: Repository root used to read metadata and corpus files.
+    Outputs:
+      - list[str]: Contract failures for executable-case membership, benchmark scope, boundary-only cases, and Wasm-emittable coverage.
+    Side Effects:
+      - Reads bootstrap metadata and corpus manifests from disk.
+    Assumptions:
+      - The 11-case Python proof loop is the current canonical executable corpus.
+    Failure Modes:
+      - Flags any mismatch between bootstrap metadata, corpus splits, fixture IDs, or per-case preservation-stage expectations.
+    """
     failures = []
     metadata = PYTHON_PROOF_LOOP_METADATA
     expected_fixture_ids = [f"fixture.python_importer.{case_name}" for case_name in FROZEN_PYTHON_EXECUTABLE_CASES]
@@ -712,6 +789,7 @@ def check_frozen_python_proof_loop_contract(root: pathlib.Path) -> list[str]:
 
 
 def check_support_lane_freeze_alignment(root: pathlib.Path) -> list[str]:
+    """Purpose: Ensure Rust, Wasm, and Track C remain documented as retained support lanes rather than active widening targets."""
     failures = []
     readme_text = (root / "README.md").read_text(encoding="utf-8")
     architecture_text = (root / "ARCHITECTURE.md").read_text(encoding="utf-8")
@@ -768,6 +846,7 @@ def check_support_lane_freeze_alignment(root: pathlib.Path) -> list[str]:
 
 
 def check_wasm_backend_scope_alignment(root: pathlib.Path) -> list[str]:
+    """Purpose: Cross-check Wasm backend documentation against the authoritative backend metadata tables."""
     failures = []
     wasm_text = (root / "backends" / "wasm" / "README.md").read_text(encoding="utf-8")
     lowering_text = (root / "LOWERING_CONTRACT.md").read_text(encoding="utf-8")
@@ -805,6 +884,7 @@ def check_wasm_backend_scope_alignment(root: pathlib.Path) -> list[str]:
 
 
 def check_decision_register(root: pathlib.Path) -> list[str]:
+    """Purpose: Confirm the decision register still carries the frozen MVP constraints and not stale queue-era language."""
     text = (root / "DECISION_REGISTER.md").read_text(encoding="utf-8")
     failures = []
     for marker in [
@@ -828,6 +908,7 @@ def check_decision_register(root: pathlib.Path) -> list[str]:
 
 
 def check_open_questions_alignment(root: pathlib.Path) -> list[str]:
+    """Purpose: Verify that resolved Rust-scope questions do not reappear in the active open-questions table."""
     failures = []
     text = (root / "OPEN_QUESTIONS.md").read_text(encoding="utf-8")
     if "OQ-003" in text:
@@ -836,6 +917,7 @@ def check_open_questions_alignment(root: pathlib.Path) -> list[str]:
 
 
 def check_removed_surface_references(root: pathlib.Path) -> list[str]:
+    """Purpose: Catch references to retired files or directories that should no longer appear in live docs and scripts."""
     failures = []
     for rel in [
         "README.md",
@@ -860,6 +942,7 @@ def check_removed_surface_references(root: pathlib.Path) -> list[str]:
 
 
 def check_not_active_markers(root: pathlib.Path, marker_map: dict[str, list[str]]) -> list[str]:
+    """Purpose: Ensure retained-but-disabled surfaces advertise their quarantine markers explicitly."""
     failures = []
     for rel, markers in marker_map.items():
         text = (root / rel).read_text(encoding="utf-8")
@@ -870,6 +953,7 @@ def check_not_active_markers(root: pathlib.Path, marker_map: dict[str, list[str]
 
 
 def check_examples(root: pathlib.Path) -> list[str]:
+    """Purpose: Validate every checked-in example artifact against its schema contract."""
     failures = []
     for artifact_rel, schema_rel in EXAMPLE_ARTIFACTS:
         payload = load_json(root / artifact_rel)
@@ -878,6 +962,7 @@ def check_examples(root: pathlib.Path) -> list[str]:
 
 
 def check_manifest_hashes(root: pathlib.Path, manifest_rel: str, schema_rel: str) -> list[str]:
+    """Purpose: Validate a corpus manifest and verify that each declared fixture hash still matches the on-disk file."""
     manifest = load_json(root / manifest_rel)
     failures = validate_instance(root, manifest, schema_rel, manifest_rel)
     for fixture in manifest.get("fixtures", []):
@@ -894,6 +979,7 @@ def check_manifest_hashes(root: pathlib.Path, manifest_rel: str, schema_rel: str
 
 
 def check_sweep_manifest(root: pathlib.Path, manifest_rel: str) -> list[str]:
+    """Purpose: Validate a sweep manifest and ensure its referenced corpus manifest still exists."""
     manifest = load_json(root / manifest_rel)
     failures = validate_instance(root, manifest, "schemas/sweep_manifest.schema.json", manifest_rel)
     corpus_manifest_rel = manifest.get("corpus_manifest")
@@ -903,6 +989,7 @@ def check_sweep_manifest(root: pathlib.Path, manifest_rel: str) -> list[str]:
 
 
 def check_typescript_archive_surface(root: pathlib.Path) -> list[str]:
+    """Purpose: Keep archived TypeScript placeholder cases quarantined from active canonical surfaces."""
     failures = []
     case_root = root / "tests" / "typescript_importer" / "cases"
     if not case_root.exists():
@@ -930,6 +1017,7 @@ def check_typescript_archive_surface(root: pathlib.Path) -> list[str]:
 
 
 def check_validation_pipeline_doc(root: pathlib.Path) -> list[str]:
+    """Purpose: Ensure CI documentation still describes the current validation pipeline and excludes retired steps."""
     failures = []
     path = root / "ci" / "validation_pipeline.md"
     text = path.read_text(encoding="utf-8")
@@ -943,10 +1031,12 @@ def check_validation_pipeline_doc(root: pathlib.Path) -> list[str]:
 
 
 def benchmark_case_ids() -> list[str]:
+    """Purpose: Derive benchmark fixture IDs directly from the canonical Python proof-loop metadata."""
     return [f"fixture.python_importer.{case_name}" for case_name in PYTHON_PROOF_LOOP_METADATA["benchmark_cases"]]
 
 
 def check_benchmark_example_alignment(root: pathlib.Path) -> list[str]:
+    """Purpose: Verify that the checked-in benchmark report example cites the current canonical benchmark case set."""
     failures = []
     expected_case_ids = benchmark_case_ids()
     report = load_json(root / "reports" / "examples" / "benchmark_report.example.json")
@@ -972,6 +1062,7 @@ def check_benchmark_example_alignment(root: pathlib.Path) -> list[str]:
 
 
 def check_track_c_example_alignment(root: pathlib.Path) -> list[str]:
+    """Purpose: Keep Track C example artifacts aligned with the frozen Python proof-loop counts and corpus hash."""
     failures = []
     track_c_result = load_json(root / "reports" / "examples" / "benchmark_track_c_result.example.json")
     track_c_manifest = load_json(root / "reports" / "examples" / "benchmark_track_c_manifest.example.json")
@@ -1019,6 +1110,7 @@ def check_track_c_example_alignment(root: pathlib.Path) -> list[str]:
 
 
 def check_deferred_track_d_surface(root: pathlib.Path) -> list[str]:
+    """Purpose: Reject any active-pipeline residue for deferred Track D work."""
     failures = []
     pipeline_text = (root / "scripts" / "scir_bootstrap_pipeline.py").read_text(encoding="utf-8")
     if "track_d" in pipeline_text or "Track D" in pipeline_text:
@@ -1029,6 +1121,20 @@ def check_deferred_track_d_surface(root: pathlib.Path) -> list[str]:
 
 
 def run_checks(root: pathlib.Path, *, include_audit: bool = False) -> list[str]:
+    """Purpose: Execute the full repository-contract validation suite for live and optional audit surfaces.
+
+    Inputs:
+      - root: Repository root to validate.
+      - include_audit: Whether to include retained but non-blocking audit surfaces in addition to the live gate.
+    Outputs:
+      - list[str]: Every contract failure found across docs, manifests, schemas, examples, and retained surfaces.
+    Side Effects:
+      - Reads repository files extensively.
+    Assumptions:
+      - Missing required files are treated as a hard stop before more detailed drift checks.
+    Failure Modes:
+      - Returns accumulated failures rather than raising so callers can print a full report.
+    """
     failures = []
     failures.extend(check_required_files(root, LIVE_REQUIRED_FILES))
     if include_audit:
@@ -1064,23 +1170,31 @@ def run_checks(root: pathlib.Path, *, include_audit: bool = False) -> list[str]:
     return failures
 
 
+#
+# The mutate_* helpers intentionally corrupt one contract surface at a time in a
+# temporary repo copy. Self-test mode uses them to prove the checker fails for
+# the specific drift classes it claims to guard.
 def mutate_remove_required_file(root: pathlib.Path) -> None:
+    """Purpose: Remove a live-surface file so self-tests can verify the missing-file guard."""
     (root / "CURRENT_FOCUS.md").unlink()
 
 
 def mutate_break_focus_alignment(root: pathlib.Path) -> None:
+    """Purpose: Introduce active-focus wording drift between root roadmap documents."""
     path = root / "README.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace("Frozen and retired", "Retired", 1), encoding="utf-8")
 
 
 def mutate_break_reconstruction_policy_alignment(root: pathlib.Path) -> None:
+    """Purpose: Remove one active reconstruction case to prove policy drift is detected."""
     path = root / "docs" / "reconstruction_policy.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace(f"- `{RECONSTRUCTION_POLICY_DRIFT_CASE_MARKER}`\n", "", 1), encoding="utf-8")
 
 
 def mutate_break_executable_subset_truth_alignment(root: pathlib.Path) -> None:
+    """Purpose: Reintroduce stale importer-only wording for the executable subset truth test."""
     path = root / "tests" / "README.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1094,27 +1208,32 @@ def mutate_break_executable_subset_truth_alignment(root: pathlib.Path) -> None:
 
 
 def mutate_remove_audit_file(root: pathlib.Path) -> None:
+    """Purpose: Remove an audit-only file so retained-surface checks can fail intentionally."""
     (root / "tooling" / "README.md").unlink()
 
 
 def mutate_break_typescript_archive_surface(root: pathlib.Path) -> None:
+    """Purpose: Promote an archived TypeScript case to an active tier to prove the quarantine guard fires."""
     path = root / "tests" / "typescript_importer" / "cases" / "a_interface_decl" / "module_manifest.json"
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace('"declared_tier": "D"', '"declared_tier": "A"', 1), encoding="utf-8")
 
 
 def mutate_break_validation_pipeline_doc(root: pathlib.Path) -> None:
+    """Purpose: Re-add a retired validation step to test documentation drift detection."""
     path = root / "ci" / "validation_pipeline.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(text + "\n15. validate derived exports\n", encoding="utf-8")
 
 
 def mutate_reintroduce_track_d_pipeline_residue(root: pathlib.Path) -> None:
+    """Purpose: Add Track D residue back into the active pipeline file for negative-fixture coverage."""
     path = root / "scripts" / "scir_bootstrap_pipeline.py"
     path.write_text(path.read_text(encoding="utf-8") + "\n# track_d residue\n", encoding="utf-8")
 
 
 def mutate_break_benchmark_report_example_alignment(root: pathlib.Path) -> None:
+    """Purpose: Rename one benchmark lineage key so the report example drifts from canonical case IDs."""
     path = root / "reports" / "examples" / "benchmark_report.example.json"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1128,6 +1247,7 @@ def mutate_break_benchmark_report_example_alignment(root: pathlib.Path) -> None:
 
 
 def mutate_break_frozen_python_proof_loop_contract(root: pathlib.Path) -> None:
+    """Purpose: Break one proof-loop fixture ID to prove corpus freeze enforcement still catches drift."""
     path = root / "tests" / "corpora" / "python_proof_loop_corpus.json"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1137,6 +1257,7 @@ def mutate_break_frozen_python_proof_loop_contract(root: pathlib.Path) -> None:
 
 
 def mutate_break_support_lane_freeze_alignment(root: pathlib.Path) -> None:
+    """Purpose: Flip Track C posture text so support-lane freeze docs no longer agree."""
     path = root / "BENCHMARK_STRATEGY.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1150,6 +1271,7 @@ def mutate_break_support_lane_freeze_alignment(root: pathlib.Path) -> None:
 
 
 def mutate_break_rust_phase_lock(root: pathlib.Path) -> None:
+    """Purpose: Pretend Rust auto-activates after Python so phase-lock enforcement can fail intentionally."""
     path = root / "IMPLEMENTATION_PLAN.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1163,6 +1285,7 @@ def mutate_break_rust_phase_lock(root: pathlib.Path) -> None:
 
 
 def mutate_break_rust_scope_lock(root: pathlib.Path) -> None:
+    """Purpose: Rewrite Rust scope from retained evidence to active round-trip support for negative testing."""
     path = root / "frontend" / "rust" / "IMPORT_SCOPE.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1176,6 +1299,7 @@ def mutate_break_rust_scope_lock(root: pathlib.Path) -> None:
 
 
 def mutate_break_rust_benchmark_lock(root: pathlib.Path) -> None:
+    """Purpose: Promote Rust into active benchmarks to prove the benchmark-freeze guard catches it."""
     path = root / "BENCHMARK_STRATEGY.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1189,6 +1313,7 @@ def mutate_break_rust_benchmark_lock(root: pathlib.Path) -> None:
 
 
 def mutate_reintroduce_rust_open_question(root: pathlib.Path) -> None:
+    """Purpose: Reinsert the resolved Rust-scope open question to verify it stays retired."""
     path = root / "OPEN_QUESTIONS.md"
     text = path.read_text(encoding="utf-8")
     insertion = (
@@ -1207,6 +1332,7 @@ def mutate_reintroduce_rust_open_question(root: pathlib.Path) -> None:
 
 
 def mutate_break_wasm_freeze_contract(root: pathlib.Path) -> None:
+    """Purpose: Add Wasm coverage to a non-emittable case so the frozen Wasm slice drifts."""
     path = root / "tests" / "corpora" / "python_proof_loop_corpus.json"
     payload = load_json(path)
     for fixture in payload.get("fixtures", []):
@@ -1217,6 +1343,7 @@ def mutate_break_wasm_freeze_contract(root: pathlib.Path) -> None:
 
 
 def mutate_break_wasm_phase_lock(root: pathlib.Path) -> None:
+    """Purpose: Pretend Wasm auto-activates in the roadmap so phase-freeze checks fail intentionally."""
     path = root / "IMPLEMENTATION_PLAN.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1230,6 +1357,7 @@ def mutate_break_wasm_phase_lock(root: pathlib.Path) -> None:
 
 
 def mutate_break_wasm_backend_scope_lock(root: pathlib.Path) -> None:
+    """Purpose: Rewrite Wasm README posture from retained support to active widening target."""
     path = root / "backends" / "wasm" / "README.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1243,6 +1371,7 @@ def mutate_break_wasm_backend_scope_lock(root: pathlib.Path) -> None:
 
 
 def mutate_break_wasm_backend_doc_alignment(root: pathlib.Path) -> None:
+    """Purpose: Remove one admitted Python module from Wasm docs to prove metadata/doc alignment checks work."""
     path = root / "backends" / "wasm" / "README.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1256,6 +1385,7 @@ def mutate_break_wasm_backend_doc_alignment(root: pathlib.Path) -> None:
 
 
 def mutate_break_wasm_benchmark_lock(root: pathlib.Path) -> None:
+    """Purpose: Promote Wasm evidence into active benchmarks for negative-fixture coverage."""
     path = root / "BENCHMARK_STRATEGY.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1269,6 +1399,7 @@ def mutate_break_wasm_benchmark_lock(root: pathlib.Path) -> None:
 
 
 def mutate_break_wasm_profile_lock(root: pathlib.Path) -> None:
+    """Purpose: Recast profile P as an active backend target to test profile-freeze enforcement."""
     path = root / "docs" / "target_profiles.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1282,6 +1413,7 @@ def mutate_break_wasm_profile_lock(root: pathlib.Path) -> None:
 
 
 def mutate_break_wasm_root_lock(root: pathlib.Path) -> None:
+    """Purpose: Rewrite the root README so Wasm becomes the next automatic phase in the negative fixture."""
     path = root / "README.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1295,6 +1427,7 @@ def mutate_break_wasm_root_lock(root: pathlib.Path) -> None:
 
 
 def mutate_break_track_c_phase_lock(root: pathlib.Path) -> None:
+    """Purpose: Pretend Track C auto-activates so roadmap freeze wording fails the self-test."""
     path = root / "IMPLEMENTATION_PLAN.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1308,6 +1441,7 @@ def mutate_break_track_c_phase_lock(root: pathlib.Path) -> None:
 
 
 def mutate_break_track_c_benchmark_lock(root: pathlib.Path) -> None:
+    """Purpose: Remove one Track C freeze bullet from benchmark strategy for negative-fixture coverage."""
     path = root / "BENCHMARK_STRATEGY.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1321,6 +1455,7 @@ def mutate_break_track_c_benchmark_lock(root: pathlib.Path) -> None:
 
 
 def mutate_break_track_c_tracks_doc_lock(root: pathlib.Path) -> None:
+    """Purpose: Remove one Track C freeze bullet from tracks documentation to test retained-doc alignment."""
     path = root / "benchmarks" / "tracks.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1334,6 +1469,7 @@ def mutate_break_track_c_tracks_doc_lock(root: pathlib.Path) -> None:
 
 
 def mutate_break_track_c_metadata_lock(root: pathlib.Path) -> None:
+    """Purpose: Rewrite Track C metadata posture so the checked metadata surface contradicts the frozen docs."""
     path = root / "scripts" / "benchmark_contract_metadata.py"
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -1354,6 +1490,7 @@ def run_negative_fixture(
     *,
     include_audit: bool = False,
 ) -> list[str]:
+    """Purpose: Run one mutation-based self-test against a temporary repo copy and assert the expected failure markers appear."""
     with tempfile.TemporaryDirectory(prefix="scir_repo_check_") as tmp:
         fixture_root = pathlib.Path(tmp) / "repo"
         shutil.copytree(root, fixture_root, ignore=shutil.ignore_patterns(".git", "__pycache__", "artifacts"))
@@ -1368,6 +1505,7 @@ def run_negative_fixture(
 
 
 def run_self_tests(root: pathlib.Path) -> list[str]:
+    """Purpose: Execute the checker's negative-fixture suite so each claimed drift detector is proven by example."""
     failures = []
     failures.extend(
         run_negative_fixture(root, "missing required file", mutate_remove_required_file, ["missing file: CURRENT_FOCUS.md"])
@@ -1580,6 +1718,7 @@ def run_self_tests(root: pathlib.Path) -> list[str]:
 
 
 def print_success(mode: str, *, self_test_count: int | None = None) -> None:
+    """Purpose: Print a mode-specific success summary that matches the validated contract surface."""
     if mode == "audit":
         print("[audit] retained-surface repository audit passed")
         print(
@@ -1597,6 +1736,7 @@ def print_success(mode: str, *, self_test_count: int | None = None) -> None:
 
 
 def main() -> int:
+    """Purpose: Parse CLI arguments, run the requested validation mode, and return a process exit code."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", default="validate", choices=["audit", "test", "validate"])
     parser.add_argument("--root")

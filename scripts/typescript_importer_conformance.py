@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+"""File: scripts/typescript_importer_conformance.py
+Purpose: Validate the dormant TypeScript placeholder corpus against its archived bundle and diagnostic contracts.
+Role in system: This preserves the retained non-live TypeScript placeholder surface without implying a working importer exists.
+Key dependencies: repo schemas and `validate_repo_contracts` JSON-instance validation helpers.
+Side effects: Reads checked-in placeholder fixtures and returns process exit codes for validation or reserved test mode.
+"""
+
 import argparse
 import json
 import pathlib
@@ -224,6 +231,7 @@ CASE_EXPECTATIONS = {
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build the CLI parser for active fixture validation and reserved test-mode messaging."""
     parser = argparse.ArgumentParser(
         description=(
             "TypeScript importer conformance checker for the dormant Phase 7 "
@@ -243,14 +251,17 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def load_json(path: pathlib.Path):
+    """Load one UTF-8 JSON artifact from the dormant TypeScript placeholder corpus."""
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def load_schema(root: pathlib.Path, relative_path: str):
+    """Resolve and load a repo-relative schema needed for placeholder artifact validation."""
     return load_json(root / relative_path)
 
 
 def validate_json_against_schema(root: pathlib.Path, json_path: pathlib.Path, schema_rel: str):
+    """Return the decoded JSON artifact plus any schema failures instead of aborting early."""
     schema = load_schema(root, schema_rel)
     instance = load_json(json_path)
     failures = []
@@ -260,6 +271,7 @@ def validate_json_against_schema(root: pathlib.Path, json_path: pathlib.Path, sc
 
 
 def summarize_item_tiers(items):
+    """Derive the placeholder feature-tier summary from item-level metadata for consistency checks."""
     summary = {"A": 0, "B": 0, "C": 0, "D": 0}
     for item in items:
         tier = item.get("tier")
@@ -269,6 +281,7 @@ def summarize_item_tiers(items):
 
 
 def expected_file_set(expectation: dict):
+    """Return the exact archived file set allowed for one TypeScript placeholder case."""
     files = {
         "README.md",
         "source.ts",
@@ -282,12 +295,14 @@ def expected_file_set(expectation: dict):
 
 
 def check_markers(text: str, markers: list[str], *, label: str, failures: list[str]):
+    """Require every archived placeholder marker to remain present in the inspected text."""
     for marker in markers:
         if marker not in text:
             failures.append(f"{label}: missing marker {marker!r}")
 
 
 def check_case(root: pathlib.Path, case_name: str, expectation: dict):
+    """Validate one dormant TypeScript placeholder bundle without implying live importer support."""
     failures = []
     case_dir = root / FIXTURE_ROOT / case_name
     if not case_dir.exists():
@@ -320,6 +335,7 @@ def check_case(root: pathlib.Path, case_name: str, expectation: dict):
                 label=str(scirh_path.relative_to(root)),
                 failures=failures,
             )
+            # A live canonical SCIR-H module here would overstate support; placeholders must remain non-authoritative.
             if scirh_text.lstrip().startswith("module "):
                 failures.append(
                     f"{scirh_path.relative_to(root)}: expected non-canonical placeholder sentinel, not canonical SCIR-H"
@@ -456,6 +472,7 @@ def check_case(root: pathlib.Path, case_name: str, expectation: dict):
 
 
 def validate_fixtures(root: pathlib.Path):
+    """Validate the entire dormant placeholder corpus against its exact archived contract."""
     failures = []
     fixture_root = root / FIXTURE_ROOT
     if not fixture_root.exists():
@@ -473,6 +490,7 @@ def validate_fixtures(root: pathlib.Path):
 
 
 def print_success():
+    """Print the canonical success summary for dormant TypeScript placeholder validation."""
     print("[validate-fixtures] TypeScript importer conformance passed")
     print(
         "Checked exact case matrix, archived placeholder source markers, schema-valid "
@@ -483,6 +501,7 @@ def print_success():
 
 
 def print_reserved_test_message():
+    """Explain that generated-vs-golden tests are intentionally reserved until a live importer exists."""
     print(
         "[reserved] TypeScript importer generated-vs-golden conformance is not implemented.\n"
         " - requested mode: test\n"
@@ -495,6 +514,7 @@ def print_reserved_test_message():
 
 
 def main() -> int:
+    """Run placeholder validation or emit the reserved test-mode posture and return an exit code."""
     parser = build_parser()
     args = parser.parse_args()
     if args.mode == "test":

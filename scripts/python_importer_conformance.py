@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Conformance checker for checked-in Python importer bundles.
-
-These checks enforce that the fixed Python fixture outputs still match the
-importer contract, canonical `SCIR-H`, boundary accounting, and schema-backed
-report surfaces. This is governance validation, not a generic golden-file diff.
+"""File: scripts/python_importer_conformance.py
+Purpose: Validate the checked-in Python importer fixture bundles against schemas, canonical SCIR-H, and boundary doctrine.
+Role in system: This is the governance checker that proves the Python importer artifacts still match the retained fixed-corpus contract.
+Key dependencies: `scir_python_bootstrap`, `scir_h_bootstrap_model`, and repo contract-validation helpers.
+Side effects: Reads checked-in fixture bundles, regenerates importer outputs for parity checks, and mutates temp copies during self-tests.
 """
 import argparse
 import json
@@ -270,14 +270,17 @@ SCIRH_REL = "expected.scirh"
 
 
 def load_json(path: pathlib.Path):
+    """Load one UTF-8 JSON fixture artifact used by the conformance checker."""
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def load_schema(root: pathlib.Path, relative_path: str):
+    """Resolve and load a repo-relative schema needed for artifact validation."""
     return load_json(root / relative_path)
 
 
 def validate_json_against_schema(root: pathlib.Path, json_path: pathlib.Path, schema_rel: str):
+    """Return the decoded JSON artifact plus any schema failures instead of aborting on the first error."""
     schema = load_schema(root, schema_rel)
     instance = load_json(json_path)
     failures = []
@@ -287,6 +290,7 @@ def validate_json_against_schema(root: pathlib.Path, json_path: pathlib.Path, sc
 
 
 def summarize_item_tiers(items):
+    """Derive the feature-tier summary from item-level metadata for consistency checks."""
     summary = {"A": 0, "B": 0, "C": 0, "D": 0}
     for item in items:
         tier = item.get("tier")
@@ -564,14 +568,17 @@ def run_checks(root: pathlib.Path):
 
 
 def mutate_remove_a_scirh(root: pathlib.Path):
+    """Delete an A-tier SCIR-H artifact to prove required canonical text is enforced."""
     (root / FIXTURE_ROOT / "a_basic_function" / SCIRH_REL).unlink()
 
 
 def mutate_remove_c_opaque_contract(root: pathlib.Path):
+    """Delete the Tier C opaque boundary contract to prove boundary accounting is mandatory."""
     (root / FIXTURE_ROOT / "c_opaque_call" / OPAQUE_BOUNDARY_REL).unlink()
 
 
 def mutate_add_d_scirh(root: pathlib.Path):
+    """Add forbidden SCIR-H to a rejected Tier D fixture to prove exclusion is enforced."""
     path = root / FIXTURE_ROOT / "d_exec_eval" / SCIRH_REL
     path.write_text(
         "module fixture.python_importer.d_exec_eval {\n}\n",
@@ -580,6 +587,7 @@ def mutate_add_d_scirh(root: pathlib.Path):
 
 
 def mutate_break_generated_golden(root: pathlib.Path):
+    """Drift one generated JSON artifact so byte-stable importer parity checks fail."""
     path = root / FIXTURE_ROOT / "a_basic_function" / "validation_report.json"
     data = load_json(path)
     data["validator"] = "drifted-importer"
@@ -587,54 +595,63 @@ def mutate_break_generated_golden(root: pathlib.Path):
 
 
 def mutate_break_scirh_canonicality(root: pathlib.Path):
+    """Rewrite SCIR-H into non-canonical syntax to prove parse-normalize-format enforcement."""
     path = root / FIXTURE_ROOT / "a_basic_function" / SCIRH_REL
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace("var y int x", "var y: int = x"), encoding="utf-8")
 
 
 def mutate_break_b_else_structure(root: pathlib.Path):
+    """Remove the explicit else marker from the if-else proof-loop golden fixture."""
     path = root / FIXTURE_ROOT / "b_if_else_return" / SCIRH_REL
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace("  else\n", ""), encoding="utf-8")
 
 
 def mutate_break_b_direct_call_shape(root: pathlib.Path):
+    """Corrupt the direct-call proof-loop golden so local-call shape validation trips."""
     path = root / FIXTURE_ROOT / "b_direct_call" / SCIRH_REL
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace("return identity(x)", "return call identity(x)"), encoding="utf-8")
 
 
 def mutate_break_b_async_await_shape(root: pathlib.Path):
+    """Remove the await marker from the async proof-loop golden to prove shape checking."""
     path = root / FIXTURE_ROOT / "b_async_arg_await" / SCIRH_REL
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace("return await fetch_value(x)", "return fetch_value(x)"), encoding="utf-8")
 
 
 def mutate_break_b_while_loop_shape(root: pathlib.Path):
+    """Corrupt loop syntax in the while proof-loop golden to prove canonical syntax matters."""
     path = root / FIXTURE_ROOT / "b_while_call_update" / SCIRH_REL
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace("loop loop0", "while loop0"), encoding="utf-8")
 
 
 def mutate_break_b_while_continue_marker(root: pathlib.Path):
+    """Replace continue with break to prove the while-control-flow golden is exact."""
     path = root / FIXTURE_ROOT / "b_while_break_continue" / SCIRH_REL
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace("continue loop0", "break loop0"), encoding="utf-8")
 
 
 def mutate_break_b_class_field_place(root: pathlib.Path):
+    """Corrupt field-place syntax in the class proof-loop golden to prove place markers matter."""
     path = root / FIXTURE_ROOT / "b_class_init_method" / SCIRH_REL
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace("self.value", "self_value"), encoding="utf-8")
 
 
 def mutate_break_b_class_update_call_shape(root: pathlib.Path):
+    """Corrupt the class update call shape so the proof-loop golden no longer matches the importer."""
     path = root / FIXTURE_ROOT / "b_class_field_update" / SCIRH_REL
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace("step(self.value)", "call step(self.value)"), encoding="utf-8")
 
 
 def mutate_remove_boundary_capability_import(root: pathlib.Path):
+    """Drop the required capability import to prove boundary contracts and manifest deps stay linked."""
     path = root / FIXTURE_ROOT / "c_opaque_call" / "module_manifest.json"
     data = load_json(path)
     data["dependencies"] = ["python:foreign_api"]
@@ -642,6 +659,7 @@ def mutate_remove_boundary_capability_import(root: pathlib.Path):
 
 
 def mutate_add_unused_boundary_capability_import(root: pathlib.Path):
+    """Add an unused capability import to prove the manifest cannot overstate boundary requirements."""
     path = root / FIXTURE_ROOT / "c_opaque_call" / "module_manifest.json"
     data = load_json(path)
     data["dependencies"].append("capability:unused_boundary")
@@ -649,6 +667,7 @@ def mutate_add_unused_boundary_capability_import(root: pathlib.Path):
 
 
 def mutate_add_illegal_capability_import_to_tier_a(root: pathlib.Path):
+    """Inject a capability import into a non-boundary Tier A fixture to prove doctrine enforcement."""
     path = root / FIXTURE_ROOT / "a_basic_function" / "module_manifest.json"
     data = load_json(path)
     data["dependencies"].append("capability:foreign_api_ping")
@@ -656,6 +675,7 @@ def mutate_add_illegal_capability_import_to_tier_a(root: pathlib.Path):
 
 
 def run_negative_fixture(root: pathlib.Path, name: str, mutate, expected_markers):
+    """Run one mutation-based self-test on a temp repo copy and assert the expected failure markers appear."""
     with tempfile.TemporaryDirectory(prefix="scir_python_fixture_") as tmp:
         fixture_root = pathlib.Path(tmp) / "repo"
         shutil.copytree(root, fixture_root, ignore=shutil.ignore_patterns("__pycache__"))
@@ -677,6 +697,7 @@ def run_negative_fixture(root: pathlib.Path, name: str, mutate, expected_markers
 
 
 def run_self_tests(root: pathlib.Path):
+    """Exercise the negative-fixture suite that proves conformance checks fail for contract drift."""
     failures = []
     cases = [
         (
@@ -763,6 +784,7 @@ def run_self_tests(root: pathlib.Path):
 
 
 def print_success(mode: str):
+    """Print the canonical success summary for fixture validation or self-test mode."""
     print(f"[{mode}] python importer fixture conformance passed")
     print(
         "Checked fixture completeness, schema-valid bundle artifacts, "
@@ -775,6 +797,7 @@ def print_success(mode: str):
 
 
 def main():
+    """Run fixture validation, optional self-tests, and map failures onto the CLI exit contract."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", default="validate-fixtures")
     parser.add_argument("--root")

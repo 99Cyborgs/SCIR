@@ -1,3 +1,9 @@
+"""File: scripts/benchmark_repro.py
+Purpose: Re-run a benchmark claim from recorded artifacts and verify that its locked corpus still matches the repository.
+Role in system: This is the benchmark reproducibility helper for preserved claim-grade audit runs.
+Key dependencies: argparse, json, subprocess, pathlib, and benchmark_audit_common.file_sha256.
+Side effects: Reads benchmark artifacts, writes reproduction outputs under artifacts/, executes the benchmark dry-run script, and prints status messages.
+"""
 from __future__ import annotations
 
 import argparse
@@ -13,10 +19,36 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def load_json(path: Path) -> dict:
+    """Purpose: Read a UTF-8 JSON artifact used by the benchmark reproduction flow.
+
+    Inputs:
+      - path: Path location of the JSON file to load.
+    Outputs:
+      - dict decoded JSON payload.
+    Side Effects:
+      - Reads from disk.
+    Assumptions:
+      - The target file contains a JSON object encoded as UTF-8.
+    Failure Modes:
+      - Raises JSONDecodeError or filesystem exceptions if the artifact is invalid or missing.
+    """
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """Purpose: Declare the CLI contract for reproducing a prior benchmark run.
+
+    Inputs:
+      - None.
+    Outputs:
+      - argparse.ArgumentParser for run-id driven reproduction requests.
+    Side Effects:
+      - None beyond parser construction.
+    Assumptions:
+      - Reproduction is anchored by a recorded run_id and may optionally override the root or output directory.
+    Failure Modes:
+      - argparse exits on invalid CLI usage.
+    """
     parser = argparse.ArgumentParser(description="Reproduce a benchmark claim run from a recorded run_id.")
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--output-dir")
@@ -25,6 +57,20 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def manifest_drift_failures(root: Path, locked_manifest: dict) -> list[str]:
+    """Purpose: Detect whether the fixture set behind a historical benchmark run has drifted since it was locked.
+
+    Inputs:
+      - root: Path repository root used to resolve locked fixture entries.
+      - locked_manifest: dict manifest-lock payload containing fixture paths and hashes.
+    Outputs:
+      - list[str] human-readable drift diagnostics. Empty means the lock still matches disk.
+    Side Effects:
+      - Reads fixture files from disk.
+    Assumptions:
+      - The manifest lock uses the same hash normalization contract as benchmark_audit_common.file_sha256.
+    Failure Modes:
+      - Reports missing fixtures or hash mismatches as drift failures instead of raising.
+    """
     failures = []
     for entry in locked_manifest["manifest"]["fixtures"]:
         fixture_path = root / entry["path"]
@@ -38,6 +84,20 @@ def manifest_drift_failures(root: Path, locked_manifest: dict) -> list[str]:
 
 
 def resolve_run_dir(root: Path, run_id: str) -> Path | None:
+    """Purpose: Locate the artifact directory that recorded the requested benchmark run.
+
+    Inputs:
+      - root: Path repository root containing `artifacts/benchmark_runs`.
+      - run_id: str logical run identifier to match.
+    Outputs:
+      - Path | None matching run directory, or None when no matching recorded context exists.
+    Side Effects:
+      - Reads candidate run directories and their JSON context files.
+    Assumptions:
+      - A valid recorded run includes both `benchmark_run_context.json` and `manifest_lock.json`.
+    Failure Modes:
+      - Ignores malformed JSON contexts and returns None when no valid match is found.
+    """
     benchmark_root = root / "artifacts" / "benchmark_runs"
     direct_match = benchmark_root / run_id
     if (direct_match / "benchmark_run_context.json").exists() and (direct_match / "manifest_lock.json").exists():
@@ -59,6 +119,23 @@ def resolve_run_dir(root: Path, run_id: str) -> Path | None:
 
 
 def main() -> int:
+    """Purpose: Reproduce a locked benchmark claim run while guarding against silent corpus drift.
+
+    Inputs:
+      - CLI arguments specifying the source run id and optional root or output locations.
+    Outputs:
+      - int process status code for the reproduction attempt.
+    Side Effects:
+      - Reads recorded run artifacts.
+      - Writes locked manifest and reproduction context files.
+      - Launches `scripts/benchmark_contract_dry_run.py --claim-run`.
+      - Prints success or failure context for operators.
+    Assumptions:
+      - Claim reproduction is only meaningful if the fixture hashes still match the locked manifest.
+    Failure Modes:
+      - Returns 1 when the recorded run context is missing or fixture drift is detected.
+      - Propagates the benchmark command's exit code only when it fails before emitting the expected reproduced artifacts.
+    """
     args = build_arg_parser().parse_args()
     root = Path(args.root).resolve() if args.root else ROOT
     run_dir = resolve_run_dir(root, args.run_id)
@@ -110,6 +187,8 @@ def main() -> int:
         output_dir / "contamination_report.json",
         output_dir / "manifest_lock.json",
     ]
+    # A non-zero claim lane can still be diagnostically useful if it produced the
+    # expected audit bundle, so only hard-fail when the run also failed to emit it.
     if completed.returncode != 0 and any(not path.exists() for path in reproduced_artifacts):
         return completed.returncode
 

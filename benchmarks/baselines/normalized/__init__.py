@@ -1,3 +1,9 @@
+"""File: benchmarks/baselines/normalized/__init__.py
+Purpose: Benchmark a lightweight normalized-Python baseline built from Python's own parsed and unparsed source.
+Role in system: This adapter measures whether a simple regularized source form closes the gap with SCIR on the admitted corpus.
+Key dependencies: ast plus benchmark_audit_common row and token helpers.
+Side effects: Reads fixture files, reparses source with Python's AST, and emits per-stage audit rows.
+"""
 from __future__ import annotations
 
 import ast
@@ -16,16 +22,60 @@ NORMALIZED_MARKERS = ["await", "return", "if", ".", "="]
 
 
 def representation_text(source_text: str) -> str:
+    """Purpose: Normalize source text through Python's parser and unparser.
+
+    Inputs:
+      - source_text: str original fixture source.
+    Outputs:
+      - str normalized source text with a trailing newline.
+    Side Effects:
+      - Parses Python source into an AST.
+    Assumptions:
+      - `ast.unparse(ast.parse(...))` is a fair baseline for lightweight regularization on the frozen Python corpus.
+    Failure Modes:
+      - Raises SyntaxError if the source fixture is invalid Python.
+    """
     return ast.unparse(ast.parse(source_text)).rstrip() + "\n"
 
 
 def semantic_explicitness(text: str) -> float:
+    """Purpose: Estimate semantic marker density in the normalized-source baseline representation.
+
+    Inputs:
+      - text: str normalized baseline representation.
+    Outputs:
+      - float normalized marker density.
+    Side Effects:
+      - None.
+    Assumptions:
+      - The chosen markers approximate explicit structure in the regularized source view.
+    Failure Modes:
+      - None.
+    """
     token_total = max(token_count(text), 1)
     hits = sum(text.count(marker) for marker in NORMALIZED_MARKERS)
     return round(hits / token_total, 4)
 
 
 def run(*, corpus_manifest: dict, root, stages: list[str], context: dict):
+    """Purpose: Emit benchmark rows for the normalized-source baseline across the requested stage matrix.
+
+    Inputs:
+      - corpus_manifest: dict fixture manifest to iterate.
+      - root: Path-like repository root used to resolve fixture paths.
+      - stages: list[str] benchmark stages requested by the harness.
+      - context: dict run metadata, callbacks, and row-construction dependencies.
+    Outputs:
+      - list[dict] audit rows for the normalized baseline.
+    Side Effects:
+      - Reads source fixtures from disk.
+      - Rebuilds normalized source text through Python's AST.
+      - Calls the benchmark evaluation callback for the reconstruction stage.
+    Assumptions:
+      - The normalized baseline participates meaningfully in `source_to_h` and `h_to_python` only.
+    Failure Modes:
+      - Propagates AST parse failures or evaluation callback failures.
+    """
     rows = []
     for entry in corpus_manifest["fixtures"]:
         source_text = (root / entry["path"]).read_text(encoding="utf-8")
@@ -110,6 +160,8 @@ def run(*, corpus_manifest: dict, root, stages: list[str], context: dict):
                     )
                 )
                 continue
+            # Preserve the benchmark stage matrix even when this baseline has no
+            # meaningful analogue for a later SCIR-specific stage.
             rows.append(
                 build_audit_row(
                     entry=entry,

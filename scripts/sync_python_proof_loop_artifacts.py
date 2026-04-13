@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""File: scripts/sync_python_proof_loop_artifacts.py
+Purpose: Check or rewrite generated Python proof-loop artifacts so checked-in fixtures stay aligned with authoritative generators.
+Role in system: This script is the synchronization helper for importer goldens and retained Track C sample artifacts.
+Key dependencies: benchmark_contract_dry_run, scir_bootstrap_pipeline, scir_python_bootstrap metadata and bundle generation.
+Side effects: In write mode it overwrites checked-in fixture artifacts and Track C sample files; in check mode it reads them and reports drift.
+"""
 from __future__ import annotations
 
 import argparse
@@ -17,10 +23,30 @@ TRACK_C_RESULT_PATH = ROOT / "reports" / "examples" / "benchmark_track_c_result.
 
 
 class SyncError(Exception):
+    """Represents: A blocking failure while regenerating authoritative proof-loop artifacts.
+
+    Invariants:
+      - Raised when authoritative generation fails before drift can be assessed or written back.
+    Relationships:
+      - Caught in main() so the script can report a mode-specific synchronization failure.
+    """
     pass
 
 
 def expected_fixture_artifacts(root: Path) -> dict[str, dict[str, str]]:
+    """Purpose: Rebuild the authoritative generated artifact set for every frozen Python proof-loop case.
+
+    Inputs:
+      - root: Path repository root used to resolve source fixtures.
+    Outputs:
+      - dict[str, dict[str, str]] per-case generated artifact contents keyed by filename.
+    Side Effects:
+      - Reads source fixtures and runs the bundle generator.
+    Assumptions:
+      - The checked-in artifact set should exactly match what build_bundle currently emits for each case.
+    Failure Modes:
+      - Propagates bundle-generation failures from build_bundle.
+    """
     artifacts: dict[str, dict[str, str]] = {}
     for case_name in PYTHON_PROOF_LOOP_METADATA["case_order"]:
         source_path = root / "tests" / "python_importer" / "cases" / case_name / "source.py"
@@ -30,6 +56,19 @@ def expected_fixture_artifacts(root: Path) -> dict[str, dict[str, str]]:
 
 
 def expected_track_c_samples(root: Path) -> tuple[str, str]:
+    """Purpose: Regenerate the retained Track C sample manifest and result text from the authoritative pilot path.
+
+    Inputs:
+      - root: Path repository root used by the Track C pilot runner.
+    Outputs:
+      - tuple[str, str] canonical JSON text for the sample manifest and sample result.
+    Side Effects:
+      - Runs the non-default Track C pilot generation path in-process.
+    Assumptions:
+      - Checked-in Track C samples are derived artifacts, not hand-edited sources of truth.
+    Failure Modes:
+      - Raises SyncError if Track C generation reports failures.
+    """
     failures, manifest, result = run_track_c_pilot(root)
     if failures:
         raise SyncError(
@@ -44,6 +83,20 @@ def expected_track_c_samples(root: Path) -> tuple[str, str]:
 
 
 def collect_drift(root: Path) -> list[str]:
+    """Purpose: Compare checked-in proof-loop artifacts against the current authoritative generators.
+
+    Inputs:
+      - root: Path repository root.
+    Outputs:
+      - list[str] human-readable drift messages. Empty means the repo is synchronized.
+    Side Effects:
+      - Reads checked-in fixture artifacts and Track C sample files.
+      - Regenerates expected fixture and Track C sample content in memory.
+    Assumptions:
+      - Synchronization means both the artifact set and each artifact's content match the generators exactly.
+    Failure Modes:
+      - Propagates SyncError from Track C sample generation.
+    """
     drifts: list[str] = []
     for case_name, expected_files in expected_fixture_artifacts(root).items():
         case_dir = FIXTURE_ROOT / case_name
@@ -68,6 +121,19 @@ def collect_drift(root: Path) -> list[str]:
 
 
 def write_synced_artifacts(root: Path) -> list[str]:
+    """Purpose: Rewrite checked-in proof-loop artifacts to match the current authoritative generators.
+
+    Inputs:
+      - root: Path repository root.
+    Outputs:
+      - list[str] repository-relative paths that were updated.
+    Side Effects:
+      - Overwrites generated fixture artifacts and Track C sample files on disk.
+    Assumptions:
+      - Only files that differ from the regenerated authoritative content should be rewritten.
+    Failure Modes:
+      - Propagates SyncError from Track C sample generation or filesystem exceptions from writes.
+    """
     updated: list[str] = []
     for case_name, expected_files in expected_fixture_artifacts(root).items():
         case_dir = FIXTURE_ROOT / case_name
@@ -88,6 +154,19 @@ def write_synced_artifacts(root: Path) -> list[str]:
 
 
 def parse_args() -> argparse.Namespace:
+    """Purpose: Declare the CLI contract for artifact synchronization checks and writes.
+
+    Inputs:
+      - None.
+    Outputs:
+      - argparse.Namespace parsed CLI arguments.
+    Side Effects:
+      - argparse may print help or usage errors.
+    Assumptions:
+      - The script supports only `check` and `write` modes plus an optional root override.
+    Failure Modes:
+      - argparse exits on invalid CLI usage.
+    """
     parser = argparse.ArgumentParser(
         description="Synchronize generated Python proof-loop artifacts from the authoritative generators."
     )
@@ -97,6 +176,21 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """Purpose: Run proof-loop artifact synchronization in either drift-check or writeback mode.
+
+    Inputs:
+      - CLI arguments selecting `check` or `write` mode and an optional root override.
+    Outputs:
+      - int process status code for synchronization.
+    Side Effects:
+      - Reads generated artifact state.
+      - Optionally rewrites checked-in generated artifacts on disk.
+      - Prints detailed drift or update summaries.
+    Assumptions:
+      - Check mode is the default because synchronization drift should usually be reviewed before writing.
+    Failure Modes:
+      - Returns 1 on detected drift in check mode or on generation failures in either mode.
+    """
     args = parse_args()
     root = Path(args.root).resolve() if args.root else ROOT
 

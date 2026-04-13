@@ -1,3 +1,9 @@
+"""File: benchmarks/baselines/source/__init__.py
+Purpose: Score the direct-source baseline against the benchmark row contract without adding an intermediate representation.
+Role in system: This adapter provides the strongest non-SCIR baseline for lexical and round-trip comparisons.
+Key dependencies: benchmark_audit_common row helpers and the benchmark evaluation callback supplied in context.
+Side effects: Reads source fixtures from disk and emits per-stage audit rows.
+"""
 from __future__ import annotations
 
 from benchmark_audit_common import (
@@ -15,12 +21,42 @@ SOURCE_MARKERS = ["await", "return", "if", "import", "."]
 
 
 def semantic_explicitness(text: str) -> float:
+    """Purpose: Estimate how much semantic structure is directly visible in raw source text.
+
+    Inputs:
+      - text: str source representation under evaluation.
+    Outputs:
+      - float normalized marker density for the direct-source baseline.
+    Side Effects:
+      - None.
+    Assumptions:
+      - The selected source markers are a coarse readability proxy, not a semantic proof.
+    Failure Modes:
+      - None.
+    """
     token_total = max(token_count(text), 1)
     hits = sum(text.count(marker) for marker in SOURCE_MARKERS)
     return round(hits / token_total, 4)
 
 
 def run(*, corpus_manifest: dict, root, stages: list[str], context: dict):
+    """Purpose: Emit direct-source benchmark rows for the requested benchmark stages.
+
+    Inputs:
+      - corpus_manifest: dict fixture manifest to iterate.
+      - root: Path-like repository root used to resolve fixture paths.
+      - stages: list[str] pipeline stages requested by the benchmark harness.
+      - context: dict run metadata, callbacks, and row-construction dependencies.
+    Outputs:
+      - list[dict] audit rows for the direct-source baseline.
+    Side Effects:
+      - Reads source fixtures from disk.
+      - Calls the benchmark evaluation callback for the reconstruction stage.
+    Assumptions:
+      - Only `source_to_h` and `h_to_python` have meaningful direct-source baseline behavior; later stages must stay explicit skips.
+    Failure Modes:
+      - Propagates filesystem or callback failures from fixture loading or evaluation.
+    """
     rows = []
     for entry in corpus_manifest["fixtures"]:
         source_path = root / entry["path"]
@@ -105,6 +141,8 @@ def run(*, corpus_manifest: dict, root, stages: list[str], context: dict):
                     )
                 )
                 continue
+            # The direct-source baseline has no representation for derivative
+            # stages, so preserve the stage matrix by emitting explicit skips.
             rows.append(
                 build_audit_row(
                     entry=entry,

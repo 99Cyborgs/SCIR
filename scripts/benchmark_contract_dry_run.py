@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Executable benchmark doctrine checker and claim-bundle generator.
-
-This file treats benchmark output as an audit surface, not a presentation layer.
-It verifies that active tracks, baselines, contamination controls, claim gates,
-and SCIR-Hc lineage binding all stay within the repository's bounded benchmark
-contract.
+"""File: scripts/benchmark_contract_dry_run.py
+Purpose: Validate the executable benchmark doctrine, generate claim-bounded benchmark artifacts, and run negative self-tests over that contract.
+Role in system: This is the benchmark governance gate that turns sweep and harness outputs into audited Track A or B evidence.
+Key dependencies: benchmark_audit_common, benchmark_contract_metadata, SCIR-Hc transform and validator helpers, scir_sweep, and the benchmark pipeline.
+Side effects: Reads and validates docs and schemas, runs benchmark and sweep helpers, writes benchmark artifacts, and fails closed when doctrine or claim scope drifts.
 """
 from __future__ import annotations
 
@@ -154,14 +153,57 @@ BENCHMARK_SWEEP_MANIFEST_REL = "tests/sweeps/python_proof_loop_full.json"
 
 
 def read(path: pathlib.Path) -> str:
+    """Purpose: Read one UTF-8 text file used by the benchmark doctrine checker.
+
+    Inputs:
+      - path: pathlib.Path file to load.
+    Outputs:
+      - str decoded text content.
+    Side Effects:
+      - Reads from disk.
+    Assumptions:
+      - The benchmark contract surface is stored as UTF-8 text.
+    Failure Modes:
+      - Propagates filesystem errors when the file is missing or unreadable.
+    """
     return path.read_text(encoding="utf-8")
 
 
 def load_json(root: pathlib.Path, rel_path: str):
+    """Purpose: Load one JSON artifact relative to the repository root.
+
+    Inputs:
+      - root: pathlib.Path repository root.
+      - rel_path: str repository-relative JSON path.
+    Outputs:
+      - Parsed JSON payload.
+    Side Effects:
+      - Reads from disk.
+    Assumptions:
+      - The target file is UTF-8 JSON.
+    Failure Modes:
+      - Propagates filesystem and JSON parsing errors.
+    """
     return json.loads((root / rel_path).read_text(encoding="utf-8"))
 
 
 def validate_instance(root: pathlib.Path, instance, schema_rel: str, label: str):
+    """Purpose: Validate one JSON instance against a schema and normalize errors into benchmark-style diagnostics.
+
+    Inputs:
+      - root: pathlib.Path repository root.
+      - instance: Parsed JSON-like payload to validate.
+      - schema_rel: str repository-relative schema path.
+      - label: str diagnostic prefix naming the checked artifact.
+    Outputs:
+      - list[str] schema validation failures.
+    Side Effects:
+      - Reads the schema file from disk.
+    Assumptions:
+      - collect_instance_validation_errors is the canonical schema-validation surface for this repo.
+    Failure Modes:
+      - Returns accumulated schema failures instead of raising.
+    """
     failures = []
     schema = json.loads((root / schema_rel).read_text(encoding="utf-8"))
     for location, message in collect_instance_validation_errors(instance, schema):
@@ -170,6 +212,21 @@ def validate_instance(root: pathlib.Path, instance, schema_rel: str, label: str)
 
 
 def parse_markdown_bullet_list_section(root: pathlib.Path, path_rel: str, heading: str):
+    """Purpose: Extract one markdown bullet section that is expected to encode executable benchmark metadata.
+
+    Inputs:
+      - root: pathlib.Path repository root.
+      - path_rel: str repository-relative markdown file path.
+      - heading: str exact section heading to parse.
+    Outputs:
+      - tuple[list[str] | None, list[str]] parsed items plus any parsing failures.
+    Side Effects:
+      - Reads the markdown file from disk.
+    Assumptions:
+      - Executable benchmark lists are encoded as ``- `value``` bullets under a named heading.
+    Failure Modes:
+      - Returns parse failures when the section is missing, empty, or malformed.
+    """
     lines = (root / path_rel).read_text(encoding="utf-8").splitlines()
     start = None
     for idx, line in enumerate(lines):
@@ -197,6 +254,21 @@ def parse_markdown_bullet_list_section(root: pathlib.Path, path_rel: str, headin
 
 
 def validate_track_c_result_lock_criteria(track_c_contract: dict, result: dict, label: str):
+    """Purpose: Check the retained Track C sample against the lock criteria that keep it diagnostic-only and non-default.
+
+    Inputs:
+      - track_c_contract: dict canonical Track C contract metadata.
+      - result: dict Track C result payload to validate.
+      - label: str diagnostic prefix naming the checked result surface.
+    Outputs:
+      - list[str] lock-criteria failures.
+    Side Effects:
+      - None.
+    Assumptions:
+      - The retained Track C posture is only acceptable while accepted cases, boundary counts, and gate states stay fixed.
+    Failure Modes:
+      - Returns failures instead of raising so callers can translate or aggregate them.
+    """
     failures = []
     metrics = result.get("metrics", {})
     if metrics.get("accepted_case_count") != track_c_contract["expected_accepted_case_count"]:
@@ -217,7 +289,23 @@ def validate_track_c_result_lock_criteria(track_c_contract: dict, result: dict, 
 
 
 def validate_track_c_sample_posture(track_c_contract: dict, manifest: dict, result: dict, manifest_label: str, result_label: str):
-    """Keep the checked-in Track C samples diagnostic-only and aligned with the non-default pilot contract."""
+    """Purpose: Keep the checked-in Track C samples diagnostic-only and aligned with the retained non-default pilot contract.
+
+    Inputs:
+      - track_c_contract: dict canonical Track C contract metadata.
+      - manifest: dict Track C manifest payload.
+      - result: dict Track C result payload.
+      - manifest_label: str diagnostic prefix for the manifest surface.
+      - result_label: str diagnostic prefix for the result surface.
+    Outputs:
+      - list[str] posture drift failures.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Changing the sample task family, corpus hash, status, evidence, or case posture requires an explicit re-decision.
+    Failure Modes:
+      - Returns failures instead of raising.
+    """
 
     failures = []
     corpus = manifest.get("corpus", {})
@@ -239,10 +327,36 @@ def validate_track_c_sample_posture(track_c_contract: dict, manifest: dict, resu
 
 
 def check_required_files(root: pathlib.Path):
+    """Purpose: Ensure the benchmark doctrine surface still contains every required executable file.
+
+    Inputs:
+      - root: pathlib.Path repository root.
+    Outputs:
+      - list[str] missing-file diagnostics.
+    Side Effects:
+      - Reads filesystem existence only.
+    Assumptions:
+      - Missing contract files invalidate any benchmark claim run.
+    Failure Modes:
+      - Returns one failure per missing file.
+    """
     return [f"missing benchmark contract file: {rel}" for rel in REQUIRED_FILES if not (root / rel).exists()]
 
 
 def check_track_markers(root: pathlib.Path):
+    """Purpose: Verify that benchmark-strategy docs still name every required track marker.
+
+    Inputs:
+      - root: pathlib.Path repository root.
+    Outputs:
+      - list[str] missing-track-marker diagnostics.
+    Side Effects:
+      - Reads benchmark strategy and track docs from disk.
+    Assumptions:
+      - Track naming drift in docs is a contract failure, not editorial noise.
+    Failure Modes:
+      - Returns one failure per missing marker.
+    """
     failures = []
     text = read(root / "BENCHMARK_STRATEGY.md") + "\n" + read(root / "benchmarks" / "tracks.md")
     for marker in REQUIRED_TRACK_MARKERS:
@@ -252,6 +366,19 @@ def check_track_markers(root: pathlib.Path):
 
 
 def check_gate_markers(root: pathlib.Path):
+    """Purpose: Verify that the benchmark gate reference still names every required success and kill gate.
+
+    Inputs:
+      - root: pathlib.Path repository root.
+    Outputs:
+      - list[str] missing-gate-marker diagnostics.
+    Side Effects:
+      - Reads the success-failure gates doc from disk.
+    Assumptions:
+      - Gate markers are part of the executable benchmark contract, not optional documentation.
+    Failure Modes:
+      - Returns one failure per missing marker.
+    """
     failures = []
     text = read(root / "benchmarks" / "success_failure_gates.md")
     for marker in REQUIRED_GATE_MARKERS:
@@ -261,6 +388,19 @@ def check_gate_markers(root: pathlib.Path):
 
 
 def check_baseline_markers(root: pathlib.Path):
+    """Purpose: Verify that the baseline reference still names every required baseline family.
+
+    Inputs:
+      - root: pathlib.Path repository root.
+    Outputs:
+      - list[str] missing-baseline-marker diagnostics.
+    Side Effects:
+      - Reads the baselines doc from disk.
+    Assumptions:
+      - Baseline naming drift would undermine the benchmark contract and comparison summaries.
+    Failure Modes:
+      - Returns one failure per missing marker.
+    """
     failures = []
     text = read(root / "benchmarks" / "baselines.md").lower()
     for marker in REQUIRED_BASELINE_MARKERS:
@@ -270,6 +410,19 @@ def check_baseline_markers(root: pathlib.Path):
 
 
 def check_benchmark_doc_contract(root: pathlib.Path):
+    """Purpose: Cross-check benchmark markdown docs against the authoritative executable benchmark metadata.
+
+    Inputs:
+      - root: pathlib.Path repository root.
+    Outputs:
+      - list[str] doctrine and documentation drift failures.
+    Side Effects:
+      - Reads benchmark strategy, tracks, baselines, corpora, contamination, gate, and report docs from disk.
+    Assumptions:
+      - Docs that define active tracks, Track C posture, or baseline requirements are part of the blocking contract surface.
+    Failure Modes:
+      - Returns all detected mismatches instead of raising on the first drift.
+    """
     failures = []
     strategy_cases, parse_failures = parse_markdown_bullet_list_section(
         root,
@@ -755,6 +908,19 @@ def check_benchmark_doc_contract(root: pathlib.Path):
 
 
 def check_track_c_pilot_samples(root: pathlib.Path):
+    """Purpose: Validate the checked-in Track C sample manifest and result against schemas and retained pilot doctrine.
+
+    Inputs:
+      - root: pathlib.Path repository root.
+    Outputs:
+      - list[str] sample-manifest and sample-result failures.
+    Side Effects:
+      - Reads the checked-in Track C sample files and benchmark schemas from disk.
+    Assumptions:
+      - The sample files are retained artifacts that must stay exactly aligned with the non-default pilot contract.
+    Failure Modes:
+      - Returns aggregated sample drift and schema failures.
+    """
     failures = []
     track_c_contract = benchmark_track_contract("C")
     manifest_rel = track_c_contract["sample_manifest_path"]
@@ -821,6 +987,21 @@ def check_track_c_pilot_samples(root: pathlib.Path):
 
 
 def validate_track_c_pilot_outputs(root: pathlib.Path, manifest: dict, result: dict):
+    """Purpose: Ensure freshly generated Track C pilot outputs still match the retained checked-in sample artifacts.
+
+    Inputs:
+      - root: pathlib.Path repository root.
+      - manifest: dict generated Track C manifest.
+      - result: dict generated Track C result.
+    Outputs:
+      - list[str] synchronization and retained-disposition failures.
+    Side Effects:
+      - Reads the checked-in Track C sample files from disk.
+    Assumptions:
+      - The generated optional pilot outputs must stay identical to the checked-in sample bundle while the retained contract holds.
+    Failure Modes:
+      - Returns translated disposition failures instead of raising.
+    """
     failures = []
     track_c_contract = benchmark_track_contract("C")
     sample_manifest = load_json(root, track_c_contract["sample_manifest_path"])
@@ -855,7 +1036,19 @@ def validate_track_c_pilot_outputs(root: pathlib.Path, manifest: dict, result: d
 
 
 def run_checks(root: pathlib.Path):
-    """Validate benchmark doctrine files before trusting any executable result bundle."""
+    """Purpose: Run the blocking benchmark doctrine checks before any executable benchmark result is trusted.
+
+    Inputs:
+      - root: pathlib.Path repository root.
+    Outputs:
+      - list[str] blocking benchmark doctrine failures.
+    Side Effects:
+      - Reads required benchmark docs, sample artifacts, and schemas through the helper checks.
+    Assumptions:
+      - Executable benchmark runs are invalid unless the governing docs and retained samples are synchronized first.
+    Failure Modes:
+      - Returns accumulated failures instead of raising.
+    """
 
     failures = []
     failures.extend(check_required_files(root))
@@ -868,6 +1061,20 @@ def run_checks(root: pathlib.Path):
 
 
 def validate_executable_benchmark_items(root: pathlib.Path, benchmark_items: dict):
+    """Purpose: Validate the executable Track A or B benchmark bundle against schemas and track contracts.
+
+    Inputs:
+      - root: pathlib.Path repository root.
+      - benchmark_items: dict manifest and result payloads emitted by the benchmark harness.
+    Outputs:
+      - list[str] bundle validation failures.
+    Side Effects:
+      - Reads schemas from disk via validate_instance.
+    Assumptions:
+      - Only Track A and B artifacts belong in the executable benchmark bundle.
+    Failure Modes:
+      - Returns schema and semantic drift failures instead of raising.
+    """
     failures = []
     expected_keys = {item["manifest_key"] for item in TRACK_EXPECTATIONS.values()} | {
         item["result_key"] for item in TRACK_EXPECTATIONS.values()
@@ -949,16 +1156,32 @@ def validate_executable_benchmark_items(root: pathlib.Path, benchmark_items: dic
 
 
 def report_baseline_value(scir_value, delta):
+    """Purpose: Recover a baseline value from a stored SCIR value and SCIR-minus-baseline delta.
+
+    Inputs:
+      - scir_value: numeric SCIR metric value or None.
+      - delta: numeric delta or None.
+    Outputs:
+      - Numeric baseline value or None when the comparison is incomplete.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Deltas are recorded as `scir - baseline`.
+    Failure Modes:
+      - Returns None when either input is missing.
+    """
     if scir_value is None or delta is None:
         return None
     return round(scir_value - delta, 4)
 
 
 def baseline_strength_order() -> list[str]:
+    """Purpose: Return the strongest-to-weakest baseline ordering used for benchmark arbitration."""
     return list(BENCHMARK_CONTRACT_METADATA["baseline_strength_order"])
 
 
 def baseline_strength_rank(baseline_name: str) -> int:
+    """Purpose: Map a baseline name to its arbitration rank for counterexample selection."""
     order = baseline_strength_order()
     try:
         return order.index(baseline_name)
@@ -973,6 +1196,7 @@ def select_rows(
     stage: str | None = None,
     tier: str | None = None,
 ) -> list[dict]:
+    """Purpose: Filter benchmark rows to the subset relevant for one aggregate calculation."""
     selected = []
     for row in rows:
         if baseline_name is not None and row.get("baseline_name") != baseline_name:
@@ -988,6 +1212,7 @@ def select_rows(
 
 
 def average_boolean_field(rows: list[dict], field_name: str) -> float | None:
+    """Purpose: Average a boolean benchmark field as a rate."""
     values = []
     for row in rows:
         value = row.get(field_name)
@@ -998,6 +1223,7 @@ def average_boolean_field(rows: list[dict], field_name: str) -> float | None:
 
 
 def average_metric_field(rows: list[dict], metric_name: str) -> float | None:
+    """Purpose: Average one metric field across a row set using the shared metric helper."""
     return safe_average([row_metric_value(row, metric_name) for row in rows])
 
 
@@ -1009,6 +1235,7 @@ def strongest_baseline_value(
     metric_name: str,
     direction: str,
 ) -> tuple[str | None, float | None]:
+    """Purpose: Find the strongest baseline with a usable value for one stage, tier, and metric."""
     candidates: list[tuple[str, float]] = []
     for baseline_name in baseline_strength_order():
         rows = select_rows(
@@ -1046,6 +1273,7 @@ def compare_directional_metric(
     direction: str,
     tie_tolerance: float,
 ) -> tuple[str, float | None]:
+    """Purpose: Compare a SCIR metric against a baseline using the surface's win, tie, and loss rules."""
     if scir_value is None or baseline_value is None:
         return "inconclusive", None
     delta = round(scir_value - baseline_value, 4)
@@ -1077,6 +1305,7 @@ def build_surface_evaluation(
     supporting_metric: str | None = None,
     supporting_value=None,
 ) -> dict:
+    """Purpose: Normalize one benchmark surface comparison into the shared evaluation shape."""
     return {
         "surface_id": surface_id,
         "strongest_baseline_name": strongest_baseline_name,
@@ -1094,6 +1323,7 @@ def build_surface_evaluation(
 
 
 def build_track_a_surface_evaluations(track_a_result: dict) -> list[dict]:
+    """Purpose: Evaluate Track A on its frozen representation and patch-composability surfaces."""
     metrics = track_a_result["metrics"]
     source_ratio = metrics["median_scir_to_source_ratio"]
     explicitness_gain = metrics["semantic_explicitness_gain"]
@@ -1171,6 +1401,7 @@ def build_track_a_surface_evaluations(track_a_result: dict) -> list[dict]:
 
 
 def build_track_b_metrics(sweep_result: dict) -> dict[str, float | None]:
+    """Purpose: Derive Track B round-trip metrics from the underlying sweep rows."""
     scir_rows = sweep_result["rows"]
     validator_rows = select_rows(scir_rows, stage="scir_h_validation", tier="A")
     round_trip_rows = select_rows(scir_rows, stage="h_to_python", tier="A")
@@ -1191,6 +1422,7 @@ def build_track_b_metrics(sweep_result: dict) -> dict[str, float | None]:
 
 
 def build_track_b_surface_evaluations(track_b_result: dict, sweep_result: dict) -> list[dict]:
+    """Purpose: Compare Track B against the strongest executable baseline on each round-trip surface."""
     baseline_rows = sweep_result["baseline_rows"]
     metrics = track_b_result["metrics"]
     evaluations = []
@@ -1266,6 +1498,7 @@ def build_track_b_surface_evaluations(track_b_result: dict, sweep_result: dict) 
 
 
 def track_decision_signal(surface_evaluations: list[dict]) -> str:
+    """Purpose: Collapse a track's surface evaluations into one decision signal."""
     outcomes = [item["outcome"] for item in surface_evaluations]
     if any(item == "inconclusive" for item in outcomes):
         return "inconclusive"
@@ -1277,6 +1510,7 @@ def track_decision_signal(surface_evaluations: list[dict]) -> str:
 
 
 def build_track_evaluation(track: str, result: dict) -> dict:
+    """Purpose: Summarize one track result into the continuation-decision input shape."""
     surface_evaluations = result["surface_evaluations"]
     return {
         "track": track,
@@ -1290,6 +1524,7 @@ def build_track_evaluation(track: str, result: dict) -> dict:
 
 
 def first_surface_by_outcome(track_evaluations: dict, outcomes: set[str]) -> dict | None:
+    """Purpose: Find the strongest counterexample or support surface across Tracks A and B."""
     surfaces = []
     for track in ["A", "B"]:
         surfaces.extend(track_evaluations[track]["surface_evaluations"])
@@ -1301,6 +1536,7 @@ def first_surface_by_outcome(track_evaluations: dict, outcomes: set[str]) -> dic
 
 
 def build_continuation_decision(comparison_summary: dict, benchmark_items: dict) -> dict:
+    """Purpose: Derive the repository-level continuation outcome from the strongest-baseline comparison."""
     track_evaluations = comparison_summary["track_evaluations"]
     if comparison_summary["contamination_flags"]:
         return {
@@ -1396,6 +1632,7 @@ def build_continuation_decision(comparison_summary: dict, benchmark_items: dict)
 
 
 def augment_comparison_summary_with_decisions(comparison_summary: dict, benchmark_items: dict) -> None:
+    """Purpose: Attach track evaluations and the continuation decision to the comparison summary in place."""
     track_evaluations = {
         "A": build_track_evaluation("A", benchmark_items["track_a_result"]),
         "B": build_track_evaluation("B", benchmark_items["track_b_result"]),
@@ -1408,6 +1645,7 @@ def augment_comparison_summary_with_decisions(comparison_summary: dict, benchmar
 
 
 def build_manifest_lock(root: pathlib.Path, corpus_manifest_rel: str, run_id: str, generated_at: str) -> dict:
+    """Purpose: Freeze the corpus manifest contents and hash that governed one benchmark run."""
     manifest = load_json(root, corpus_manifest_rel)
     return {
         "run_id": run_id,
@@ -1419,6 +1657,7 @@ def build_manifest_lock(root: pathlib.Path, corpus_manifest_rel: str, run_id: st
 
 
 def benchmark_report_disclaimers(corpus_manifest: dict, contamination_report: dict) -> list[str]:
+    """Purpose: Generate the fixed disclaimer set attached to every benchmark report."""
     opaque_cases = [entry["id"] for entry in corpus_manifest["fixtures"] if entry.get("tier") == "C"]
     disclaimers = [
         "Results are limited to the fixed Python proof-loop corpus and do not imply whole-language support.",
@@ -1435,6 +1674,7 @@ def benchmark_report_disclaimers(corpus_manifest: dict, contamination_report: di
 
 
 def benchmark_report_representation_metrics(comparison_summary: dict) -> tuple[dict, dict]:
+    """Purpose: Split aggregate metrics into explicit SCIR and compressed SCIR-Hc bundles for the report surface."""
     scir_metrics = comparison_summary["aggregate"]["scir_metrics"]
     explicit_metrics = {
         "LCR": scir_metrics["LCR"],
@@ -1452,6 +1692,7 @@ def benchmark_report_representation_metrics(comparison_summary: dict) -> tuple[d
 
 
 def benchmark_report_canonical_registry() -> dict[str, object]:
+    """Purpose: Return the canonical SCIR-H registry used for benchmark lineage binding."""
     return {
         f"fixture.python_importer.{case_name}": PYTHON_SCIRH_MODULES[case_name]
         for case_name in BENCHMARK_CONTRACT_METADATA["benchmark_cases"]
@@ -1459,6 +1700,7 @@ def benchmark_report_canonical_registry() -> dict[str, object]:
 
 
 def benchmark_report_lineage_references() -> dict[str, dict[str, str]]:
+    """Purpose: Build the SCIR-H lineage references exposed in benchmark reports."""
     return {
         module_id: scirhc_lineage_root_payload(build_scirhc_lineage_root(module))
         for module_id, module in benchmark_report_canonical_registry().items()
@@ -1466,10 +1708,12 @@ def benchmark_report_lineage_references() -> dict[str, dict[str, str]]:
 
 
 def benchmark_lineage_scope() -> list[str]:
+    """Purpose: Return the sorted lineage scope covered by benchmark claims."""
     return sorted(benchmark_report_canonical_registry())
 
 
 def metric_class_for_name(metric_name: str) -> str:
+    """Purpose: Resolve a benchmark metric name to its SCIR-Hc claim-scope metric class."""
     for rule in CLAIM_SCOPE_RULES.values():
         metric_class = rule["metric_classes"].get(metric_name)
         if metric_class is not None:
@@ -1478,6 +1722,7 @@ def metric_class_for_name(metric_name: str) -> str:
 
 
 def build_scirhc_diff_audit_bundle() -> dict[str, object]:
+    """Purpose: Generate the SCIR-Hc diff-audit bundle for the canonical benchmark corpus."""
     modules = {}
     with internal_scirhc_transform_access():
         for module_id, module in benchmark_report_canonical_registry().items():
@@ -1496,7 +1741,21 @@ def build_claim_gate(
     *,
     claim_class: str = DEFAULT_BENCHMARK_CLAIM_CLASS,
 ) -> dict:
-    """Build the machine-readable boundary that determines whether a benchmark run may support an explicit claim."""
+    """Purpose: Build the machine-readable boundary that determines whether a benchmark run may support an explicit claim.
+
+    Inputs:
+      - comparison_summary: dict aggregate comparison payload.
+      - benchmark_items: dict benchmark manifest and result bundle.
+      - claim_class: str SCIR-Hc claim class to evaluate.
+    Outputs:
+      - dict claim-gate payload with evaluated conditions and overall pass state.
+    Side Effects:
+      - None.
+    Assumptions:
+      - Claim gates are limited to the evidence and metrics permitted by the declared SCIR-Hc claim class.
+    Failure Modes:
+      - Propagates missing-key errors if required comparison surfaces are absent.
+    """
 
     aggregate = comparison_summary["aggregate"]
     scir_metrics = aggregate["scir_metrics"]
@@ -1559,6 +1818,7 @@ def build_claim_gate(
 
 
 def build_failure_attribution(comparison_summary: dict) -> dict:
+    """Purpose: Attribute a failed claim posture to the dominant measurable cause in the aggregate comparison."""
     aggregate = comparison_summary["aggregate"]
     scir_metrics = aggregate["scir_metrics"]
     delta_vs_ast = aggregate["delta_vs_ast"]
@@ -1592,7 +1852,28 @@ def build_benchmark_report(
     benchmark_items: dict,
     reproducibility_block: dict,
 ) -> dict:
-    """Assemble a claim-bearing report whose SCIR-Hc evidence stays explicitly lineage-bound and class-scoped."""
+    """Purpose: Assemble the claim-bearing benchmark report while keeping SCIR-Hc evidence lineage-bound and class-scoped.
+
+    Inputs:
+      - run_id: str benchmark run id.
+      - commit_sha: str source revision.
+      - generated_at: str report timestamp.
+      - claim_run: bool whether the run requested claim mode.
+      - corpus_manifest_rel: str repository-relative corpus manifest path.
+      - corpus_manifest: dict corpus manifest payload.
+      - comparison_summary: dict aggregate comparison payload.
+      - contamination_report: dict contamination summary.
+      - benchmark_items: dict benchmark manifest and result bundle.
+      - reproducibility_block: dict run reproducibility metadata.
+    Outputs:
+      - dict benchmark report payload.
+    Side Effects:
+      - Calls claim-scope validation before returning.
+    Assumptions:
+      - Reports must stay bounded by the declared SCIR-Hc claim class and canonical lineage references.
+    Failure Modes:
+      - Propagates claim-scope validation errors if the report overreaches.
+    """
 
     explicit_metrics, compressed_metrics = benchmark_report_representation_metrics(comparison_summary)
     claim_class = DEFAULT_BENCHMARK_CLAIM_CLASS
@@ -1651,6 +1932,7 @@ def build_benchmark_report(
 
 
 def build_benchmark_report_markdown(report: dict) -> str:
+    """Purpose: Render the benchmark report into the checked-in markdown review format."""
     lines = [
         "# Benchmark Report",
         "",
@@ -1716,6 +1998,7 @@ def augment_benchmark_items(
     reproducibility_block: dict,
     corpus_manifest_rel: str,
 ):
+    """Purpose: Enrich raw benchmark outputs with sweep-derived metrics, comparisons, and reproducibility context."""
     for track_key, stage_name in [
         ("track_a_result", "source_to_h"),
         ("track_b_result", "h_to_python"),
@@ -1758,6 +2041,7 @@ def augment_benchmark_items(
 
 
 def augment_track_c_pilot_outputs(root: pathlib.Path, manifest: dict, result: dict):
+    """Purpose: Normalize generated Track C pilot outputs into the retained checked-in sample shape."""
     track_c_contract = benchmark_track_contract("C")
     corpus_manifest_hash = canonical_json_hash(load_json(root, BENCHMARK_CORPUS_MANIFEST_REL))
     reproducibility_block = {
@@ -1810,6 +2094,7 @@ def augment_track_c_pilot_outputs(root: pathlib.Path, manifest: dict, result: di
 
 
 def benchmark_gate_failures(comparison_summary: dict, contamination_report: dict) -> list[str]:
+    """Purpose: Return blocking gate failures that make a benchmark claim or continuation decision invalid."""
     failures = []
     if contamination_report["leakage_flags"]:
         failures.append("contamination detected")
@@ -1830,7 +2115,7 @@ def claim_audit_failures(
     benchmark_report: dict,
     manifest_lock: dict,
 ) -> list[str]:
-    """Return every condition that makes a claim-producing benchmark bundle non-defensible."""
+    """Purpose: Return every condition that makes a claim-producing benchmark bundle non-defensible."""
 
     failures = []
     expected_hash = manifest_lock["corpus_manifest_hash"]
@@ -1916,6 +2201,7 @@ def write_benchmark_outputs(
     manifest_lock: dict,
     sweep_manifest_rel: str,
 ):
+    """Purpose: Write the complete benchmark artifact bundle to one output directory, replacing any previous contents."""
     if output_dir.exists():
         shutil.rmtree(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -1947,6 +2233,10 @@ def write_benchmark_outputs(
         encoding="utf-8",
     )
 
+
+# Mutation helpers below intentionally corrupt one benchmark contract surface at
+# a time so the negative-fixture harness can prove the doctrine checker still
+# fails closed instead of silently accepting drift.
 
 def mutate_remove_track_a(root: pathlib.Path):
     for rel in ["BENCHMARK_STRATEGY.md", "benchmarks/tracks.md"]:
@@ -2232,6 +2522,7 @@ def mutate_track_c_sample_result_lock_metric_file(root: pathlib.Path):
 
 
 def run_negative_fixture(root: pathlib.Path, name: str, mutate, expected_markers):
+    """Purpose: Run one negative fixture by mutating a temporary repo copy and asserting the doctrine checks fail as expected."""
     with tempfile.TemporaryDirectory(prefix="scir_benchmark_check_") as tmp:
         fixture_root = pathlib.Path(tmp) / "repo"
         shutil.copytree(root, fixture_root, ignore=shutil.ignore_patterns(".git", "__pycache__"))
@@ -2247,6 +2538,7 @@ def run_negative_fixture(root: pathlib.Path, name: str, mutate, expected_markers
 
 
 def run_negative_track_c_sample_sync_fixture(root: pathlib.Path, name: str, mutate, expected_markers):
+    """Purpose: Run one negative fixture against the retained Track C sample-sync path and assert the expected failures appear."""
     with tempfile.TemporaryDirectory(prefix="scir_track_c_sample_sync_") as tmp:
         fixture_root = pathlib.Path(tmp) / "repo"
         shutil.copytree(root, fixture_root, ignore=shutil.ignore_patterns(".git", "__pycache__"))
@@ -2265,6 +2557,7 @@ def run_negative_track_c_sample_sync_fixture(root: pathlib.Path, name: str, muta
 
 
 def run_self_tests(root: pathlib.Path):
+    """Purpose: Execute the benchmark doctrine's negative-fixture self-tests before trusting live benchmark results."""
     failures = []
     count = 0
     for name, mutate, expected_markers in [
@@ -2379,6 +2672,7 @@ def run_self_tests(root: pathlib.Path):
 
 
 def print_success(track_a_result, track_b_result, continuation_decision, self_test_count):
+    """Purpose: Print the human-readable success summary for the active Track A and B benchmark lane."""
     print("[benchmark] benchmark harness passed")
     print("Tracks, baselines, contamination controls, and executable Track A/B runs are present.")
     print("Conditional Track C doctrine, retained disposition, and sample artifacts are synchronized and remain non-default.")
@@ -2404,6 +2698,7 @@ def print_success(track_a_result, track_b_result, continuation_decision, self_te
 
 
 def print_track_c_success(track_c_result):
+    """Purpose: Print the optional Track C pilot summary without treating it as part of the default executable gate."""
     disposition = benchmark_track_contract("C")["disposition"][0]
     print(
         "Track C optional status: "
@@ -2416,6 +2711,7 @@ def print_track_c_success(track_c_result):
 
 
 def main():
+    """Purpose: Run benchmark doctrine checks, self-tests, the live benchmark harness, and artifact emission from one CLI entrypoint."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--root")
     parser.add_argument("--include-track-c-pilot", action="store_true")
