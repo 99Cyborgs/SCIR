@@ -78,7 +78,7 @@ At minimum it must:
 
 `python scripts/validate_repo_contracts.py --mode audit` remains the optional retained-surface audit for broader placeholder, tooling, CI, and archival docs kept on disk outside the default blocking surface.
 
-`python scripts/run_repo_validation.py --require-rust` remains the optional compatibility entrypoint for environments that require an explicit usable Rust toolchain before running the deeper Rust slice.
+`python scripts/run_repo_validation.py --require-rust` remains the optional compatibility entrypoint for environments that require an explicit usable Rust toolchain before running the deeper Rust slice, including the retained Rust pipeline self-tests.
 
 `python scripts/benchmark_contract_dry_run.py --claim-run` remains an explicit opt-in claim lane.
 

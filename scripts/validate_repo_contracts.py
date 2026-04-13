@@ -211,8 +211,63 @@ ACTIVE_FOCUS_MARKERS = [
     "SCIR-H",
     "validator hardening",
 ]
-ACTIVE_PLAN_REL = "plans/2026-04-12-track-c-mvp-boundary-lock-and-phase-6-reset.md"
+ACTIVE_PLAN_REL = "plans/2026-04-13-mvp-completion-and-pre-baseline-alignment.md"
 ACTIVE_ITEM_MARKER = "post-proof-loop consolidation"
+EXECUTABLE_SUBSET_REQUIRED_MARKERS = {
+    "specs/scir_h_spec.md": [
+        "| `loop` | yes | exact fixed proof-loop shapes are executable; broader forms remain deferred |",
+        "| `break` | yes | exact fixed proof-loop shapes are executable; broader forms remain deferred |",
+        "| `continue` | yes | exact fixed proof-loop shapes are executable; broader forms remain deferred |",
+    ],
+    "specs/validator_invariants.md": [
+        "the fixed `b_while_call_update` and `b_while_break_continue` loop-control slices are admitted through lowering and reconstruction; broader loop forms remain deferred",
+    ],
+    "scripts/scir_h_bootstrap_model.py": [
+        '"construct": "`loop`"',
+        '"spec_downstream_status": "exact fixed proof-loop shapes are executable; broader forms remain deferred"',
+        '"construct": "single-handler `try` / `catch name Type`"',
+        '"spec_downstream_status": "exact single-handler `ValueError` proof-loop slice only; broader forms importer-only or deferred"',
+    ],
+    "SPEC_COMPLETENESS_CHECKLIST.md": [
+        "| `loop` | yes | yes | yes | yes for the exact `b_while_call_update` and `b_while_break_continue` slices | yes for the exact `b_while_call_update` and `b_while_break_continue` slices | yes | subset-bound executable support | kept as exact-shape proof-loop support; broader loop forms remain deferred |",
+        "| `break` | yes | yes | yes | yes for the exact `b_while_break_continue` slice | yes for the exact `b_while_break_continue` slice | yes | subset-bound executable support | kept as an exact-shape proof-loop control form; broader break forms remain deferred |",
+        "| `continue` | yes | yes | yes | yes for the exact `b_while_break_continue` slice | yes for the exact `b_while_break_continue` slice | yes | subset-bound executable support | kept as an exact-shape proof-loop control form; broader continue forms remain deferred |",
+    ],
+    "frontend/python/IMPORT_SCOPE.md": [
+        "There are no active importer-only Python fixture cases in the frozen MVP corpus.",
+    ],
+    "frontend/python/AGENTS.md": [
+        "do not reclassify any of those cases back to importer-only",
+    ],
+    "tests/README.md": [
+        "fixture bundles for the active Python importer proof loop plus the explicit rejected case",
+    ],
+}
+EXECUTABLE_SUBSET_FORBIDDEN_MARKERS = {
+    "specs/scir_h_spec.md": [
+        "canonical parser/validator surface only; importer-only beyond that",
+    ],
+    "specs/validator_invariants.md": [
+        "loop forms may exist in importer-only `SCIR-H` slices without active lowering",
+    ],
+    "scripts/scir_h_bootstrap_model.py": [
+        '"spec_downstream_status": "canonical parser/validator surface only; importer-only beyond that"',
+    ],
+    "SPEC_COMPLETENESS_CHECKLIST.md": [
+        "| `loop` | yes | yes | validator-only | no | no | yes | canonical parser/validator surface only | kept as importer-only `SCIR-H` surface beyond parser/validator |",
+        "| `break` | yes | yes | validator-only | no | no | yes | canonical parser/validator surface only | kept as importer-only `SCIR-H` surface beyond parser/validator |",
+        "| `continue` | yes | yes | validator-only | no | no | yes | canonical parser/validator surface only | kept as importer-only `SCIR-H` surface beyond parser/validator |",
+    ],
+    "docs/project_overview.md": [
+        "importer-only Tier `B` `SCIR-H` evidence cases",
+    ],
+    "frontend/python/AGENTS.md": [
+        "keep importer-only follow-on function and async cases Tier `B`",
+    ],
+    "tests/README.md": [
+        "active Python importer proof loop and importer-only follow-on cases",
+    ],
+}
 BACKLOG_DECISION_MARKER = (
     "Keep broader object and exception semantics beyond the exact admitted class and `d_try_except` slices rejected or deferred until new canonical fixtures and decision-register updates exist."
 )
@@ -568,6 +623,21 @@ def check_reconstruction_policy_alignment(root: pathlib.Path) -> list[str]:
         failures.append(
             "docs/reconstruction_policy.md: active reconstruction cases drifted from PYTHON_PROOF_LOOP_METADATA executable cases"
         )
+    return failures
+
+
+def check_executable_subset_truth_alignment(root: pathlib.Path) -> list[str]:
+    failures = []
+    for rel, markers in EXECUTABLE_SUBSET_REQUIRED_MARKERS.items():
+        text = (root / rel).read_text(encoding="utf-8")
+        for marker in markers:
+            if marker not in text:
+                failures.append(f"{rel}: missing executable-subset truth marker {marker!r}")
+    for rel, markers in EXECUTABLE_SUBSET_FORBIDDEN_MARKERS.items():
+        text = (root / rel).read_text(encoding="utf-8")
+        for marker in markers:
+            if marker in text:
+                failures.append(f"{rel}: stale executable-subset wording {marker!r}")
     return failures
 
 
@@ -966,6 +1036,7 @@ def run_checks(root: pathlib.Path, *, include_audit: bool = False) -> list[str]:
     failures.extend(check_focus_alignment(root))
     failures.extend(check_python_import_scope_alignment(root))
     failures.extend(check_reconstruction_policy_alignment(root))
+    failures.extend(check_executable_subset_truth_alignment(root))
     failures.extend(check_frozen_python_proof_loop_contract(root))
     failures.extend(check_support_lane_freeze_alignment(root))
     failures.extend(check_wasm_backend_scope_alignment(root))
@@ -1005,6 +1076,19 @@ def mutate_break_reconstruction_policy_alignment(root: pathlib.Path) -> None:
     path = root / "docs" / "reconstruction_policy.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace(f"- `{RECONSTRUCTION_POLICY_DRIFT_CASE_MARKER}`\n", "", 1), encoding="utf-8")
+
+
+def mutate_break_executable_subset_truth_alignment(root: pathlib.Path) -> None:
+    path = root / "tests" / "README.md"
+    text = path.read_text(encoding="utf-8")
+    path.write_text(
+        text.replace(
+            "fixture bundles for the active Python importer proof loop plus the explicit rejected case",
+            "fixture bundles for the active Python importer proof loop and importer-only follow-on cases",
+            1,
+        ),
+        encoding="utf-8",
+    )
 
 
 def mutate_remove_audit_file(root: pathlib.Path) -> None:
@@ -1300,6 +1384,14 @@ def run_self_tests(root: pathlib.Path) -> list[str]:
             "reconstruction policy drift",
             mutate_break_reconstruction_policy_alignment,
             ["docs/reconstruction_policy.md: active reconstruction cases drifted from PYTHON_PROOF_LOOP_METADATA executable cases"],
+        )
+    )
+    failures.extend(
+        run_negative_fixture(
+            root,
+            "executable subset truth drift",
+            mutate_break_executable_subset_truth_alignment,
+            ["tests/README.md: stale executable-subset wording"],
         )
     )
     failures.extend(

@@ -48,6 +48,21 @@
       ]
     },
     {
+      "id": "invalid_scir_l.invoke.effect_token",
+      "language": "scir_l",
+      "path": "tests/invalid_scir_l/invalid_invoke_effect_token.json",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "bounded invoke effect token discipline"
+      ],
+      "hash": "sha256:737736c13a27915e683b07c06d75606827bf7c994d68e3893580920ac7c47809",
+      "expected_diagnostic_codes": [
+        "L003"
+      ]
+    },
+    {
       "id": "invalid_scir_l.memory.bad_token",
       "language": "scir_l",
       "path": "tests/invalid_scir_l/invalid_memory_token.json",
@@ -148,6 +163,21 @@
         "unsupported terminator kind"
       ],
       "hash": "sha256:4a58a21b91a3dac825c7c39e2e5fc3d33364d2306a34fd3d98b7596912c7b09a",
+      "expected_diagnostic_codes": [
+        "L001"
+      ]
+    },
+    {
+      "id": "invalid_scir_l.invoke.catch_type",
+      "language": "scir_l",
+      "path": "tests/invalid_scir_l/invalid_invoke_catch_type.json",
+      "tier": "D",
+      "expected_support": "reject",
+      "expected_preservation_ceiling": "PX",
+      "features": [
+        "bounded invoke catch type"
+      ],
+      "hash": "sha256:ad721b59f9a2c4056ceb0f111406f0a36bd8bd8a154bfda665ebd68eb8a1f19a",
       "expected_diagnostic_codes": [
         "L001"
       ]

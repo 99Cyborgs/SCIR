@@ -1,0 +1,73 @@
+{
+  "module_id": "invalid.scir_l.invoke_effect_token",
+  "functions": [
+    {
+      "name": "bad_invoke_effect_token",
+      "returns": "int",
+      "params": [
+        "x"
+      ],
+      "blocks": [
+        {
+          "id": "entry",
+          "params": [
+            "eff0"
+          ],
+          "instructions": [],
+          "terminator": {
+            "kind": "invoke",
+            "callee": "sym:may_fail",
+            "args": [
+              "x",
+              0
+            ],
+            "result": "call0",
+            "normal": "ret_value",
+            "normal_args": [
+              "call0"
+            ],
+            "catch": "catch_valueerror",
+            "catch_args": [],
+            "catch_type": "ValueError",
+            "origin": "invalid.scir_l.invoke_effect_token::try-call",
+            "lowering_rule": "H_TRY_INVOKE"
+          }
+        },
+        {
+          "id": "ret_value",
+          "params": [
+            "value0"
+          ],
+          "instructions": [],
+          "terminator": {
+            "kind": "ret",
+            "value": "value0",
+            "origin": "invalid.scir_l.invoke_effect_token::try-return",
+            "lowering_rule": "H_RETURN"
+          }
+        },
+        {
+          "id": "catch_valueerror",
+          "params": [],
+          "instructions": [
+            {
+              "id": "const0",
+              "op": "const",
+              "operands": [
+                0
+              ],
+              "origin": "invalid.scir_l.invoke_effect_token::catch-return-zero",
+              "lowering_rule": "H_CONST_RET"
+            }
+          ],
+          "terminator": {
+            "kind": "ret",
+            "value": "const0",
+            "origin": "invalid.scir_l.invoke_effect_token::catch-return",
+            "lowering_rule": "H_CONST_RET"
+          }
+        }
+      ]
+    }
+  ]
+}

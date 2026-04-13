@@ -15,7 +15,7 @@ Local rules:
 - keep host-sensitive claims profile-qualified, usually `R` or `D-PY`,
 - emit explicit opaque boundaries for host objects or reflection-heavy surfaces,
 - keep the bootstrap fixture corpus under `tests/python_importer/cases/` aligned with the accepted first-slice subset,
-- keep importer-only follow-on function and async cases Tier `B` and out of executable lowering, reconstruction, and benchmark claims until downstream evidence exists,
+- keep the frozen 11-case executable Python proof loop executable end to end and do not reclassify any of those cases back to importer-only without synchronized spec, corpus, and decision updates,
 - reject `raise` mapping in the bootstrap fixture slice rather than inventing partial support,
 - if admitting minimal Python `try/except` in follow-on work, keep it Tier `B` and out of executable lowering, reconstruction, and benchmark claims until exception lowering exists,
 - Tier `D` bootstrap fixtures must not emit canonical `SCIR-H`,

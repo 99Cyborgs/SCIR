@@ -14,9 +14,9 @@ Status: Normative
 | `set` field place | yes | yes | yes | yes | yes for bounded record-like shapes | yes | fully supported in MVP | kept |
 | `return` | yes | yes | yes | yes | yes | yes | fully supported in MVP | kept |
 | `if` / `else` | yes | yes | yes | Python proof loop yes; broader cases no | Python subset yes | yes | fully supported in MVP | kept with subset-bound lowering |
-| `loop` | yes | yes | validator-only | no | no | yes | canonical parser/validator surface only | kept as importer-only `SCIR-H` surface beyond parser/validator |
-| `break` | yes | yes | validator-only | no | no | yes | canonical parser/validator surface only | kept as importer-only `SCIR-H` surface beyond parser/validator |
-| `continue` | yes | yes | validator-only | no | no | yes | canonical parser/validator surface only | kept as importer-only `SCIR-H` surface beyond parser/validator |
+| `loop` | yes | yes | yes | yes for the exact `b_while_call_update` and `b_while_break_continue` slices | yes for the exact `b_while_call_update` and `b_while_break_continue` slices | yes | subset-bound executable support | kept as exact-shape proof-loop support; broader loop forms remain deferred |
+| `break` | yes | yes | yes | yes for the exact `b_while_break_continue` slice | yes for the exact `b_while_break_continue` slice | yes | subset-bound executable support | kept as an exact-shape proof-loop control form; broader break forms remain deferred |
+| `continue` | yes | yes | yes | yes for the exact `b_while_break_continue` slice | yes for the exact `b_while_break_continue` slice | yes | subset-bound executable support | kept as an exact-shape proof-loop control form; broader continue forms remain deferred |
 | single-handler `try` / `catch name Type` | yes | yes | yes | yes for the exact `d_try_except` slice | yes for the exact `d_try_except` slice | yes | subset-bound executable support | kept as an exact-shape proof-loop slice; broader forms remain deferred |
 | direct call `f(args)` | yes | yes | yes | subset-bound yes | yes for Python subset | yes | fully supported in MVP | kept |
 | `await` | yes | yes | yes | yes | yes for Python subset | yes | fully supported in MVP | kept |

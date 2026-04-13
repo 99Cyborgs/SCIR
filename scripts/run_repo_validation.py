@@ -69,7 +69,7 @@ def main() -> int:
         benchmark_command,
     ]
     deep_rust_commands = [
-        [sys.executable, "scripts/scir_bootstrap_pipeline.py", "--language", "rust", "--mode", "validate"],
+        [sys.executable, "scripts/scir_bootstrap_pipeline.py", "--language", "rust", "--mode", "test"],
     ]
 
     for command in baseline_commands:

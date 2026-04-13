@@ -67,7 +67,7 @@ These invariants are hard constraints. Validators must reject violations.
 - `benchmark_report` must declare `metric_class` and `scir_h_evidence` on every evaluated condition and claim
 - `benchmark_report` lineage references must bind canonical module ids to semantic lineage ids and normalized canonical hashes
 - active canonical `SCIR-L` is limited to the grammar in `specs/scir_l_spec.md`
-- loop forms may exist in importer-only `SCIR-H` slices without active lowering
+- the fixed `b_while_call_update` and `b_while_break_continue` loop-control slices are admitted through lowering and reconstruction; broader loop forms remain deferred
 - the exact `d_try_except` `!throw` effect marker plus its bounded `invoke`/catch lowering path are admitted; standalone `throw` syntax and broader exception lowering remain unsupported
 - unused declared effects are invalid in the active subset
 - `borrow<T>` must not be used as a mutation root; `borrow_mut<T>` remains the only writable borrow mode

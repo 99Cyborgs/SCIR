@@ -8,5 +8,6 @@ The current fixtures cover:
 
 - malformed CFG and unsupported terminator shapes
 - SSA, effect-token, and memory-token discipline
+- bounded `invoke` catch-type and effect-token drift
 - provenance-origin and lowering-rule drift
 - unsupported ops and illegal boundary-op structure

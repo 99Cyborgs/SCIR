@@ -6544,6 +6544,7 @@ def run_rust_self_tests(root: pathlib.Path):
 
     output_failures = validate_rust_output_set(
         {
+            "scir_hc_reports": {},
             "scir_h_reports": {},
             "scir_l_reports": {"d_proc_macro": {}},
             "translation_reports": {},
@@ -6555,6 +6556,7 @@ def run_rust_self_tests(root: pathlib.Path):
 
     wasm_output_failures = validate_rust_output_set(
         {
+            "scir_hc_reports": {case_name: {} for case_name in RUST_SUPPORTED_CASES},
             "scir_h_reports": {case_name: {} for case_name in RUST_SUPPORTED_CASES},
             "scir_l_reports": {case_name: {} for case_name in RUST_SUPPORTED_CASES},
             "translation_reports": {case_name: {} for case_name in RUST_SUPPORTED_CASES},

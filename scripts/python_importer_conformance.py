@@ -705,12 +705,12 @@ def run_self_tests(root: pathlib.Path):
             ["a_basic_function", "canonical SCIR-H parse failed"],
         ),
         (
-            "if/else importer-only golden lost else structure",
+            "if/else proof-loop golden lost else structure",
             mutate_break_b_else_structure,
             ["b_if_else_return", "generated text bundle did not match checked-in fixture"],
         ),
         (
-            "direct-call importer-only golden lost local call shape",
+            "direct-call proof-loop golden lost local call shape",
             mutate_break_b_direct_call_shape,
             ["b_direct_call", "canonical SCIR-H parse failed"],
         ),
@@ -720,22 +720,22 @@ def run_self_tests(root: pathlib.Path):
             ["b_async_arg_await", "missing marker 'return await fetch_value(x)'"],
         ),
         (
-            "while importer-only golden lost loop syntax",
+            "while proof-loop golden lost loop syntax",
             mutate_break_b_while_loop_shape,
             ["b_while_call_update", "canonical SCIR-H parse failed"],
         ),
         (
-            "while importer-only golden lost continue marker",
+            "while proof-loop golden lost continue marker",
             mutate_break_b_while_continue_marker,
             ["b_while_break_continue", "generated text bundle did not match checked-in fixture"],
         ),
         (
-            "class importer-only golden lost field-place syntax",
+            "class proof-loop golden lost field-place syntax",
             mutate_break_b_class_field_place,
             ["b_class_init_method", "missing marker 'set self.value value'"],
         ),
         (
-            "class importer-only update golden lost local call shape",
+            "class proof-loop update golden lost local call shape",
             mutate_break_b_class_update_call_shape,
             ["b_class_field_update", "canonical SCIR-H parse failed"],
         ),

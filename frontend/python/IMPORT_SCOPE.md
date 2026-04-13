@@ -20,6 +20,7 @@ Status: Normative
 ### Importer-only canonical `SCIR-H` cases
 
 No checked-in importer-only canonical `SCIR-H` cases remain in the active Python fixture set.
+Importer-only Python support is currently empty for the frozen MVP corpus.
 
 ### Rejected cases
 
@@ -31,7 +32,8 @@ Only the executable proof-loop cases above are active end-to-end MVP claims.
 
 ## Importer-only cases
 
-The importer-only cases above remain canonical `SCIR-H` evidence only. They do not imply active lowering or reconstruction support.
+There are no active importer-only Python fixture cases in the frozen MVP corpus.
+Any future importer-only case must remain explicit in this file and must not imply active lowering or reconstruction support.
 
 ## Unsupported
 

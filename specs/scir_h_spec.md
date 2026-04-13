@@ -94,9 +94,9 @@ See `specs/scir_hc_doctrine.md` for the blocking authority-boundary, derivation,
 | `set` field place | yes | fully supported in MVP |
 | `return` | yes | fully supported in MVP |
 | `if` / `else` | yes | fully supported in MVP |
-| `loop` | yes | canonical parser/validator surface only; importer-only beyond that |
-| `break` | yes | canonical parser/validator surface only; importer-only beyond that |
-| `continue` | yes | canonical parser/validator surface only; importer-only beyond that |
+| `loop` | yes | exact fixed proof-loop shapes are executable; broader forms remain deferred |
+| `break` | yes | exact fixed proof-loop shapes are executable; broader forms remain deferred |
+| `continue` | yes | exact fixed proof-loop shapes are executable; broader forms remain deferred |
 | single-handler `try` / `catch name Type` | yes | exact single-handler `ValueError` proof-loop slice only; broader forms importer-only or deferred |
 | direct call `f(args)` | yes | fully supported in MVP |
 | `await` | yes | fully supported in MVP |
