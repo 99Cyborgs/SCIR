@@ -1,6 +1,6 @@
 {
   "benchmark_id": "example-benchmark-track-a-001",
-  "run_id": "example-benchmark-run-20260403T170000Z",
+  "run_id": "example-benchmark-run-20260413T163918Z",
   "commit_sha": "example-commit-sha",
   "spec_version": "v0.1-draft",
   "tool_version": "scir-benchmark-audit-v1",
@@ -10,38 +10,47 @@
   "profile": "R",
   "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
   "metrics": {
-    "source_token_total": 70,
-    "scir_h_token_total": 113,
-    "scir_hc_token_total": 102,
-    "typed_ast_token_total": 476,
+    "source_token_total": 244,
+    "scir_h_token_total": 387,
+    "scir_hc_token_total": 438,
+    "typed_ast_token_total": 1764,
     "median_scir_to_source_ratio": 1.5,
-    "aggregate_scir_to_source_ratio": 1.6143,
-    "median_scirhc_to_source_ratio": 1.4211,
-    "aggregate_scirhc_to_source_ratio": 1.4571,
-    "median_scir_to_typed_ast_ratio": 0.2726,
-    "aggregate_scir_to_typed_ast_ratio": 0.2374,
-    "median_scirhc_to_typed_ast_ratio": 0.2244,
-    "aggregate_scirhc_to_typed_ast_ratio": 0.2143,
-    "aggregate_structural_redundancy_gain": 0.1571,
-    "patch_composability_gain_vs_typed_ast": 0.8931,
+    "aggregate_scir_to_source_ratio": 1.5861,
+    "median_scirhc_to_source_ratio": 1.7368,
+    "aggregate_scirhc_to_source_ratio": 1.7951,
+    "median_scir_to_typed_ast_ratio": 0.2197,
+    "aggregate_scir_to_typed_ast_ratio": 0.2194,
+    "median_scirhc_to_typed_ast_ratio": 0.25,
+    "aggregate_scirhc_to_typed_ast_ratio": 0.2483,
+    "body_median_scir_to_source_ratio": 1.0,
+    "aggregate_structural_redundancy_gain": -0.209,
+    "header_token_share": 0.5814,
     "gate_S3_source_pass": false,
     "gate_S3_ast_pass": true,
     "gate_S4_pass": true,
     "gate_K2_hit": false,
     "gate_K4_hit": false,
-    "preservation_level_ceiling": "P3"
+    "opaque_fraction": 0.05,
+    "semantic_explicitness_gain": 15,
+    "patch_composability_gain_vs_typed_ast": 0.875,
+    "median_scir_to_typed_ast_patch_ratio": 0.125,
+    "preservation_level_ceiling": "P3",
+    "tier_a_feature_count": 19,
+    "tier_b_feature_count": 0,
+    "tier_c_feature_count": 1,
+    "tier_d_feature_count": 0
   },
   "baseline_comparison": {
-    "direct source": 0.6569,
-    "typed-AST": -5.1103,
-    "lightweight regularized core or s-expression": 0.6569,
-    "direct source (SCIR-Hc LCR)": 0.5061,
-    "typed-AST (SCIR-Hc LCR)": -5.2611,
-    "lightweight regularized core or s-expression (SCIR-Hc LCR)": 0.5061
+    "direct source": 0.6012,
+    "typed-AST": -5.5324,
+    "lightweight regularized core or s-expression": 0.6012,
+    "direct source (SCIR-Hc LCR)": 0.8086,
+    "typed-AST (SCIR-Hc LCR)": -5.325,
+    "lightweight regularized core or s-expression (SCIR-Hc LCR)": 0.8086
   },
   "artifact_rows": [
     {
-      "run_id": "example-benchmark-run-20260403T170000Z",
+      "run_id": "example-benchmark-run-20260413T163918Z",
       "commit_sha": "example-commit-sha",
       "spec_version": "v0.1-draft",
       "tool_version": "scir-benchmark-audit-v1",
@@ -61,12 +70,12 @@
       "status": "pass",
       "metrics": {
         "token_count": 28,
-        "token_count_scirhc": 27,
+        "token_count_scirhc": 33,
         "source_token_count": 19,
         "edit_distance": 20,
-        "edit_distance_scirhc": 15,
+        "edit_distance_scirhc": 21,
         "LCR": 1.4737,
-        "LCR_scirhc": 1.4211,
+        "LCR_scirhc": 1.7368,
         "GR": 1.0,
         "GR_scirhc": 1.0,
         "SE": 0.2143,
@@ -96,12 +105,12 @@
           "cwd": "G:/GitHub/incubate/SCIR"
         },
         "seed": 0,
-        "timestamp": "2026-04-03T17:00:00+00:00"
+        "timestamp": "2026-04-13T16:39:18+00:00"
       }
     }
   ],
   "reproducibility_block": {
-    "command": "python scripts/benchmark_contract_dry_run.py --claim-run",
+    "command": "python scripts/benchmark_contract_dry_run.py",
     "environment": {
       "python_executable": "python",
       "python_version": "3.11.0",
@@ -109,11 +118,56 @@
       "cwd": "G:/GitHub/incubate/SCIR"
     },
     "seed": 0,
-    "timestamp": "2026-04-03T17:00:00+00:00"
+    "timestamp": "2026-04-13T16:39:18+00:00"
   },
   "status": "pass",
   "evidence": [
     "comparison against direct source, typed-AST, and normalized baseline",
-    "claim bundle includes reproducibility block and manifest hash"
-  ]
+    "surface evaluations identify the strongest baseline on each active Track A claim surface"
+  ],
+  "surface_evaluations": [
+    {
+      "surface_id": "canonical_explicitness_tradeoff",
+      "strongest_baseline_name": "direct source",
+      "metric": "median_scir_to_source_ratio",
+      "direction": "lower",
+      "scir_value": 1.5,
+      "strongest_baseline_value": 1.0,
+      "delta": 0.5,
+      "tie_tolerance": 0.1,
+      "outcome": "tie",
+      "threshold_summary": "win: median_scir_to_source_ratio <= 1.10 with semantic_explicitness_gain > 0; tie: median_scir_to_source_ratio <= 1.50 with semantic_explicitness_gain > 0; loss: otherwise",
+      "supporting_metric": "semantic_explicitness_gain",
+      "supporting_value": 15
+    },
+    {
+      "surface_id": "compressed_regularity_vs_typed_ast",
+      "strongest_baseline_name": "typed-AST",
+      "metric": "median_scirhc_to_typed_ast_ratio",
+      "direction": "lower",
+      "scir_value": 0.25,
+      "strongest_baseline_value": 1.0,
+      "delta": -0.75,
+      "tie_tolerance": 0.0,
+      "outcome": "win",
+      "threshold_summary": "win: <= 0.75; tie: > 0.75 and <= 1.0; loss: > 1.0",
+      "supporting_metric": null,
+      "supporting_value": null
+    },
+    {
+      "surface_id": "patch_composability_vs_typed_ast",
+      "strongest_baseline_name": "typed-AST",
+      "metric": "patch_composability_gain_vs_typed_ast",
+      "direction": "higher",
+      "scir_value": 0.875,
+      "strongest_baseline_value": 0.0,
+      "delta": 0.875,
+      "tie_tolerance": 0.0,
+      "outcome": "win",
+      "threshold_summary": "win: > 0.0; tie: == 0.0; loss: < 0.0",
+      "supporting_metric": null,
+      "supporting_value": null
+    }
+  ],
+  "decision_signal": "win"
 }

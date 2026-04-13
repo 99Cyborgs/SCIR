@@ -24,3 +24,5 @@ Any non-editorial refresh to those Track `C` samples must cite the opt-in regene
 - `benchmark_report.example.json`
 - `comparison_summary.example.json`
 - `contamination_report.example.json`
+
+Those examples now include strongest-baseline surface evaluations and the repository-level continuation decision used to distinguish `SCIR_NECESSARY`, `SCIR_USEFUL_BUT_UNNECESSARY`, `SCIR_NOT_JUSTIFIED`, and `INCONCLUSIVE`.

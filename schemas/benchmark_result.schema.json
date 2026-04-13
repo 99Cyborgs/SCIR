@@ -100,6 +100,22 @@
         "$ref": "#/$defs/auditRow"
       }
     },
+    "surface_evaluations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/surfaceEvaluation"
+      }
+    },
+    "decision_signal": {
+      "type": "string",
+      "enum": [
+        "win",
+        "tie",
+        "loss",
+        "inconclusive"
+      ]
+    },
     "reproducibility_block": {
       "$ref": "#/$defs/reproducibilityBlock"
     },
@@ -329,6 +345,82 @@
         },
         "reproducibility_block": {
           "$ref": "#/$defs/reproducibilityBlock"
+        }
+      }
+    },
+    "surfaceEvaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "surface_id",
+        "strongest_baseline_name",
+        "metric",
+        "direction",
+        "scir_value",
+        "strongest_baseline_value",
+        "delta",
+        "tie_tolerance",
+        "outcome",
+        "threshold_summary",
+        "supporting_metric",
+        "supporting_value"
+      ],
+      "properties": {
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "strongest_baseline_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "metric": {
+          "type": "string",
+          "minLength": 1
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "lower",
+            "higher"
+          ]
+        },
+        "scir_value": {
+          "$ref": "#/$defs/metricValue"
+        },
+        "strongest_baseline_value": {
+          "$ref": "#/$defs/metricValue"
+        },
+        "delta": {
+          "$ref": "#/$defs/metricValue"
+        },
+        "tie_tolerance": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "win",
+            "tie",
+            "loss",
+            "inconclusive"
+          ]
+        },
+        "threshold_summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supporting_metric": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "supporting_value": {
+          "$ref": "#/$defs/metricValue"
         }
       }
     }

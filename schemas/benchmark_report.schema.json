@@ -22,6 +22,7 @@
     "claim_gate",
     "failure_attribution",
     "claims",
+    "continuation_decision",
     "disclaimers",
     "artifacts",
     "reproducibility_block"
@@ -133,6 +134,9 @@
       "items": {
         "$ref": "#/$defs/claim"
       }
+    },
+    "continuation_decision": {
+      "$ref": "#/$defs/continuationDecision"
     },
     "disclaimers": {
       "type": "array",
@@ -798,6 +802,51 @@
         "timestamp": {
           "type": "string",
           "minLength": 1
+        }
+      }
+    },
+    "continuationDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "claim_ready",
+        "strongest_counterexample_baseline",
+        "strongest_counterexample_surface",
+        "reasons"
+      ],
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "SCIR_NECESSARY",
+            "SCIR_USEFUL_BUT_UNNECESSARY",
+            "SCIR_NOT_JUSTIFIED",
+            "INCONCLUSIVE"
+          ]
+        },
+        "claim_ready": {
+          "type": "boolean"
+        },
+        "strongest_counterexample_baseline": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "strongest_counterexample_surface": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     }

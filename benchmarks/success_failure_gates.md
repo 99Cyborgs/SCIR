@@ -28,6 +28,7 @@ Explicit claim runs must fail when:
 - corpus hash mismatches are detected across the benchmark bundle
 - a reproducibility block is missing
 - contamination is detected
+- the active continuation decision is not `SCIR_NECESSARY`
 - `claim_class` or `evidence_class` is missing from `benchmark_report`
 - `SCIR-Hc` evidence leaks across claim classes or implies semantic-preservation, reconstruction-fidelity, or cross-language claims
 - none of the active claim-gate conditions hold
@@ -40,6 +41,15 @@ Active claim-gate conditions are:
 
 Each `benchmark_report` may evaluate only the condition set admitted by its declared `claim_class`.
 Mixed-class claim reports are invalid even when multiple conditions happen to pass diagnostically.
+
+## Continuation decision outcomes
+
+| Outcome | Condition |
+| --- | --- |
+| `SCIR_NECESSARY` | both active tracks pass, no active surface loses, Track `B` beats the strongest measured baseline, and Track `A` does not lose |
+| `SCIR_USEFUL_BUT_UNNECESSARY` | both active tracks pass, Track `A` wins at least one active surface, and Track `B` only ties the strongest measured baseline |
+| `SCIR_NOT_JUSTIFIED` | any active track fails, any active surface loses, or strong baselines otherwise match SCIR without a continuation-critical win |
+| `INCONCLUSIVE` | contamination or missing strongest-baseline evidence prevents a fair decision |
 
 ## Rule
 

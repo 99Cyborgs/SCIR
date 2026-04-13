@@ -21,9 +21,14 @@ if str(REPO_ROOT) not in sys.path:
 
 from benchmark_audit_common import (
     BENCHMARK_TOOL_VERSION,
+    NORMALIZED_BASELINE_NAME,
     SCIR_SYSTEM_NAME,
+    SOURCE_BASELINE_NAME,
+    TYPED_AST_BASELINE_NAME,
     build_reproducibility_block,
     canonical_json_hash,
+    row_metric_value,
+    safe_average,
 )
 from benchmark_contract_metadata import (
     BENCHMARK_CONTRACT_METADATA,
@@ -935,6 +940,11 @@ def validate_executable_benchmark_items(root: pathlib.Path, benchmark_items: dic
         reproducibility_block = result.get("reproducibility_block")
         if not isinstance(reproducibility_block, dict) or not reproducibility_block.get("command"):
             failures.append(f"{name} result: missing reproducibility_block.command")
+        surface_evaluations = result.get("surface_evaluations")
+        if not isinstance(surface_evaluations, list) or not surface_evaluations:
+            failures.append(f"{name} result: missing surface_evaluations")
+        if result.get("decision_signal") not in {"win", "tie", "loss", "inconclusive"}:
+            failures.append(f"{name} result: invalid decision_signal {result.get('decision_signal')!r}")
     return failures
 
 
@@ -942,6 +952,459 @@ def report_baseline_value(scir_value, delta):
     if scir_value is None or delta is None:
         return None
     return round(scir_value - delta, 4)
+
+
+def baseline_strength_order() -> list[str]:
+    return list(BENCHMARK_CONTRACT_METADATA["baseline_strength_order"])
+
+
+def baseline_strength_rank(baseline_name: str) -> int:
+    order = baseline_strength_order()
+    try:
+        return order.index(baseline_name)
+    except ValueError:
+        return len(order)
+
+
+def select_rows(
+    rows: list[dict],
+    *,
+    baseline_name: str | None = None,
+    stage: str | None = None,
+    tier: str | None = None,
+) -> list[dict]:
+    selected = []
+    for row in rows:
+        if baseline_name is not None and row.get("baseline_name") != baseline_name:
+            continue
+        if stage is not None and row.get("stage") != stage:
+            continue
+        if tier is not None and row.get("tier") != tier:
+            continue
+        if row.get("status") == "skip":
+            continue
+        selected.append(row)
+    return selected
+
+
+def average_boolean_field(rows: list[dict], field_name: str) -> float | None:
+    values = []
+    for row in rows:
+        value = row.get(field_name)
+        if value is None:
+            continue
+        values.append(1.0 if value else 0.0)
+    return safe_average(values)
+
+
+def average_metric_field(rows: list[dict], metric_name: str) -> float | None:
+    return safe_average([row_metric_value(row, metric_name) for row in rows])
+
+
+def strongest_baseline_value(
+    baseline_rows: list[dict],
+    *,
+    stage: str,
+    tier: str,
+    metric_name: str,
+    direction: str,
+) -> tuple[str | None, float | None]:
+    candidates: list[tuple[str, float]] = []
+    for baseline_name in baseline_strength_order():
+        rows = select_rows(
+            baseline_rows,
+            baseline_name=baseline_name,
+            stage=stage,
+            tier=tier,
+        )
+        if metric_name in {"compile_pass", "test_pass"}:
+            value = average_boolean_field(rows, metric_name)
+        elif metric_name == "semantic_regression_rate":
+            round_trip_value = average_metric_field(rows, "round_trip")
+            value = None if round_trip_value is None else round(1.0 - round_trip_value, 4)
+        else:
+            value = average_metric_field(rows, metric_name)
+        if value is not None:
+            candidates.append((baseline_name, value))
+    if not candidates:
+        return None, None
+    if direction == "lower":
+        best_value = min(value for _, value in candidates)
+    else:
+        best_value = max(value for _, value in candidates)
+    best_names = sorted(
+        [name for name, value in candidates if value == best_value],
+        key=baseline_strength_rank,
+    )
+    return best_names[0], best_value
+
+
+def compare_directional_metric(
+    scir_value: float | None,
+    baseline_value: float | None,
+    *,
+    direction: str,
+    tie_tolerance: float,
+) -> tuple[str, float | None]:
+    if scir_value is None or baseline_value is None:
+        return "inconclusive", None
+    delta = round(scir_value - baseline_value, 4)
+    if direction == "lower":
+        if scir_value < baseline_value:
+            return "win", delta
+        if delta <= tie_tolerance:
+            return "tie", delta
+        return "loss", delta
+    if scir_value > baseline_value:
+        return "win", delta
+    if delta >= -tie_tolerance:
+        return "tie", delta
+    return "loss", delta
+
+
+def build_surface_evaluation(
+    *,
+    surface_id: str,
+    strongest_baseline_name: str,
+    metric: str,
+    direction: str,
+    scir_value,
+    strongest_baseline_value,
+    delta,
+    tie_tolerance: float | None,
+    outcome: str,
+    threshold_summary: str,
+    supporting_metric: str | None = None,
+    supporting_value=None,
+) -> dict:
+    return {
+        "surface_id": surface_id,
+        "strongest_baseline_name": strongest_baseline_name,
+        "metric": metric,
+        "direction": direction,
+        "scir_value": scir_value,
+        "strongest_baseline_value": strongest_baseline_value,
+        "delta": delta,
+        "tie_tolerance": tie_tolerance,
+        "outcome": outcome,
+        "threshold_summary": threshold_summary,
+        "supporting_metric": supporting_metric,
+        "supporting_value": supporting_value,
+    }
+
+
+def build_track_a_surface_evaluations(track_a_result: dict) -> list[dict]:
+    metrics = track_a_result["metrics"]
+    source_ratio = metrics["median_scir_to_source_ratio"]
+    explicitness_gain = metrics["semantic_explicitness_gain"]
+    if source_ratio <= 1.10 and explicitness_gain > 0:
+        canonical_outcome = "win"
+    elif source_ratio <= 1.50 and explicitness_gain > 0:
+        canonical_outcome = "tie"
+    else:
+        canonical_outcome = "loss"
+
+    compressed_ratio = metrics["median_scirhc_to_typed_ast_ratio"]
+    compressed_outcome, compressed_delta = compare_directional_metric(
+        compressed_ratio,
+        1.0,
+        direction="lower",
+        tie_tolerance=0.0,
+    )
+    if compressed_ratio is not None and compressed_ratio <= 0.75:
+        compressed_outcome = "win"
+    elif compressed_ratio is not None and compressed_ratio <= 1.0:
+        compressed_outcome = "tie"
+
+    patch_gain = metrics["patch_composability_gain_vs_typed_ast"]
+    patch_outcome, patch_delta = compare_directional_metric(
+        patch_gain,
+        0.0,
+        direction="higher",
+        tie_tolerance=0.0,
+    )
+
+    return [
+        build_surface_evaluation(
+            surface_id="canonical_explicitness_tradeoff",
+            strongest_baseline_name=SOURCE_BASELINE_NAME,
+            metric="median_scir_to_source_ratio",
+            direction="lower",
+            scir_value=source_ratio,
+            strongest_baseline_value=1.0,
+            delta=round(source_ratio - 1.0, 4),
+            tie_tolerance=0.10,
+            outcome=canonical_outcome,
+            threshold_summary=(
+                "win: median_scir_to_source_ratio <= 1.10 with semantic_explicitness_gain > 0; "
+                "tie: median_scir_to_source_ratio <= 1.50 with semantic_explicitness_gain > 0; "
+                "loss: otherwise"
+            ),
+            supporting_metric="semantic_explicitness_gain",
+            supporting_value=explicitness_gain,
+        ),
+        build_surface_evaluation(
+            surface_id="compressed_regularity_vs_typed_ast",
+            strongest_baseline_name=TYPED_AST_BASELINE_NAME,
+            metric="median_scirhc_to_typed_ast_ratio",
+            direction="lower",
+            scir_value=compressed_ratio,
+            strongest_baseline_value=1.0,
+            delta=compressed_delta,
+            tie_tolerance=0.0,
+            outcome=compressed_outcome,
+            threshold_summary="win: <= 0.75; tie: > 0.75 and <= 1.0; loss: > 1.0",
+        ),
+        build_surface_evaluation(
+            surface_id="patch_composability_vs_typed_ast",
+            strongest_baseline_name=TYPED_AST_BASELINE_NAME,
+            metric="patch_composability_gain_vs_typed_ast",
+            direction="higher",
+            scir_value=patch_gain,
+            strongest_baseline_value=0.0,
+            delta=patch_delta,
+            tie_tolerance=0.0,
+            outcome=patch_outcome,
+            threshold_summary="win: > 0.0; tie: == 0.0; loss: < 0.0",
+        ),
+    ]
+
+
+def build_track_b_metrics(sweep_result: dict) -> dict[str, float | None]:
+    scir_rows = sweep_result["rows"]
+    validator_rows = select_rows(scir_rows, stage="scir_h_validation", tier="A")
+    round_trip_rows = select_rows(scir_rows, stage="h_to_python", tier="A")
+    first_pass_validator_success = safe_average(
+        [1.0 if row.get("status") == "pass" else 0.0 for row in validator_rows]
+    )
+    round_trip_fidelity = average_metric_field(round_trip_rows, "round_trip")
+    reconstruction_stability = average_metric_field(round_trip_rows, "SCPR")
+    semantic_regression_rate = None
+    if round_trip_fidelity is not None:
+        semantic_regression_rate = round(1.0 - round_trip_fidelity, 4)
+    return {
+        "tier_a_first_pass_validator_success_rate": first_pass_validator_success,
+        "tier_a_round_trip_fidelity": round_trip_fidelity,
+        "tier_a_semantic_regression_rate": semantic_regression_rate,
+        "tier_a_reconstruction_stability": reconstruction_stability,
+    }
+
+
+def build_track_b_surface_evaluations(track_b_result: dict, sweep_result: dict) -> list[dict]:
+    baseline_rows = sweep_result["baseline_rows"]
+    metrics = track_b_result["metrics"]
+    evaluations = []
+    # Track B is evaluated as parity against the strongest executable baseline
+    # on each round-trip surface, not as an isolated SCIR pass/fail report.
+    surface_specs = [
+        (
+            "tier_a_compile_pass_rate",
+            "compile_pass",
+            "higher",
+            0.05,
+            "win: above strongest baseline; tie: within 5 percentage points; loss: below by more than 5 percentage points",
+        ),
+        (
+            "tier_a_test_pass_rate",
+            "test_pass",
+            "higher",
+            0.05,
+            "win: above strongest baseline; tie: within 5 percentage points; loss: below by more than 5 percentage points",
+        ),
+        (
+            "tier_a_round_trip_fidelity",
+            "round_trip",
+            "higher",
+            0.05,
+            "win: above strongest baseline; tie: within 5 percentage points; loss: below by more than 5 percentage points",
+        ),
+        (
+            "tier_a_semantic_regression_rate",
+            "semantic_regression_rate",
+            "lower",
+            0.05,
+            "win: below strongest baseline; tie: within 5 percentage points; loss: above by more than 5 percentage points",
+        ),
+        (
+            "tier_a_reconstruction_stability",
+            "SCPR",
+            "higher",
+            0.05,
+            "win: above strongest baseline; tie: within 5 percentage points; loss: below by more than 5 percentage points",
+        ),
+    ]
+    for surface_id, baseline_metric_name, direction, tie_tolerance, threshold_summary in surface_specs:
+        strongest_name, strongest_value = strongest_baseline_value(
+            baseline_rows,
+            stage="h_to_python",
+            tier="A",
+            metric_name=baseline_metric_name,
+            direction=direction,
+        )
+        scir_value = metrics.get(surface_id)
+        outcome, delta = compare_directional_metric(
+            scir_value,
+            strongest_value,
+            direction=direction,
+            tie_tolerance=tie_tolerance,
+        )
+        evaluations.append(
+            build_surface_evaluation(
+                surface_id=surface_id,
+                strongest_baseline_name=strongest_name or "missing-baseline",
+                metric=surface_id,
+                direction=direction,
+                scir_value=scir_value,
+                strongest_baseline_value=strongest_value,
+                delta=delta,
+                tie_tolerance=tie_tolerance,
+                outcome=outcome,
+                threshold_summary=threshold_summary,
+            )
+        )
+    return evaluations
+
+
+def track_decision_signal(surface_evaluations: list[dict]) -> str:
+    outcomes = [item["outcome"] for item in surface_evaluations]
+    if any(item == "inconclusive" for item in outcomes):
+        return "inconclusive"
+    if any(item == "loss" for item in outcomes):
+        return "loss"
+    if any(item == "win" for item in outcomes):
+        return "win"
+    return "tie"
+
+
+def build_track_evaluation(track: str, result: dict) -> dict:
+    surface_evaluations = result["surface_evaluations"]
+    return {
+        "track": track,
+        "track_status": result["status"],
+        "decision_signal": result["decision_signal"],
+        "win_count": sum(1 for item in surface_evaluations if item["outcome"] == "win"),
+        "tie_count": sum(1 for item in surface_evaluations if item["outcome"] == "tie"),
+        "loss_count": sum(1 for item in surface_evaluations if item["outcome"] == "loss"),
+        "surface_evaluations": surface_evaluations,
+    }
+
+
+def first_surface_by_outcome(track_evaluations: dict, outcomes: set[str]) -> dict | None:
+    surfaces = []
+    for track in ["A", "B"]:
+        surfaces.extend(track_evaluations[track]["surface_evaluations"])
+    surfaces = sorted(
+        [item for item in surfaces if item["outcome"] in outcomes],
+        key=lambda item: (baseline_strength_rank(item["strongest_baseline_name"]), item["surface_id"]),
+    )
+    return surfaces[0] if surfaces else None
+
+
+def build_continuation_decision(comparison_summary: dict, benchmark_items: dict) -> dict:
+    track_evaluations = comparison_summary["track_evaluations"]
+    if comparison_summary["contamination_flags"]:
+        return {
+            "outcome": "INCONCLUSIVE",
+            "claim_ready": False,
+            "strongest_counterexample_baseline": None,
+            "strongest_counterexample_surface": None,
+            "reasons": ["Contamination flags are present; continuation cannot be decided cleanly."],
+        }
+
+    track_a = track_evaluations["A"]
+    track_b = track_evaluations["B"]
+    loss_surface = first_surface_by_outcome(track_evaluations, {"loss"})
+    tie_surface = first_surface_by_outcome(track_evaluations, {"tie"})
+
+    # Repository continuation is stricter than any one descriptive claim:
+    # the active program must show a continuation-critical win, not just viability.
+    if benchmark_items["track_a_result"]["status"] != "pass" or benchmark_items["track_b_result"]["status"] != "pass":
+        return {
+            "outcome": "SCIR_NOT_JUSTIFIED",
+            "claim_ready": False,
+            "strongest_counterexample_baseline": loss_surface["strongest_baseline_name"] if loss_surface else None,
+            "strongest_counterexample_surface": loss_surface["surface_id"] if loss_surface else None,
+            "reasons": [
+                "Track A and Track B must both pass their active benchmark gates before continuation is justified.",
+            ],
+        }
+
+    if track_a["decision_signal"] == "loss" or track_b["decision_signal"] == "loss":
+        reasons = ["Strongest-baseline comparison records at least one loss on an active decision surface."]
+        if loss_surface is not None:
+            reasons.append(
+                f"{loss_surface['surface_id']} loses to {loss_surface['strongest_baseline_name']}."
+            )
+        return {
+            "outcome": "SCIR_NOT_JUSTIFIED",
+            "claim_ready": False,
+            "strongest_counterexample_baseline": loss_surface["strongest_baseline_name"] if loss_surface else None,
+            "strongest_counterexample_surface": loss_surface["surface_id"] if loss_surface else None,
+            "reasons": reasons,
+        }
+
+    if track_a["decision_signal"] == "inconclusive" or track_b["decision_signal"] == "inconclusive":
+        return {
+            "outcome": "INCONCLUSIVE",
+            "claim_ready": False,
+            "strongest_counterexample_baseline": None,
+            "strongest_counterexample_surface": None,
+            "reasons": ["At least one active track remains inconclusive against the strongest measured baseline."],
+        }
+
+    if track_b["decision_signal"] == "win" and track_a["decision_signal"] in {"win", "tie"}:
+        return {
+            "outcome": "SCIR_NECESSARY",
+            "claim_ready": True,
+            "strongest_counterexample_baseline": None,
+            "strongest_counterexample_surface": None,
+            "reasons": [
+                "Track B materially beats the strongest measured baseline on active round-trip fidelity surfaces.",
+                "Track A does not lose to the strongest baseline on active representation surfaces.",
+            ],
+        }
+
+    if track_a["decision_signal"] == "win" and track_b["decision_signal"] == "tie":
+        reasons = [
+            "Track A shows benchmark value, but Track B only ties the strongest measured baseline.",
+            "SCIR remains viable on the admitted scope without proving it is necessary.",
+        ]
+        if tie_surface is not None:
+            reasons.append(
+                f"{tie_surface['surface_id']} ties {tie_surface['strongest_baseline_name']} within the declared threshold."
+            )
+        return {
+            "outcome": "SCIR_USEFUL_BUT_UNNECESSARY",
+            "claim_ready": False,
+            "strongest_counterexample_baseline": tie_surface["strongest_baseline_name"] if tie_surface else None,
+            "strongest_counterexample_surface": tie_surface["surface_id"] if tie_surface else None,
+            "reasons": reasons,
+        }
+
+    reasons = ["Strong baselines match SCIR on the active admitted scope without a continuation-critical win."]
+    if tie_surface is not None:
+        reasons.append(
+            f"{tie_surface['surface_id']} ties {tie_surface['strongest_baseline_name']} within the declared threshold."
+        )
+    return {
+        "outcome": "SCIR_NOT_JUSTIFIED",
+        "claim_ready": False,
+        "strongest_counterexample_baseline": tie_surface["strongest_baseline_name"] if tie_surface else None,
+        "strongest_counterexample_surface": tie_surface["surface_id"] if tie_surface else None,
+        "reasons": reasons,
+    }
+
+
+def augment_comparison_summary_with_decisions(comparison_summary: dict, benchmark_items: dict) -> None:
+    track_evaluations = {
+        "A": build_track_evaluation("A", benchmark_items["track_a_result"]),
+        "B": build_track_evaluation("B", benchmark_items["track_b_result"]),
+    }
+    comparison_summary["track_evaluations"] = track_evaluations
+    comparison_summary["continuation_decision"] = build_continuation_decision(
+        comparison_summary,
+        benchmark_items,
+    )
 
 
 def build_manifest_lock(root: pathlib.Path, corpus_manifest_rel: str, run_id: str, generated_at: str) -> dict:
@@ -1173,6 +1636,7 @@ def build_benchmark_report(
         "claim_gate": claim_gate,
         "failure_attribution": failure_attribution,
         "claims": claims,
+        "continuation_decision": comparison_summary["continuation_decision"],
         "disclaimers": benchmark_report_disclaimers(corpus_manifest, contamination_report),
         "artifacts": {
             "comparison_summary": "comparison_summary.json",
@@ -1197,6 +1661,7 @@ def build_benchmark_report_markdown(report: dict) -> str:
         f"- claim_class: `{report['claim_class']}`",
         f"- evidence_class: `{report['evidence_class']}`",
         f"- claim_gate: `{report['claim_gate']['ai_thesis_status']}`",
+        f"- continuation_decision: `{report['continuation_decision']['outcome']}`",
         "",
         "## Representations",
         "",
@@ -1225,6 +1690,18 @@ def build_benchmark_report_markdown(report: dict) -> str:
             f"- {item['statement']} baseline=`{item['baseline_name']}` metric=`{item['metric']}` "
             f"observed=`{item['observed_value']}` delta=`{item['delta']}`"
         )
+    lines.extend(["", "## Continuation Decision", ""])
+    lines.append(
+        f"- outcome=`{report['continuation_decision']['outcome']}` "
+        f"claim_ready=`{report['continuation_decision']['claim_ready']}`"
+    )
+    if report["continuation_decision"]["strongest_counterexample_baseline"]:
+        lines.append(
+            f"- strongest_counterexample=`{report['continuation_decision']['strongest_counterexample_baseline']}` "
+            f"surface=`{report['continuation_decision']['strongest_counterexample_surface']}`"
+        )
+    for item in report["continuation_decision"]["reasons"]:
+        lines.append(f"- {item}")
     lines.extend(["", "## Disclaimers", ""])
     for item in report["disclaimers"]:
         lines.append(f"- {item}")
@@ -1239,9 +1716,9 @@ def augment_benchmark_items(
     reproducibility_block: dict,
     corpus_manifest_rel: str,
 ):
-    for track_key, stage_name, metric_name in [
-        ("track_a_result", "source_to_h", "LCR"),
-        ("track_b_result", "h_to_python", "round_trip"),
+    for track_key, stage_name in [
+        ("track_a_result", "source_to_h"),
+        ("track_b_result", "h_to_python"),
     ]:
         result = benchmark_items[track_key]
         result["run_id"] = sweep_result["run_id"]
@@ -1261,12 +1738,19 @@ def augment_benchmark_items(
                 "typed-AST (SCIR-Hc LCR)": comparison_summary["aggregate"]["delta_vs_ast"]["LCR_scirhc"],
                 "lightweight regularized core or s-expression (SCIR-Hc LCR)": comparison_summary["aggregate"]["delta_vs_normalized"]["LCR_scirhc"],
             }
+            result["surface_evaluations"] = build_track_a_surface_evaluations(result)
         else:
+            result["metrics"].update(build_track_b_metrics(sweep_result))
             result["baseline_comparison"] = {
                 "direct source": comparison_summary["aggregate"]["delta_vs_source"]["round_trip"],
                 "typed-AST": comparison_summary["aggregate"]["delta_vs_ast"]["round_trip"],
                 "lightweight regularized core or s-expression": comparison_summary["aggregate"]["delta_vs_normalized"]["round_trip"],
+                "direct source (SCPR)": comparison_summary["aggregate"]["delta_vs_source"]["SCPR"],
+                "typed-AST (SCPR)": comparison_summary["aggregate"]["delta_vs_ast"]["SCPR"],
+                "lightweight regularized core or s-expression (SCPR)": comparison_summary["aggregate"]["delta_vs_normalized"]["SCPR"],
             }
+            result["surface_evaluations"] = build_track_b_surface_evaluations(result, sweep_result)
+        result["decision_signal"] = track_decision_signal(result["surface_evaluations"])
     for manifest_key in ["track_a_manifest", "track_b_manifest"]:
         manifest = benchmark_items[manifest_key]
         manifest["corpus_manifest"] = corpus_manifest_rel
@@ -1329,6 +1813,12 @@ def benchmark_gate_failures(comparison_summary: dict, contamination_report: dict
     failures = []
     if contamination_report["leakage_flags"]:
         failures.append("contamination detected")
+    decision = comparison_summary.get("continuation_decision")
+    # Anything short of SCIR_NECESSARY is a stop signal for the executable decision lane.
+    if not isinstance(decision, dict):
+        failures.append("continuation decision is missing")
+    elif decision.get("outcome") != "SCIR_NECESSARY":
+        failures.append(f"continuation decision is {decision.get('outcome')}")
     return failures
 
 
@@ -1346,6 +1836,9 @@ def claim_audit_failures(
     expected_hash = manifest_lock["corpus_manifest_hash"]
     if comparison_summary.get("corpus_manifest_hash") != expected_hash:
         failures.append("corpus hash mismatch between comparison summary and manifest lock")
+    continuation_decision = comparison_summary.get("continuation_decision")
+    if not isinstance(continuation_decision, dict):
+        failures.append("comparison summary continuation decision is missing")
     if contamination_report.get("corpus_manifest_hash") != expected_hash:
         failures.append("corpus hash mismatch between contamination report and manifest lock")
     if benchmark_report.get("corpus_manifest_hash") != expected_hash:
@@ -1369,6 +1862,12 @@ def claim_audit_failures(
         failures.append("benchmark report claim gate is missing")
     elif not benchmark_report["claim_gate"].get("passed"):
         failures.append("no claim gate condition satisfied; AI thesis invalidated")
+    if benchmark_report.get("continuation_decision") != continuation_decision:
+        # A passing SCIR-Hc descriptive claim must not mask the repository-level
+        # continuation outcome derived from the full strong-baseline comparison.
+        failures.append("benchmark report continuation decision drifted from comparison summary")
+    if isinstance(continuation_decision, dict) and not continuation_decision.get("claim_ready"):
+        failures.append(f"continuation decision is {continuation_decision.get('outcome')}; claim mode is blocked")
     if benchmark_report.get("representation") != SCIRHC_REPORT_REPRESENTATION:
         failures.append(f"benchmark report representation must be {SCIRHC_REPORT_REPRESENTATION}")
     expected_lineage_references = benchmark_report_lineage_references()
@@ -1793,6 +2292,22 @@ def run_self_tests(root: pathlib.Path):
     harness_failures, benchmark_items = run_benchmark_suite(root)
     if harness_failures or benchmark_items is None:
         return failures + ["benchmark self-test setup: executable benchmark harness must pass"], count
+    sweep_failures, sweep_result, _, _, comparison_summary, _ = run_sweep(root, BENCHMARK_SWEEP_MANIFEST_REL)
+    if sweep_failures or sweep_result is None or comparison_summary is None:
+        return failures + ["benchmark self-test setup: executable sweep must pass"], count
+    reproducibility_block = build_reproducibility_block(
+        "python scripts/benchmark_contract_dry_run.py",
+        root=root,
+        timestamp=sweep_result["generated_at"],
+    )
+    augment_benchmark_items(
+        benchmark_items=benchmark_items,
+        sweep_result=sweep_result,
+        comparison_summary=comparison_summary,
+        reproducibility_block=reproducibility_block,
+        corpus_manifest_rel=BENCHMARK_CORPUS_MANIFEST_REL,
+    )
+    augment_comparison_summary_with_decisions(comparison_summary, benchmark_items)
 
     for name, mutate, expected_markers in [
         ("unexpected track d artifact", mutate_add_track_d_result, ["benchmark bundle: unexpected executable artifact track_d_result"]),
@@ -1863,7 +2378,7 @@ def run_self_tests(root: pathlib.Path):
     return failures, count
 
 
-def print_success(track_a_result, track_b_result, self_test_count):
+def print_success(track_a_result, track_b_result, continuation_decision, self_test_count):
     print("[benchmark] benchmark harness passed")
     print("Tracks, baselines, contamination controls, and executable Track A/B runs are present.")
     print("Conditional Track C doctrine, retained disposition, and sample artifacts are synchronized and remain non-default.")
@@ -1878,6 +2393,12 @@ def print_success(track_a_result, track_b_result, self_test_count):
         f"{track_b_result['status']} "
         f"(Tier A compile={track_b_result['metrics']['tier_a_compile_pass_rate']}, "
         f"Tier A test={track_b_result['metrics']['tier_a_test_pass_rate']})."
+    )
+    print(
+        "Continuation decision: "
+        f"{continuation_decision['outcome']} "
+        f"(claim_ready={continuation_decision['claim_ready']}, "
+        f"strongest_counterexample={continuation_decision['strongest_counterexample_baseline']})."
     )
     print(f"Benchmark checker self-tests passed ({self_test_count} negative fixtures).")
 
@@ -1980,6 +2501,7 @@ def main():
         reproducibility_block=reproducibility_block,
         corpus_manifest_rel=corpus_manifest_rel,
     )
+    augment_comparison_summary_with_decisions(comparison_summary, benchmark_items)
 
     bundle_failures = validate_executable_benchmark_items(root, benchmark_items)
     if bundle_failures:
@@ -2079,7 +2601,12 @@ def main():
         print(f"[benchmark] artifacts written to {output_dir}")
         sys.exit(1)
 
-    print_success(benchmark_items["track_a_result"], benchmark_items["track_b_result"], self_test_count)
+    print_success(
+        benchmark_items["track_a_result"],
+        benchmark_items["track_b_result"],
+        comparison_summary["continuation_decision"],
+        self_test_count,
+    )
     print(f"Benchmark artifacts written to {output_dir}")
     if args.include_track_c_pilot:
         track_c_failures, track_c_manifest, track_c_result = run_track_c_pilot(root)

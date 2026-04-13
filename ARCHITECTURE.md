@@ -13,9 +13,21 @@ SCIR is a two-layer system.
 `SCIR-H` is the only semantic source of truth.
 `SCIR-L` is valid only when it is justified by validated `SCIR-H` plus a named lowering rule.
 
+## Active repository phase
+
+The active phase is:
+
+```text
+Frozen 11-case Python proof-loop
+  -> Track A / Track B strong-baseline comparison
+  -> continuation or stop decision
+```
+
+Track `A` and Track `B` are the only active benchmark tracks in this strong-baseline phase.
+
 ## Active implementation lane
 
-The active lane is:
+The implementation lane being audited by that phase is:
 
 ```text
 Python source
@@ -25,7 +37,7 @@ Python source
   -> focused validator hardening
 ```
 
-This is the current widening target.
+This remains the bounded implementation surface under test. It is not permission to widen semantics during the falsification phase.
 
 ## Maintained support lanes
 
@@ -73,7 +85,7 @@ The active proof loop now includes one exact executable `try/catch` slice: a dir
 - `SCIR-Hc` is a derived compression view over validated `SCIR-H`, never semantic authority.
 - `SCIR-L` remains derivative-only and subset-bound.
 - Wasm remains a bounded retained reference backend, not a parity claim or the current widening target.
-- Benchmarking remains a retained audit surface, not the current implementation driver.
+- Benchmarking remains an audit surface over the admitted implementation lane, not permission to rewrite the architecture.
 
 ## Architecture change protocol
 

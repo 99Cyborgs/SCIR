@@ -81,6 +81,7 @@ At minimum it must:
 `python scripts/run_repo_validation.py --require-rust` remains the optional compatibility entrypoint for environments that require an explicit usable Rust toolchain before running the deeper Rust slice, including the retained Rust pipeline self-tests.
 
 `python scripts/benchmark_contract_dry_run.py --claim-run` remains an explicit opt-in claim lane.
+It must fail unless the active continuation decision is `SCIR_NECESSARY`.
 
 Default sweep and benchmark runs must overwrite stable ignored output directories unless an explicit `--output-dir` is supplied.
 

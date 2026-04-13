@@ -1,21 +1,21 @@
 {
-  "run_id": "example-benchmark-run-20260403T170000Z",
+  "run_id": "example-benchmark-run-20260413T163918Z",
   "commit_sha": "example-commit-sha",
   "spec_version": "v0.1-draft",
   "tool_version": "scir-benchmark-audit-v1",
-  "claim_mode": "claim",
+  "claim_mode": "smoke",
   "representation": "SCIR-Hc",
   "corpus_manifest": "reports/examples/corpus_manifest.example.json",
   "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
-  "generated_at": "2026-04-03T17:00:00+00:00",
+  "generated_at": "2026-04-13T16:39:18+00:00",
   "scir_h_lineage_references": {
-    "fixture.python_importer.a_async_await": {
-      "semantic_lineage_id": "a98fe0c337795cf2ba3402bfbfa922b148e80c5523cb607e04b24d6ebc8c3621",
-      "normalized_canonical_hash": "6e8964fe70a9042ca8a380ae2368c8fb158f0d38961afecaeed7d9751f26a80d"
-    },
     "fixture.python_importer.a_basic_function": {
       "semantic_lineage_id": "3c587f53a4b9d222de6d7d030596f12f8a39099043b9ac1a71676944527aeeb4",
       "normalized_canonical_hash": "86137dfe16e2e3c3adcaa519a6e3e4dadb1278c15d6312dc7d133057b73d8e8a"
+    },
+    "fixture.python_importer.a_async_await": {
+      "semantic_lineage_id": "a98fe0c337795cf2ba3402bfbfa922b148e80c5523cb607e04b24d6ebc8c3621",
+      "normalized_canonical_hash": "6e8964fe70a9042ca8a380ae2368c8fb158f0d38961afecaeed7d9751f26a80d"
     },
     "fixture.python_importer.b_direct_call": {
       "semantic_lineage_id": "32009e343204bc239d85132dc1f12a65d5ea6a26142aea581aae370f373a1aa8",
@@ -59,15 +59,15 @@
     "B": "pass"
   },
   "explicit_representation_metrics": {
-    "LCR": 1.6569,
-    "GR": 0.9545,
-    "SE": 0.213,
+    "LCR": 1.6012,
+    "GR": 0.9828,
+    "SE": 0.1946,
     "SCPR": 1.0,
     "round_trip": 1.0
   },
   "compressed_representation_metrics": {
-    "LCR_scirhc": 1.5061,
-    "GR_scirhc": 0.9545,
+    "LCR_scirhc": 1.8086,
+    "GR_scirhc": 0.9828,
     "SCPR_scirhc": 1.0
   },
   "claim_class": "LEXICAL_COMPRESSION_ONLY",
@@ -100,9 +100,9 @@
           "fixture.python_importer.b_class_field_update",
           "fixture.python_importer.d_try_except"
         ],
-        "observed_value": 1.5061,
-        "baseline_value": 6.7672,
-        "delta": -5.2611,
+        "observed_value": 1.8086,
+        "baseline_value": 7.1336,
+        "delta": -5.325,
         "threshold": 0.0,
         "comparison": "lt",
         "passed": true
@@ -112,40 +112,52 @@
   "failure_attribution": {
     "primary_cause": "unavoidable_explicitness",
     "token_inflation": 0.0,
-    "structural_redundancy": 0.1508,
-    "unavoidable_explicitness": 0.1611
+    "structural_redundancy": 0.0,
+    "unavoidable_explicitness": 0.1547
   },
   "claims": [
-      {
-        "statement": "SCIR-Hc beats typed-AST on LCR.",
-        "corpus_manifest": "reports/examples/corpus_manifest.example.json",
-        "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
-        "baseline_name": "typed-AST",
-        "metric": "LCR_scirhc",
-        "metric_class": "DESCRIPTIVE",
-        "scir_h_evidence": [
-          "fixture.python_importer.a_basic_function",
-          "fixture.python_importer.a_async_await",
-          "fixture.python_importer.b_direct_call",
-          "fixture.python_importer.c_opaque_call",
-          "fixture.python_importer.b_if_else_return",
-          "fixture.python_importer.b_async_arg_await",
-          "fixture.python_importer.b_while_call_update",
-          "fixture.python_importer.b_while_break_continue",
-          "fixture.python_importer.b_class_init_method",
-          "fixture.python_importer.b_class_field_update",
-          "fixture.python_importer.d_try_except"
-        ],
-        "observed_value": 1.5061,
-        "baseline_value": 6.7672,
-        "delta": -5.2611,
-        "confidence_range": null
+    {
+      "statement": "SCIR-Hc beats typed-AST on LCR.",
+      "corpus_manifest": "reports/examples/corpus_manifest.example.json",
+      "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "baseline_name": "typed-AST",
+      "metric": "LCR_scirhc",
+      "metric_class": "DESCRIPTIVE",
+      "scir_h_evidence": [
+        "fixture.python_importer.a_basic_function",
+        "fixture.python_importer.a_async_await",
+        "fixture.python_importer.b_direct_call",
+        "fixture.python_importer.c_opaque_call",
+        "fixture.python_importer.b_if_else_return",
+        "fixture.python_importer.b_async_arg_await",
+        "fixture.python_importer.b_while_call_update",
+        "fixture.python_importer.b_while_break_continue",
+        "fixture.python_importer.b_class_init_method",
+        "fixture.python_importer.b_class_field_update",
+        "fixture.python_importer.d_try_except"
+      ],
+      "observed_value": 1.8086,
+      "baseline_value": 7.1336,
+      "delta": -5.325,
+      "confidence_range": null
     }
   ],
+  "continuation_decision": {
+    "outcome": "SCIR_USEFUL_BUT_UNNECESSARY",
+    "claim_ready": false,
+    "strongest_counterexample_baseline": "direct source",
+    "strongest_counterexample_surface": "canonical_explicitness_tradeoff",
+    "reasons": [
+      "Track A shows benchmark value, but Track B only ties the strongest measured baseline.",
+      "SCIR remains viable on the admitted scope without proving it is necessary.",
+      "canonical_explicitness_tradeoff ties direct source within the declared threshold."
+    ]
+  },
   "disclaimers": [
     "Results are limited to the fixed Python proof-loop corpus and do not imply whole-language support.",
     "Wasm and reconstruction evidence remain profile-qualified and do not imply native or host parity.",
     "SCIR-Hc is a derived AI-facing form and must round-trip through canonical SCIR-H before downstream claims.",
+    "Opaque or boundary-only cases remain present: fixture.python_importer.c_opaque_call",
     "Dataset split mode: simulated_no_training."
   ],
   "artifacts": {
@@ -155,7 +167,7 @@
     "sweep_result": "sweep_result.example.json"
   },
   "reproducibility_block": {
-    "command": "python scripts/benchmark_contract_dry_run.py --claim-run",
+    "command": "python scripts/benchmark_contract_dry_run.py",
     "environment": {
       "python_executable": "python",
       "python_version": "3.11.0",
@@ -163,6 +175,6 @@
       "cwd": "G:/GitHub/incubate/SCIR"
     },
     "seed": 0,
-    "timestamp": "2026-04-03T17:00:00+00:00"
+    "timestamp": "2026-04-13T16:39:18+00:00"
   }
 }

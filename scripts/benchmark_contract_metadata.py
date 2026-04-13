@@ -53,6 +53,17 @@ BENCHMARK_CONTRACT_METADATA = {
     "active_tracks": ["A", "B"],
     "conditional_tracks": ["C"],
     "deferred_tracks": ["D"],
+    "baseline_strength_order": [
+        "direct source",
+        "typed-AST",
+        "lightweight regularized core or s-expression",
+    ],
+    "continuation_outcomes": [
+        "SCIR_NECESSARY",
+        "SCIR_USEFUL_BUT_UNNECESSARY",
+        "SCIR_NOT_JUSTIFIED",
+        "INCONCLUSIVE",
+    ],
     "benchmark_cases": list(PYTHON_PROOF_LOOP_METADATA["benchmark_cases"]),
     "mandatory_baselines": [
         "direct source",
@@ -89,8 +100,13 @@ BENCHMARK_CONTRACT_METADATA = {
                 "aggregate_scir_to_typed_ast_ratio",
                 "median_scirhc_to_typed_ast_ratio",
                 "aggregate_scirhc_to_typed_ast_ratio",
+                "body_median_scir_to_source_ratio",
                 "aggregate_structural_redundancy_gain",
+                "header_token_share",
+                "opaque_fraction",
+                "semantic_explicitness_gain",
                 "patch_composability_gain_vs_typed_ast",
+                "median_scir_to_typed_ast_patch_ratio",
                 "gate_S3_source_pass",
                 "gate_S3_ast_pass",
                 "gate_S4_pass",
@@ -111,6 +127,10 @@ BENCHMARK_CONTRACT_METADATA = {
                 "tier_a_compile_pass_rate",
                 "tier_a_test_pass_rate",
                 "idiomaticity_mean",
+                "tier_a_first_pass_validator_success_rate",
+                "tier_a_round_trip_fidelity",
+                "tier_a_semantic_regression_rate",
+                "tier_a_reconstruction_stability",
                 "gate_S1_pass",
                 "gate_S4_pass",
                 "gate_K3_hit",
@@ -241,6 +261,19 @@ def _validate_benchmark_contract_metadata():
         raise ValueError("BENCHMARK_CONTRACT_METADATA conditional tracks must remain Track C only")
     if BENCHMARK_CONTRACT_METADATA["deferred_tracks"] != ["D"]:
         raise ValueError("BENCHMARK_CONTRACT_METADATA deferred tracks must remain Track D only")
+    if BENCHMARK_CONTRACT_METADATA["baseline_strength_order"] != [
+        "direct source",
+        "typed-AST",
+        "lightweight regularized core or s-expression",
+    ]:
+        raise ValueError("BENCHMARK_CONTRACT_METADATA baseline strength order drifted")
+    if BENCHMARK_CONTRACT_METADATA["continuation_outcomes"] != [
+        "SCIR_NECESSARY",
+        "SCIR_USEFUL_BUT_UNNECESSARY",
+        "SCIR_NOT_JUSTIFIED",
+        "INCONCLUSIVE",
+    ]:
+        raise ValueError("BENCHMARK_CONTRACT_METADATA continuation outcomes drifted")
 
     for track in BENCHMARK_CONTRACT_METADATA["active_tracks"]:
         contract = benchmark_track_contract(track)

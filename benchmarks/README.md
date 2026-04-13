@@ -9,8 +9,10 @@ Benchmarks are part of the product boundary.
 - Track `B`
 
 Active Track `A`/`B` runs now emit `comparison_summary.json`, `contamination_report.json`, `benchmark_report.json`, `benchmark_report.md`, and `manifest_lock.json` in addition to the sweep artifacts.
+They also emit per-track `surface_evaluations`, per-track `decision_signal`, and a repository-level `continuation_decision`.
 Track `A` report surfaces separate canonical `SCIR-H` metrics from compressed `SCIR-Hc` metrics.
 `benchmark_report.json` must also declare `claim_class` and `evidence_class` so `SCIR-Hc` evidence cannot leak across claim scopes.
+Claim mode is only successful when the continuation decision is `SCIR_NECESSARY`.
 
 ## Conditional pilot
 
@@ -40,6 +42,7 @@ No benchmark claim is valid unless it names:
 - comparator metric
 - active profile
 - gates
+- continuation decision
 
 ## Commands
 

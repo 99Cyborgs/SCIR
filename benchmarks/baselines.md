@@ -33,3 +33,9 @@ Status: Normative
 ## Rule
 
 Always interpret results against the strongest relevant baseline first. The active MVP must not compare SCIR only to weak baselines.
+
+## Active strongest-baseline mapping
+
+- direct source is the strongest baseline for canonical explicitness and executable round-trip parity surfaces
+- typed-AST is the strongest baseline for compressed regularity and typed patch-composability surfaces
+- the regularized-core baseline remains published as a third executable comparator, not as the decisive active baseline when direct source or typed-AST already covers the surface

@@ -55,6 +55,8 @@ See `benchmarks/baselines.md` for the adapter contract, including `run_baseline(
 - every result bundle uses a `benchmark_result`
 - every evaluation-lane sweep must emit `sweep_summary`, `regression_summary`, `comparison_summary.json`, and `contamination_report.json`
 - every claim run must emit `benchmark_report.json`, `benchmark_report.md`, and `manifest_lock.json`
+- every active Track `A` and Track `B` result must emit per-surface `surface_evaluations` plus a per-track `decision_signal`
+- every active run must emit a repository-level `continuation_decision`
 - every claim must name the strongest relevant baseline
 - every claim must cite the corpus manifest hash and comparator metric
 - every `benchmark_report` claim must declare `claim_class` and `evidence_class`
@@ -78,6 +80,7 @@ The minimum externally defensible bundle for an active executable run now includ
 - `manifest_lock.json`
 
 Claim-producing runs must fail if baseline results are missing, corpus hash mismatches are detected, a reproducibility block is missing, contamination is detected, or none of the approved claim-gate conditions hold for the declared `claim_class`.
+They must also fail if the active continuation decision is anything other than `SCIR_NECESSARY`.
 They must also emit separate explicit and compressed representation metrics plus failure attribution for lexical inflation sources.
 They must also bind the `SCIR-Hc` claim surface back to the canonical benchmark corpus through explicit `scir_h_lineage_references`, normalized canonical hashes, and complete per-claim `scir_h_evidence` coverage.
 They must classify every evaluated and claimed metric as `DESCRIPTIVE`, `EVALUATIVE`, or `CAUSAL`, and they must reject causal or authority-implying metrics outside the declared evidence surface.
@@ -88,6 +91,9 @@ They must reject cross-class inference and any implicit generalization from `SCI
 - If direct source or typed AST matches SCIR on the active task family, treat that as evidence against continuing.
 - If `SCIR-Hc` matches typed AST across the measured lexical and repair-composability signals, treat the AI-facing compression thesis as invalidated.
 - If Track `A` looks acceptable but Track `B` is unstable, treat the representation as unproven.
+- If Track `A` wins but Track `B` only ties the strongest measured baseline, classify the repository outcome as `SCIR_USEFUL_BUT_UNNECESSARY`.
+- If both active tracks only tie or any active surface loses to the strongest relevant baseline, classify the repository outcome as `SCIR_NOT_JUSTIFIED`.
+- Use `INCONCLUSIVE` only for contamination or missing strongest-baseline evidence, not for internal benchmark incompleteness.
 - A Track `C` pilot is valid only after the fixed Python proof loop remains stable.
 - Wasm success is backend evidence only; it does not validate broader semantics or benchmark claims by itself.
 - `SCIR-Hc` evidence must stay inside the declared `claim_class` / `evidence_class` boundary for the benchmark report that cites it.
@@ -119,6 +125,24 @@ For Track `B`:
 - evaluate `S1`, `S4`, `K3`, and `K4`,
 - treat Tier `A` compile and test rates as the blocking signal,
 - keep idiomaticity as supporting evidence, not a separate hard gate.
+
+## Active strongest-baseline attribution
+
+Active claim surfaces must compare SCIR to the strongest relevant baseline first:
+
+- Track `A` canonical explicitness tradeoff: direct-source workflow baseline
+- Track `A` compressed regularity: typed-AST baseline
+- Track `A` patch composability: typed-AST baseline
+- Track `B` compile, test, round-trip fidelity, semantic regression, and reconstruction stability: strongest executable direct-source or typed-AST round-trip baseline, with direct source winning ties by baseline-strength order
+
+The published baseline-strength order is `direct source`, then `typed-AST`, then `lightweight regularized core or s-expression`.
+
+## Continuation outcomes
+
+- `SCIR_NECESSARY`: both active tracks pass, no active surface loses, Track `B` materially beats the strongest measured baseline, and Track `A` does not lose
+- `SCIR_USEFUL_BUT_UNNECESSARY`: both active tracks pass, Track `A` shows benchmark value, and Track `B` only ties the strongest measured baseline
+- `SCIR_NOT_JUSTIFIED`: any active track fails, any active surface loses, or strong baselines otherwise match SCIR without a continuation-critical win
+- `INCONCLUSIVE`: contamination or missing strongest-baseline evidence prevents a fair decision
 
 ## Conditional Track `C`
 

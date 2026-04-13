@@ -1,12 +1,12 @@
 {
   "sweep_id": "example-proof-loop-sweep",
-  "run_id": "example-proof-loop-sweep-20260403T170000Z",
+  "run_id": "example-proof-loop-sweep-20260413T163918Z",
   "commit_sha": "example-commit-sha",
   "spec_version": "v0.1-draft",
   "tool_version": "scir-benchmark-audit-v1",
   "corpus_id": "example-proof-loop-corpus",
   "corpus_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
-  "generated_at": "2026-04-03T17:00:00+00:00",
+  "generated_at": "2026-04-13T16:39:18+00:00",
   "comparison_metrics": [
     "LCR",
     "GR",
@@ -19,44 +19,44 @@
   ],
   "aggregate": {
     "scir_metrics": {
-      "LCR": 1.4737,
-      "GR": 1.0,
-      "SE": 0.2143,
-      "SCPR": null,
-      "round_trip": null,
-      "LCR_scirhc": 1.4211,
-      "GR_scirhc": 1.0,
-      "SCPR_scirhc": null
+      "LCR": 1.6012,
+      "GR": 0.9828,
+      "SE": 0.1946,
+      "SCPR": 1.0,
+      "round_trip": 1.0,
+      "LCR_scirhc": 1.8086,
+      "GR_scirhc": 0.9828,
+      "SCPR_scirhc": 1.0
     },
     "delta_vs_source": {
-      "LCR": 0.4737,
-      "GR": 0.0,
-      "SE": 0.0921,
-      "SCPR": null,
-      "round_trip": null,
-      "LCR_scirhc": 0.4211,
-      "GR_scirhc": 0.0,
-      "SCPR_scirhc": null
+      "LCR": 0.6012,
+      "GR": -0.0172,
+      "SE": 0.0697,
+      "SCPR": 0.0,
+      "round_trip": 0.0,
+      "LCR_scirhc": 0.8086,
+      "GR_scirhc": -0.0172,
+      "SCPR_scirhc": 0.0
     },
     "delta_vs_ast": {
-      "LCR": -7.7368,
-      "GR": 0.0,
-      "SE": 0.1857,
-      "SCPR": null,
-      "round_trip": null,
-      "LCR_scirhc": -7.7894,
-      "GR_scirhc": 0.0,
-      "SCPR_scirhc": null
+      "LCR": -5.5324,
+      "GR": -0.0172,
+      "SE": 0.1547,
+      "SCPR": 0.0,
+      "round_trip": 0.0,
+      "LCR_scirhc": -5.325,
+      "GR_scirhc": -0.0172,
+      "SCPR_scirhc": 0.0
     },
     "delta_vs_normalized": {
-      "LCR": 0.4737,
-      "GR": 0.0,
-      "SE": 0.0038,
-      "SCPR": null,
-      "round_trip": null,
-      "LCR_scirhc": 0.4211,
-      "GR_scirhc": 0.0,
-      "SCPR_scirhc": null
+      "LCR": 0.6012,
+      "GR": -0.0172,
+      "SE": 0.0455,
+      "SCPR": 0.0,
+      "round_trip": 0.0,
+      "LCR_scirhc": 0.8086,
+      "GR_scirhc": -0.0172,
+      "SCPR_scirhc": 0.0
     }
   },
   "slices": [
@@ -68,7 +68,7 @@
         "SE": 0.2143,
         "SCPR": null,
         "round_trip": null,
-        "LCR_scirhc": 1.4211,
+        "LCR_scirhc": 1.7368,
         "GR_scirhc": 1.0,
         "SCPR_scirhc": null
       },
@@ -78,7 +78,7 @@
         "SE": 0.0921,
         "SCPR": null,
         "round_trip": null,
-        "LCR_scirhc": 0.4211,
+        "LCR_scirhc": 0.7368,
         "GR_scirhc": 0.0,
         "SCPR_scirhc": null
       },
@@ -88,7 +88,7 @@
         "SE": 0.1857,
         "SCPR": null,
         "round_trip": null,
-        "LCR_scirhc": -7.7894,
+        "LCR_scirhc": -7.4732,
         "GR_scirhc": 0.0,
         "SCPR_scirhc": null
       },
@@ -98,12 +98,101 @@
         "SE": 0.0038,
         "SCPR": null,
         "round_trip": null,
-        "LCR_scirhc": 0.4211,
+        "LCR_scirhc": 0.7368,
         "GR_scirhc": 0.0,
         "SCPR_scirhc": null
       }
     }
   ],
   "tolerance_failures": [],
-  "contamination_flags": []
+  "contamination_flags": [],
+  "track_evaluations": {
+    "A": {
+      "track": "A",
+      "track_status": "pass",
+      "decision_signal": "win",
+      "win_count": 2,
+      "tie_count": 1,
+      "loss_count": 0,
+      "surface_evaluations": [
+        {
+          "surface_id": "canonical_explicitness_tradeoff",
+          "strongest_baseline_name": "direct source",
+          "metric": "median_scir_to_source_ratio",
+          "direction": "lower",
+          "scir_value": 1.5,
+          "strongest_baseline_value": 1.0,
+          "delta": 0.5,
+          "tie_tolerance": 0.1,
+          "outcome": "tie",
+          "threshold_summary": "win: median_scir_to_source_ratio <= 1.10 with semantic_explicitness_gain > 0; tie: median_scir_to_source_ratio <= 1.50 with semantic_explicitness_gain > 0; loss: otherwise",
+          "supporting_metric": "semantic_explicitness_gain",
+          "supporting_value": 15
+        },
+        {
+          "surface_id": "compressed_regularity_vs_typed_ast",
+          "strongest_baseline_name": "typed-AST",
+          "metric": "median_scirhc_to_typed_ast_ratio",
+          "direction": "lower",
+          "scir_value": 0.25,
+          "strongest_baseline_value": 1.0,
+          "delta": -0.75,
+          "tie_tolerance": 0.0,
+          "outcome": "win",
+          "threshold_summary": "win: <= 0.75; tie: > 0.75 and <= 1.0; loss: > 1.0",
+          "supporting_metric": null,
+          "supporting_value": null
+        },
+        {
+          "surface_id": "patch_composability_vs_typed_ast",
+          "strongest_baseline_name": "typed-AST",
+          "metric": "patch_composability_gain_vs_typed_ast",
+          "direction": "higher",
+          "scir_value": 0.875,
+          "strongest_baseline_value": 0.0,
+          "delta": 0.875,
+          "tie_tolerance": 0.0,
+          "outcome": "win",
+          "threshold_summary": "win: > 0.0; tie: == 0.0; loss: < 0.0",
+          "supporting_metric": null,
+          "supporting_value": null
+        }
+      ]
+    },
+    "B": {
+      "track": "B",
+      "track_status": "pass",
+      "decision_signal": "tie",
+      "win_count": 0,
+      "tie_count": 5,
+      "loss_count": 0,
+      "surface_evaluations": [
+        {
+          "surface_id": "tier_a_compile_pass_rate",
+          "strongest_baseline_name": "direct source",
+          "metric": "tier_a_compile_pass_rate",
+          "direction": "higher",
+          "scir_value": 1.0,
+          "strongest_baseline_value": 1.0,
+          "delta": 0.0,
+          "tie_tolerance": 0.05,
+          "outcome": "tie",
+          "threshold_summary": "win: above strongest baseline; tie: within 5 percentage points; loss: below by more than 5 percentage points",
+          "supporting_metric": null,
+          "supporting_value": null
+        }
+      ]
+    }
+  },
+  "continuation_decision": {
+    "outcome": "SCIR_USEFUL_BUT_UNNECESSARY",
+    "claim_ready": false,
+    "strongest_counterexample_baseline": "direct source",
+    "strongest_counterexample_surface": "canonical_explicitness_tradeoff",
+    "reasons": [
+      "Track A shows benchmark value, but Track B only ties the strongest measured baseline.",
+      "SCIR remains viable on the admitted scope without proving it is necessary.",
+      "canonical_explicitness_tradeoff ties direct source within the declared threshold."
+    ]
+  }
 }

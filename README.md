@@ -5,11 +5,11 @@ SCIR is a two-layer semantic substrate.
 - `SCIR-H` is the only normative semantic authority.
 - `SCIR-L` is derivative-only lowering justified by validated `SCIR-H`.
 
-## Active widening target
+## Active repository target
 
-The live implementation target is:
+The live repository target is:
 
-`Python subset importer -> canonical SCIR-H -> validator hardening`
+`Frozen 11-case Python proof-loop strong-baseline falsification for Track A and Track B`
 
 ## Current narrowed MVP boundary
 
@@ -23,7 +23,7 @@ The current narrowed MVP that the default gate keeps comparison-ready includes:
 - Python reconstruction from validated `SCIR-H`
 - bounded Rust importer-first evidence plus optional Rust-inclusive validation
 - bounded Wasm reference-backend validation for the admitted helper-free subset
-- Track `A` and Track `B` benchmark harnesses
+- Track `A` and Track `B` strong-baseline benchmark comparison
 
 Maintained but frozen support surfaces remain on disk and inside the canonical validation gate:
 
@@ -32,10 +32,11 @@ Maintained but frozen support surfaces remain on disk and inside the canonical v
 - Python reconstruction from validated `SCIR-H`
 - bounded Rust importer-first evidence
 - bounded Wasm reference backend
-- Track `A` and Track `B` benchmark harnesses
+- Track `A` and Track `B` strong-baseline benchmark comparison
 
 Those surfaces are part of the current bounded MVP, but they are not the current scope-expansion target.
 Helper-free Wasm remains retained backend evidence only for the MVP; it is not the next automatic implementation phase, and any future backend widening requires a fresh post-MVP reactivation decision.
+The current phase asks whether SCIR materially beats the strongest non-SCIR baselines on the admitted scope; ties are evidence against continuation, not partial credit.
 
 ## Live surface
 

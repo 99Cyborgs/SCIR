@@ -88,6 +88,25 @@
         "type": "string",
         "minLength": 1
       }
+    },
+    "track_evaluations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "A",
+        "B"
+      ],
+      "properties": {
+        "A": {
+          "$ref": "#/$defs/trackEvaluation"
+        },
+        "B": {
+          "$ref": "#/$defs/trackEvaluation"
+        }
+      }
+    },
+    "continuation_decision": {
+      "$ref": "#/$defs/continuationDecision"
     }
   },
   "$defs": {
@@ -248,6 +267,205 @@
             "number",
             "null"
           ]
+        }
+      }
+    },
+    "surfaceEvaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "surface_id",
+        "strongest_baseline_name",
+        "metric",
+        "direction",
+        "scir_value",
+        "strongest_baseline_value",
+        "delta",
+        "tie_tolerance",
+        "outcome",
+        "threshold_summary",
+        "supporting_metric",
+        "supporting_value"
+      ],
+      "properties": {
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "strongest_baseline_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "metric": {
+          "type": "string",
+          "minLength": 1
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "lower",
+            "higher"
+          ]
+        },
+        "scir_value": {
+          "type": [
+            "number",
+            "string",
+            "boolean",
+            "null"
+          ]
+        },
+        "strongest_baseline_value": {
+          "type": [
+            "number",
+            "string",
+            "boolean",
+            "null"
+          ]
+        },
+        "delta": {
+          "type": [
+            "number",
+            "string",
+            "boolean",
+            "null"
+          ]
+        },
+        "tie_tolerance": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "win",
+            "tie",
+            "loss",
+            "inconclusive"
+          ]
+        },
+        "threshold_summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supporting_metric": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "supporting_value": {
+          "type": [
+            "number",
+            "string",
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "trackEvaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "track",
+        "track_status",
+        "decision_signal",
+        "win_count",
+        "tie_count",
+        "loss_count",
+        "surface_evaluations"
+      ],
+      "properties": {
+        "track": {
+          "type": "string",
+          "enum": [
+            "A",
+            "B"
+          ]
+        },
+        "track_status": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "mixed",
+            "fail"
+          ]
+        },
+        "decision_signal": {
+          "type": "string",
+          "enum": [
+            "win",
+            "tie",
+            "loss",
+            "inconclusive"
+          ]
+        },
+        "win_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tie_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "loss_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "surface_evaluations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/surfaceEvaluation"
+          }
+        }
+      }
+    },
+    "continuationDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "claim_ready",
+        "strongest_counterexample_baseline",
+        "strongest_counterexample_surface",
+        "reasons"
+      ],
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "SCIR_NECESSARY",
+            "SCIR_USEFUL_BUT_UNNECESSARY",
+            "SCIR_NOT_JUSTIFIED",
+            "INCONCLUSIVE"
+          ]
+        },
+        "claim_ready": {
+          "type": "boolean"
+        },
+        "strongest_counterexample_baseline": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "strongest_counterexample_surface": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     }

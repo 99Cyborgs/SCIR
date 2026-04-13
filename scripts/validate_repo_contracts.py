@@ -207,12 +207,12 @@ AUDIT_NOT_ACTIVE_MARKERS = {
 }
 
 ACTIVE_FOCUS_MARKERS = [
-    "Python subset importer",
-    "SCIR-H",
-    "validator hardening",
+    "Frozen 11-case Python proof-loop",
+    "strong-baseline",
+    "Track `A` and Track `B`",
 ]
-ACTIVE_PLAN_REL = "plans/2026-04-13-mvp-completion-and-pre-baseline-alignment.md"
-ACTIVE_ITEM_MARKER = "post-proof-loop consolidation"
+ACTIVE_PLAN_REL = "plans/2026-04-13-strong-baseline-falsification-phase.md"
+ACTIVE_ITEM_MARKER = "decision-grade falsification phase"
 EXECUTABLE_SUBSET_REQUIRED_MARKERS = {
     "specs/scir_h_spec.md": [
         "| `loop` | yes | exact fixed proof-loop shapes are executable; broader forms remain deferred |",
@@ -566,6 +566,8 @@ def check_focus_alignment(root: pathlib.Path) -> list[str]:
     readme_text = (root / "README.md").read_text(encoding="utf-8")
     architecture_text = (root / "ARCHITECTURE.md").read_text(encoding="utf-8")
     boundary_text = (root / "SYSTEM_BOUNDARY.md").read_text(encoding="utf-8")
+    # Literal marker matching is intentional here: phase wording drift across the
+    # root docs is treated as contract drift, not as harmless editorial variance.
     for marker in ACTIVE_FOCUS_MARKERS:
         for rel, text in [
             ("CURRENT_FOCUS.md", focus_text),
@@ -1069,7 +1071,7 @@ def mutate_remove_required_file(root: pathlib.Path) -> None:
 def mutate_break_focus_alignment(root: pathlib.Path) -> None:
     path = root / "README.md"
     text = path.read_text(encoding="utf-8")
-    path.write_text(text.replace("validator hardening", "validator work", 1), encoding="utf-8")
+    path.write_text(text.replace("Frozen 11-case Python proof-loop", "11-case Python proof-loop", 1), encoding="utf-8")
 
 
 def mutate_break_reconstruction_policy_alignment(root: pathlib.Path) -> None:
@@ -1375,7 +1377,7 @@ def run_self_tests(root: pathlib.Path) -> list[str]:
             root,
             "focus drift",
             mutate_break_focus_alignment,
-            ["README.md: missing active-focus marker 'validator hardening'"],
+            ["README.md: missing active-focus marker 'Frozen 11-case Python proof-loop'"],
         )
     )
     failures.extend(

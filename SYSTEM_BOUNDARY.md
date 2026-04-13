@@ -12,13 +12,13 @@ It is not:
 - a proof-first research stack
 - a universal backend program
 
-## Active implementation target
+## Active repository target
 
-The active implementation target is:
+The active repository target is:
 
-- Python subset importer
-- canonical `SCIR-H`
-- `SCIR-H` validator hardening
+- Frozen 11-case Python proof-loop
+- strong-baseline falsification
+- Track `A` and Track `B`
 
 ## Current narrowed MVP boundary
 
@@ -32,7 +32,7 @@ The current narrowed MVP boundary kept executable for later baseline comparison 
 - Python reconstruction from validated `SCIR-H`
 - bounded Rust importer-first evidence
 - bounded Wasm reference backend validation for the admitted helper-free subset
-- Track `A` and Track `B` benchmark harnesses
+- Track `A` and Track `B` strong-baseline benchmark comparison
 
 ## Maintained but frozen support surfaces
 
@@ -44,7 +44,7 @@ These remain validated and preserved on disk, but they are not the current widen
 - Python reconstruction from validated `SCIR-H`
 - bounded Rust importer-first evidence
 - bounded Wasm reference backend
-- Track `A` and Track `B` benchmark harnesses
+- Track `A` and Track `B` strong-baseline benchmark comparison
 
 ## Not active now
 
